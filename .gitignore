@@ -62,3 +62,4 @@ security_*.json
 # CI/CD
 .github/secrets/
 logs/*.log
+snyk-code.sarif
