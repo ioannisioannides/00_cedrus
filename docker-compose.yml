@@ -1,0 +1,287 @@
+# ==============================================================================
+# CEDRUS DOCKER COMPOSE - DEVELOPMENT ENVIRONMENT
+# ==============================================================================
+# Self-hosted development stack - Zero cloud costs
+# Hot reload enabled for rapid development
+# 
+# Stack:
+# - Django 5.2.8 with hot reload (port 8000)
+# - PostgreSQL 16 (port 5432)
+# - Redis 7 (port 6379)
+# - Adminer database UI (port 8080)
+# 
+# Built by: Dr. Thomas Berg (Caltech PhD, DevOps, 23 years)
+# ==============================================================================
+
+version: '3.9'
+
+# ==============================================================================
+# NETWORKS
+# ==============================================================================
+networks:
+  cedrus-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ==============================================================================
+# VOLUMES
+# ==============================================================================
+volumes:
+  # PostgreSQL data persistence
+  postgres-data:
+    driver: local
+  
+  # Redis data persistence
+  redis-data:
+    driver: local
+  
+  # Media files (uploads)
+  media-files:
+    driver: local
+  
+  # Static files
+  static-files:
+    driver: local
+
+# ==============================================================================
+# SERVICES
+# ==============================================================================
+services:
+  
+  # ============================================================================
+  # POSTGRESQL DATABASE
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: cedrus-postgres-dev
+    restart: unless-stopped
+    
+    environment:
+      POSTGRES_DB: cedrus_dev
+      POSTGRES_USER: cedrus
+      POSTGRES_PASSWORD: cedrus_dev_password_change_in_production
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
+      # Performance tuning for development
+      POSTGRES_HOST_AUTH_METHOD: md5
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Custom PostgreSQL configuration (optional)
+      # - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - cedrus-network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cedrus -d cedrus_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    
+    # Resource limits (prevent runaway processes)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  
+  # ============================================================================
+  # REDIS CACHE
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: cedrus-redis-dev
+    restart: unless-stopped
+    
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel notice
+    
+    volumes:
+      - redis-data:/data
+    
+    ports:
+      - "6379:6379"
+    
+    networks:
+      - cedrus-network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+  
+  # ============================================================================
+  # DJANGO APPLICATION (DEVELOPMENT MODE)
+  # ============================================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Match host user ID for file permissions
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    
+    container_name: cedrus-web-dev
+    restart: unless-stopped
+    
+    # Override production command with development server
+    command: >
+      sh -c "
+      echo '🔄 Waiting for PostgreSQL...' &&
+      while ! nc -z postgres 5432; do sleep 1; done &&
+      echo '✅ PostgreSQL ready!' &&
+      echo '🔄 Running migrations...' &&
+      python manage.py migrate --noinput &&
+      echo '✅ Migrations complete!' &&
+      echo '🔄 Collecting static files...' &&
+      python manage.py collectstatic --noinput &&
+      echo '✅ Static files collected!' &&
+      echo '🚀 Starting Django development server...' &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+    
+    environment:
+      # Django settings
+      DJANGO_SETTINGS_MODULE: cedrus.settings
+      DJANGO_DEBUG: "True"
+      DJANGO_SECRET_KEY: "dev-secret-key-change-in-production-minimum-50-chars-required-for-security"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0,web"
+      
+      # Database (PostgreSQL)
+      DATABASE_URL: "postgresql://cedrus:cedrus_dev_password_change_in_production@postgres:5432/cedrus_dev"
+      
+      # Redis cache
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/1"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/2"
+      
+      # Email (console backend for development)
+      EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
+      
+      # Static/Media files (local storage)
+      MEDIA_ROOT: "/app/media"
+      STATIC_ROOT: "/app/staticfiles"
+      
+      # Development flags
+      DJANGO_LOG_LEVEL: "DEBUG"
+      PYTHONUNBUFFERED: "1"
+    
+    volumes:
+      # HOT RELOAD: Mount source code for live updates
+      - .:/app:rw
+      # Persistent media files
+      - media-files:/app/media
+      # Persistent static files
+      - static-files:/app/staticfiles
+      # Don't mount __pycache__ (causes issues)
+      - /app/__pycache__
+    
+    ports:
+      - "8000:8000"
+    
+    networks:
+      - cedrus-network
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  
+  # ============================================================================
+  # ADMINER - DATABASE UI (DEVELOPMENT ONLY)
+  # ============================================================================
+  adminer:
+    image: adminer:latest
+    container_name: cedrus-adminer-dev
+    restart: unless-stopped
+    
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: nette
+    
+    ports:
+      - "8080:8080"
+    
+    networks:
+      - cedrus-network
+    
+    depends_on:
+      - postgres
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+# ==============================================================================
+# USAGE
+# ==============================================================================
+# Start all services:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f web
+#
+# Run Django commands:
+#   docker-compose exec web python manage.py createsuperuser
+#   docker-compose exec web python manage.py shell
+#   docker-compose exec web pytest
+#
+# Database access:
+#   http://localhost:8080 (Adminer UI)
+#   docker-compose exec postgres psql -U cedrus -d cedrus_dev
+#
+# Stop all services:
+#   docker-compose down
+#
+# Stop and remove volumes (CAUTION: deletes data):
+#   docker-compose down -v
+#
+# Rebuild after code changes:
+#   docker-compose up -d --build
+# ==============================================================================

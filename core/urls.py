@@ -4,11 +4,16 @@ URL configuration for core app.
 
 from django.urls import path
 
-from . import views
+from . import health, views
 
 app_name = "core"
 
 urlpatterns = [
+    # Health check endpoints
+    path("health/", health.health_check, name="health_check"),
+    path("health/ready/", health.readiness_check, name="readiness_check"),
+    path("health/live/", health.liveness_check, name="liveness_check"),
+    path("health/status/", health.detailed_status, name="detailed_status"),
     # Organizations
     path("organizations/", views.OrganizationListView.as_view(), name="organization_list"),
     path(

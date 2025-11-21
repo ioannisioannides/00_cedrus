@@ -1,0 +1,95 @@
+# ==============================================================================
+# CEDRUS .dockerignore
+# ==============================================================================
+# Exclude unnecessary files from Docker build context
+# Reduces build time and image size
+# ==============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media/*
+/staticfiles/*
+*.pot
+
+# Development
+.env
+.env.local
+.env.*.local
+local_settings.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.hypothesis/
+*.bak
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+
+# Documentation (build docs separately)
+docs/
+*.md
+!README.md
+
+# Docker
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Security reports (sensitive)
+security_*.json
+
+# Governance (not needed in container)
+.governance/
+
+# Agents (development only)
+.agents/
+
+# Trunk (not needed in production)
+trunk/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
