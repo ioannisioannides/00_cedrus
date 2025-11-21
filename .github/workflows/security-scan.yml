@@ -12,10 +12,13 @@ jobs:
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 1  # Shallow clone for speed
     
     - name: Set up Python
       uses: actions/setup-python@v6

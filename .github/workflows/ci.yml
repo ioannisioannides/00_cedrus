@@ -9,6 +9,12 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+# Workflow-level permissions (least privilege principle)
+permissions:
+  contents: read  # Required for checkout
+  issues: write   # Required for creating issues on failure
+  pull-requests: write  # Required for PR comments
+
 env:
   PYTHON_VERSION: '3.13'
   POSTGRES_DB: cedrus_test
@@ -113,6 +119,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 1  # Shallow clone for speed
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
@@ -190,6 +198,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 1  # Shallow clone for speed
     
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -230,6 +240,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 1  # Shallow clone for speed
     
     - name: Determine deployment environment
       id: deployment-env

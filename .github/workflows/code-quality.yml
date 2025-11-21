@@ -6,16 +6,22 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+# Workflow-level permissions (least privilege principle)
+permissions:
+  contents: read  # Required for checkout
+  pull-requests: write  # Required for PR comments
+
 jobs:
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
       with:
-        fetch-depth: 0
+        fetch-depth: 1  # Shallow clone for speed
     
     - name: Set up Python
       uses: actions/setup-python@v6
