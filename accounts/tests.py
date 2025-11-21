@@ -102,7 +102,7 @@ class AuthenticationTest(TestCase):
         response = self.client.get(reverse("accounts:login"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(
-            response, "Email", case_insensitive=True
+            response, "Username"
         )  # pylint: disable=unexpected-keyword-arg  # pylint: disable=unexpected-keyword-arg
 
     def test_login_valid_credentials(self):
@@ -126,7 +126,7 @@ class AuthenticationTest(TestCase):
         self.assertFalse(response.context["user"].is_authenticated)
         # Should stay on login page with error
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "error", case_insensitive=True)
+        self.assertContains(response, "error")
 
     def test_login_missing_fields(self):
         """Test login with missing fields."""
@@ -198,11 +198,11 @@ class DashboardAccessTest(TestCase):
     def test_cb_admin_cannot_access_other_dashboards(self):
         """Test CB Admin is redirected from other dashboards."""
         self.client.login(username="cbadmin", password="pass123")
-        response = self.client.get(reverse("accounts:dashboard_auditor"))
-        self.assertRedirects(response, reverse("accounts:dashboard"))
+        response = self.client.get(reverse("accounts:dashboard_auditor"), follow=True)
+        self.assertRedirects(response, reverse("accounts:dashboard_cb"))
 
-        response = self.client.get(reverse("accounts:dashboard_client"))
-        self.assertRedirects(response, reverse("accounts:dashboard"))
+        response = self.client.get(reverse("accounts:dashboard_client"), follow=True)
+        self.assertRedirects(response, reverse("accounts:dashboard_cb"))
 
     def test_lead_auditor_dashboard_access(self):
         """Test Lead Auditor can access auditor dashboard."""
@@ -245,7 +245,7 @@ class DashboardAccessTest(TestCase):
         self.client.login(username="norole", password="pass123")
         response = self.client.get(reverse("accounts:dashboard"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No role assigned", case_insensitive=True)
+        self.assertContains(response, "No role assigned")
 
     def test_dashboard_requires_login(self):
         """Test that dashboards require authentication."""

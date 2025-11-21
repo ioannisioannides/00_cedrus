@@ -326,7 +326,7 @@ class AuditDetailView(LoginRequiredMixin, DetailView):
 
         # Get available status transitions
         workflow = AuditWorkflow(audit)
-        context["available_transitions"] = workflow.get_available_transitions()
+        context["available_transitions"] = workflow.get_available_transitions(user)
 
         # Check if user can submit to client
         context["can_submit_to_client"] = (
@@ -468,7 +468,7 @@ def audit_transition_status(request, pk, new_status):
 
     try:
         # Validate and perform the transition
-        workflow.transition_to(new_status, user=user)
+        workflow.transition(new_status, user)
 
         # Success messages based on transition
         if new_status == "client_review":

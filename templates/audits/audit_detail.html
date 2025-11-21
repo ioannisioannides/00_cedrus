@@ -346,7 +346,7 @@
                                             <a href="{% url 'audits:nonconformity_update' nc.pk %}" class="btn btn-outline-primary">
                                                 <i class="bi bi-pencil"></i> Edit
                                             </a>
-                                            <a href="{% url 'audits:finding_delete' 'nc' nc.pk %}" class="btn btn-outline-danger">
+                                            <a href="{% url 'audits:nonconformity_delete' nc.pk %}" class="btn btn-outline-danger">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         {% endif %}
@@ -404,7 +404,7 @@
                                     <a href="{% url 'audits:observation_update' obs.pk %}" class="btn btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'audits:finding_delete' 'observation' obs.pk %}" class="btn btn-outline-danger">
+                                    <a href="{% url 'audits:observation_delete' obs.pk %}" class="btn btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
@@ -450,7 +450,7 @@
                                     <a href="{% url 'audits:ofi_update' ofi.pk %}" class="btn btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'audits:finding_delete' 'ofi' ofi.pk %}" class="btn btn-outline-danger">
+                                    <a href="{% url 'audits:ofi_delete' ofi.pk %}" class="btn btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>

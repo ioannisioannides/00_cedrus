@@ -141,7 +141,7 @@ class AuditSequenceValidationTests(TestCase):
             total_audit_date_to=today - timedelta(days=27),
             lead_auditor=self.user,
             created_by=self.user,
-            status="decided",
+            status="closed",  # Changed from "decided" to "closed"
         )
         stage1.certifications.add(self.cert)
         stage1.sites.add(self.site)
@@ -460,13 +460,13 @@ class WorkflowAuditSequenceValidationTests(TestCase):
             total_audit_date_to=today + timedelta(days=3),
             lead_auditor=self.cb_admin,
             created_by=self.cb_admin,
-            status="client_review",
+            status="submitted",
         )
         stage2.certifications.add(self.cert)
         stage2.sites.add(self.site)
 
         workflow = AuditWorkflow(stage2)
-        can_transition, reason = workflow.can_transition("submitted", self.cb_admin)
+        can_transition, reason = workflow.can_transition("decided", self.cb_admin)
 
         self.assertFalse(can_transition)
         self.assertIn("Stage 2 audit requires a completed Stage 1", reason)
@@ -486,13 +486,13 @@ class WorkflowAuditSequenceValidationTests(TestCase):
             total_audit_date_to=today + timedelta(days=2),
             lead_auditor=self.cb_admin,
             created_by=self.cb_admin,
-            status="client_review",
+            status="submitted",
         )
         surveillance.certifications.add(self.cert)
         surveillance.sites.add(self.site)
 
         workflow = AuditWorkflow(surveillance)
-        can_transition, reason = workflow.can_transition("submitted", self.cb_admin)
+        can_transition, reason = workflow.can_transition("decided", self.cb_admin)
 
         self.assertFalse(can_transition)
         self.assertIn("requires active certifications", reason)

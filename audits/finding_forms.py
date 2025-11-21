@@ -78,6 +78,10 @@ class NonconformityForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.audit = audit
 
+        # Set audit on instance for validation (needed for model.clean())
+        if audit and not self.instance.pk:  # Only for create forms
+            self.instance.audit = audit
+
         # Filter sites to only those belonging to the audit's organization
         if audit:
             self.fields["site"].queryset = Site.objects.filter(organization=audit.organization)
@@ -265,6 +269,10 @@ class ObservationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.audit = audit
 
+        # Set audit on instance for validation (needed for model.clean())
+        if audit and not self.instance.pk:  # Only for create forms
+            self.instance.audit = audit
+
         # Filter sites to only those in the audit
         if audit:
             self.fields["site"].queryset = Site.objects.filter(organization=audit.organization)
@@ -322,6 +330,10 @@ class OpportunityForImprovementForm(forms.ModelForm):
     def __init__(self, *args, audit=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.audit = audit
+
+        # Set audit on instance for validation (needed for model.clean())
+        if audit and not self.instance.pk:  # Only for create forms
+            self.instance.audit = audit
 
         # Filter sites to only those in the audit
         if audit:

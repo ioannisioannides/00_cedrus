@@ -19,16 +19,9 @@ User = get_user_model()
 
 
 @pytest.fixture
-def standard(db, organization):
-    """Create test certification (renamed from standard for backward compatibility)."""
-    std = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
-    return Certification.objects.create(
-        organization=organization,
-        standard=std,
-        certification_scope="Quality Management",
-        certificate_status="active",
-        certificate_id="CERT-001",
-    )
+def standard(db):
+    """Create test standard."""
+    return Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
 
 
 @pytest.fixture
@@ -89,7 +82,15 @@ def audit_scheduled(db, organization, standard, auditor_user):
         lead_auditor=auditor_user,
         created_by=auditor_user,
     )
-    audit.certifications.add(standard)
+    # Create certification for the audit
+    cert = Certification.objects.create(
+        organization=organization,
+        standard=standard,
+        certification_scope="Quality Management",
+        certificate_status="active",
+        certificate_id="CERT-001",
+    )
+    audit.certifications.add(cert)
     return audit
 
 
@@ -105,7 +106,15 @@ def audit_decided(db, organization, standard, auditor_user):
         lead_auditor=auditor_user,
         created_by=auditor_user,
     )
-    audit.certifications.add(standard)
+    # Create certification for the audit
+    cert = Certification.objects.create(
+        organization=organization,
+        standard=standard,
+        certification_scope="Quality Management",
+        certificate_status="active",
+        certificate_id="CERT-002",
+    )
+    audit.certifications.add(cert)
     return audit
 
 
@@ -277,8 +286,8 @@ class TestObservationCRUD:
             {
                 "standard": standard.pk,
                 "clause": "8.2.1",
-                "objective_evidence": "Test observation evidence",
-                "auditor_explanation": "Test observation explanation",
+                "statement": "Test observation evidence",
+                "explanation": "Test observation explanation",
             },
         )
 
@@ -299,8 +308,8 @@ class TestObservationCRUD:
             {
                 "standard": standard.pk,
                 "clause": "8.2.1",
-                "objective_evidence": "Test evidence",
-                "auditor_explanation": "Test explanation",
+                "statement": "Test evidence",
+                "explanation": "Test explanation",
             },
         )
 
@@ -313,8 +322,8 @@ class TestObservationCRUD:
             audit=audit_scheduled,
             standard=standard,
             clause="8.2.1",
-            objective_evidence="Test observation",
-            auditor_explanation="Test note",
+            statement="Test observation",
+            explanation="Test note",
             created_by=auditor_user,
         )
 
@@ -334,8 +343,8 @@ class TestObservationCRUD:
             audit=audit_scheduled,
             standard=standard,
             clause="8.2.1",
-            objective_evidence="Old evidence",
-            auditor_explanation="Old explanation",
+            statement="Old evidence",
+            explanation="Old explanation",
             created_by=auditor_user,
         )
 
@@ -348,15 +357,15 @@ class TestObservationCRUD:
             {
                 "standard": standard.pk,
                 "clause": "8.2.2",
-                "objective_evidence": "New evidence",
-                "auditor_explanation": "New explanation",
+                "statement": "New evidence",
+                "explanation": "New explanation",
             },
         )
 
         assert response.status_code == 302
         obs.refresh_from_db()
         assert obs.clause == "8.2.2"
-        assert obs.objective_evidence == "New evidence"
+        assert obs.statement == "New evidence"
 
     def test_delete_observation(self, auditor_user, audit_scheduled, standard):
         """Test deleting observation."""
@@ -364,8 +373,8 @@ class TestObservationCRUD:
             audit=audit_scheduled,
             standard=standard,
             clause="8.2.1",
-            objective_evidence="Test observation",
-            auditor_explanation="Test note",
+            statement="Test observation",
+            explanation="Test note",
             created_by=auditor_user,
         )
 
@@ -394,8 +403,7 @@ class TestOFICRUD:
             {
                 "standard": standard.pk,
                 "clause": "9.3",
-                "objective_evidence": "Test OFI evidence",
-                "auditor_explanation": "Test improvement suggestion",
+                "description": "Test OFI evidence",
             },
         )
 
@@ -416,8 +424,7 @@ class TestOFICRUD:
             {
                 "standard": standard.pk,
                 "clause": "9.3",
-                "objective_evidence": "Test evidence",
-                "auditor_explanation": "Test suggestion",
+                "description": "Test evidence",
             },
         )
 
@@ -430,8 +437,7 @@ class TestOFICRUD:
             audit=audit_scheduled,
             standard=standard,
             clause="9.3",
-            objective_evidence="Test OFI",
-            auditor_explanation="Test suggestion",
+            description="Test OFI",
             created_by=auditor_user,
         )
 
@@ -451,8 +457,7 @@ class TestOFICRUD:
             audit=audit_scheduled,
             standard=standard,
             clause="9.3",
-            objective_evidence="Old evidence",
-            auditor_explanation="Old suggestion",
+            description="Old evidence",
             created_by=auditor_user,
         )
 
@@ -465,15 +470,14 @@ class TestOFICRUD:
             {
                 "standard": standard.pk,
                 "clause": "9.3.1",
-                "objective_evidence": "New evidence",
-                "auditor_explanation": "New suggestion",
+                "description": "New evidence",
             },
         )
 
         assert response.status_code == 302
         ofi.refresh_from_db()
         assert ofi.clause == "9.3.1"
-        assert ofi.objective_evidence == "New evidence"
+        assert ofi.description == "New evidence"
 
     def test_delete_ofi(self, auditor_user, audit_scheduled, standard):
         """Test deleting OFI."""
@@ -481,8 +485,7 @@ class TestOFICRUD:
             audit=audit_scheduled,
             standard=standard,
             clause="9.3",
-            objective_evidence="Test OFI",
-            auditor_explanation="Test suggestion",
+            description="Test OFI",
             created_by=auditor_user,
         )
 
@@ -518,8 +521,8 @@ class TestFindingsIntegration:
             audit=audit_scheduled,
             standard=standard,
             clause="8.2.1",
-            objective_evidence="Obs evidence",
-            auditor_explanation="Obs note",
+            statement="Obs evidence",
+            explanation="Obs note",
             created_by=auditor_user,
         )
 
@@ -527,8 +530,7 @@ class TestFindingsIntegration:
             audit=audit_scheduled,
             standard=standard,
             clause="9.3",
-            objective_evidence="OFI evidence",
-            auditor_explanation="OFI suggestion",
+            description="OFI evidence",
             created_by=auditor_user,
         )
 

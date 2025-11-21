@@ -22,7 +22,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 # Health check imports
-from core.health import health_check, readiness_check, liveness_check
+from core.health import health_check, liveness_check, readiness_check
 
 urlpatterns = [
     path("admin/", admin.site.urls),

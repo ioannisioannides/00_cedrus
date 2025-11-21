@@ -60,17 +60,17 @@
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Objective Evidence</label>
-                    <p class="mb-0">{{ observation.objective_evidence|linebreaks }}</p>
+                    <label class="form-label fw-bold">Observation Statement</label>
+                    <p class="mb-0">{{ observation.statement|linebreaks }}</p>
                 </div>
                 
                 <div class="mb-0">
-                    <label class="form-label fw-bold">Auditor Notes</label>
+                    <label class="form-label fw-bold">Additional Explanation</label>
                     <p class="mb-0">
-                        {% if observation.auditor_explanation %}
-                            {{ observation.auditor_explanation|linebreaks }}
+                        {% if observation.explanation %}
+                            {{ observation.explanation|linebreaks }}
                         {% else %}
-                            <span class="text-muted">No additional notes</span>
+                            <span class="text-muted">No additional explanation</span>
                         {% endif %}
                     </p>
                 </div>

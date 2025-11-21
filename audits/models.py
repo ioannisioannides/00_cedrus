@@ -418,7 +418,8 @@ class Finding(models.Model):
         errors = {}
 
         # Validate that standard belongs to one of the audit's certifications
-        if self.standard and self.audit:
+        # Only validate if audit is available (not excluded from validation)
+        if self.standard and hasattr(self, 'audit') and self.audit:
             # Get standards from audit's certifications
             audit_standards = self.audit.certifications.values_list("standard", flat=True)
 
@@ -429,7 +430,8 @@ class Finding(models.Model):
                 )
 
         # Validate that site belongs to the audit's organization
-        if self.site and self.audit:
+        # Only validate if audit is available
+        if self.site and hasattr(self, 'audit') and self.audit:
             if self.site.organization != self.audit.organization:
                 errors["site"] = (
                     f"Site {self.site.site_name} does not belong to {self.audit.organization.name}."
