@@ -42,7 +42,7 @@ jobs:
         pip-audit --desc
     
     - name: Upload security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: weekly-security-reports
         path: |
