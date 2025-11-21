@@ -21,9 +21,18 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+# Health check imports
+from core.health import health_check, readiness_check, liveness_check
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", RedirectView.as_view(url="/login/", permanent=False), name="home"),
+    
+    # Health check endpoints (root level for container orchestration)
+    path("health/", health_check, name="health"),
+    path("health/ready/", readiness_check, name="readiness"),
+    path("health/live/", liveness_check, name="liveness"),
+    
     path("", include("accounts.urls")),
     path("core/", include("core.urls")),
     path("audits/", include("audits.urls")),
