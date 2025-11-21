@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Standards - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Standards</h1>
+        <p class="page-subtitle">Manage certification standards and codes</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'core:standard_create' %}" class="btn btn-primary">
+            <span>+</span> Create Standard
+        </a>
+    </div>
+</div>
+
+{% if standards %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Title</th>
+                            <th>NACE Code</th>
+                            <th>EA Code</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for standard in standards %}
+                            <tr>
+                                <td>
+                                    <code style="background-color: var(--cedrus-gray-100); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">{{ standard.code }}</code>
+                                </td>
+                                <td>
+                                    <strong>{{ standard.title }}</strong>
+                                </td>
+                                <td>{{ standard.nace_code|default:"—" }}</td>
+                                <td>{{ standard.ea_code|default:"—" }}</td>
+                                <td>
+                                    <a href="{% url 'core:standard_update' standard.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                <div class="empty-state-icon">📜</div>
+                <p>No standards yet.</p>
+                <a href="{% url 'core:standard_create' %}" class="btn btn-primary">Create First Standard</a>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+

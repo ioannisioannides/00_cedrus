@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Nonconformity Response - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Verify Nonconformity Response</h1>
+        <p class="page-subtitle">Clause {{ nc.clause }} - Audit #{{ nc.audit.pk }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:nonconformity_detail' nc.pk %}" class="btn btn-outline-secondary">Back to Nonconformity</a>
+    </div>
+</div>
+
+<!-- Client Response Summary -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Client Response</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-12">
+                <label class="form-label fw-bold">Root Cause Analysis</label>
+                <p class="mb-0">{{ nc.client_root_cause|linebreaks }}</p>
+            </div>
+            
+            <div class="col-md-12">
+                <label class="form-label fw-bold">Immediate Correction</label>
+                <p class="mb-0">{{ nc.client_correction|linebreaks }}</p>
+            </div>
+            
+            <div class="col-md-12">
+                <label class="form-label fw-bold">Corrective Action Plan</label>
+                <p class="mb-0">{{ nc.client_corrective_action|linebreaks }}</p>
+            </div>
+            
+            {% if nc.due_date %}
+            <div class="col-md-12">
+                <label class="form-label fw-bold">Due Date</label>
+                <p class="mb-0">{{ nc.due_date|date:"F d, Y" }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Verification Decision</h5>
+        </div>
+        <div class="card-body">
+            <div class="form-group mb-3">
+                <label class="form-label required">Verification Action</label>
+                <div class="{% if form.verification_action.errors %}is-invalid{% endif %}">
+                    {% for choice in form.verification_action %}
+                        <div class="form-check">
+                            {{ choice.tag }}
+                            <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                {{ choice.choice_label }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if form.verification_action.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.verification_action.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">
+                    <strong>Accept Response:</strong> The response is satisfactory and corrective action is acceptable.<br>
+                    <strong>Request Changes:</strong> The response needs revision. Client can update their response.<br>
+                    <strong>Close Nonconformity:</strong> Only available if response has been accepted. Marks the NC as closed.
+                </small>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label for="id_verification_notes" class="form-label">Verification Notes</label>
+                <textarea 
+                    class="form-control {% if form.verification_notes.errors %}is-invalid{% endif %}" 
+                    id="id_verification_notes" 
+                    name="verification_notes" 
+                    rows="3">{{ form.verification_notes.value|default:'' }}</textarea>
+                {% if form.verification_notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.verification_notes.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Optional notes about the verification decision.</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'audits:nonconformity_detail' nc.pk %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Submit Verification</button>
+    </div>
+</form>
+{% endblock %}
+

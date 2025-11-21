@@ -1,0 +1,34 @@
+# Dependabot configuration for automated dependency updates
+# Enterprise Excellence Initiative - Week 1, Day 3-4
+
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "team-leads"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    reviewers:
+      - "devops-team"
+    labels:
+      - "ci-cd"
+      - "automated"

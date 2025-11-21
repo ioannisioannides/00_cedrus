@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Observation {{ observation.clause }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Observation Details</h1>
+        <p class="page-subtitle">Clause {{ observation.clause }} - Audit #{{ observation.audit.pk }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' observation.audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+        {% if can_edit %}
+            <a href="{% url 'audits:observation_update' observation.pk %}" class="btn btn-primary">Edit</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Basic Information -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Standard</dt>
+                    <dd class="col-sm-7">
+                        {% if observation.standard %}
+                            <strong>{{ observation.standard.code }}</strong> - {{ observation.standard.title }}
+                        {% else %}
+                            <span class="text-muted">Not specified</span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-5">Clause</dt>
+                    <dd class="col-sm-7"><strong>{{ observation.clause }}</strong></dd>
+                    
+                    <dt class="col-sm-5">Created By</dt>
+                    <dd class="col-sm-7">{{ observation.created_by.get_full_name|default:observation.created_by.username }}</dd>
+                    
+                    <dt class="col-sm-5">Created At</dt>
+                    <dd class="col-sm-7">{{ observation.created_at|date:"F d, Y H:i" }}</dd>
+                    
+                    {% if observation.updated_at %}
+                        <dt class="col-sm-5">Last Updated</dt>
+                        <dd class="col-sm-7">{{ observation.updated_at|date:"F d, Y H:i" }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Finding Details -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Observation Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Objective Evidence</label>
+                    <p class="mb-0">{{ observation.objective_evidence|linebreaks }}</p>
+                </div>
+                
+                <div class="mb-0">
+                    <label class="form-label fw-bold">Auditor Notes</label>
+                    <p class="mb-0">
+                        {% if observation.auditor_explanation %}
+                            {{ observation.auditor_explanation|linebreaks }}
+                        {% else %}
+                            <span class="text-muted">No additional notes</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Note:</strong> Observations are informational findings that do not require formal corrective action.
+</div>
+
+{% endblock %}

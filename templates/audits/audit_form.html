@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Audit - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{% if object %}Edit{% else %}Create{% endif %} Audit</h1>
+        <p class="page-subtitle">{% if object %}Update audit information{% else %}Create a new audit record{% endif %}</p>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    <div class="row g-4">
+        <!-- Basic Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="id_organization" class="form-label required">Organization</label>
+                        <select 
+                            class="form-select {% if form.organization.errors %}is-invalid{% endif %}" 
+                            id="id_organization" 
+                            name="organization" 
+                            required>
+                            <option value="">Select an organization</option>
+                            {% for org in form.organization.field.queryset %}
+                                <option value="{{ org.pk }}" {% if form.organization.value == org.pk %}selected{% endif %}>{{ org.name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.organization.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.organization.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_audit_type" class="form-label required">Audit Type</label>
+                        <select 
+                            class="form-select {% if form.audit_type.errors %}is-invalid{% endif %}" 
+                            id="id_audit_type" 
+                            name="audit_type" 
+                            required>
+                            <option value="">Select audit type</option>
+                            {% for value, label in form.audit_type.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}" {% if form.audit_type.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.audit_type.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.audit_type.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if object %}
+                    <div class="form-group">
+                        <label class="form-label">Current Status</label>
+                        <div>
+                            <span class="badge bg-secondary">{{ object.get_status_display }}</span>
+                            <small class="text-muted d-block mt-1">Status changes are managed through workflow actions on the audit detail page.</small>
+                            </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="id_lead_auditor" class="form-label required">Lead Auditor</label>
+                        <select 
+                            class="form-select {% if form.lead_auditor.errors %}is-invalid{% endif %}" 
+                            id="id_lead_auditor" 
+                            name="lead_auditor" 
+                            required>
+                            <option value="">Select lead auditor</option>
+                            {% for user in form.lead_auditor.field.queryset %}
+                                <option value="{{ user.pk }}" {% if form.lead_auditor.value == user.pk %}selected{% endif %}>{{ user.get_full_name|default:user.username }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.lead_auditor.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.lead_auditor.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dates & Duration -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Schedule</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_total_audit_date_from" class="form-label required">Start Date</label>
+                                <input 
+                                    type="date" 
+                                    class="form-control {% if form.total_audit_date_from.errors %}is-invalid{% endif %}" 
+                                    id="id_total_audit_date_from" 
+                                    name="total_audit_date_from" 
+                                    value="{{ form.total_audit_date_from.value|default:'' }}" 
+                                    required>
+                                {% if form.total_audit_date_from.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.total_audit_date_from.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_total_audit_date_to" class="form-label required">End Date</label>
+                                <input 
+                                    type="date" 
+                                    class="form-control {% if form.total_audit_date_to.errors %}is-invalid{% endif %}" 
+                                    id="id_total_audit_date_to" 
+                                    name="total_audit_date_to" 
+                                    value="{{ form.total_audit_date_to.value|default:'' }}" 
+                                    required>
+                                {% if form.total_audit_date_to.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.total_audit_date_to.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_planned_duration_hours" class="form-label required">Duration (hours)</label>
+                        <input 
+                            type="number" 
+                            class="form-control {% if form.planned_duration_hours.errors %}is-invalid{% endif %}" 
+                            id="id_planned_duration_hours" 
+                            name="planned_duration_hours" 
+                            value="{{ form.planned_duration_hours.value|default:'' }}" 
+                            step="0.5" 
+                            min="0" 
+                            required
+                            placeholder="Enter duration in hours">
+                        {% if form.planned_duration_hours.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.planned_duration_hours.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Enter the total audit duration in hours (e.g., 8.5)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Certifications & Sites -->
+    <div class="row g-4 mt-0">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Certifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="id_certifications" class="form-label required">Select Certifications</label>
+                        <select 
+                            class="form-select {% if form.certifications.errors %}is-invalid{% endif %}" 
+                            id="id_certifications" 
+                            name="certifications" 
+                            multiple 
+                            size="6" 
+                            required>
+                            {% for cert in form.certifications.field.queryset %}
+                                <option value="{{ cert.pk }}" {% if cert.pk in form.certifications.value %}selected{% endif %}>
+                                    {{ cert.organization.name }} - {{ cert.standard.code }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.certifications.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.certifications.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Hold <kbd>Ctrl</kbd> (Windows/Linux) or <kbd>Cmd</kbd> (Mac) to select multiple</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Sites</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="id_sites" class="form-label required">Select Sites</label>
+                        <select 
+                            class="form-select {% if form.sites.errors %}is-invalid{% endif %}" 
+                            id="id_sites" 
+                            name="sites" 
+                            multiple 
+                            size="6" 
+                            required>
+                            {% for site in form.sites.field.queryset %}
+                                <option value="{{ site.pk }}" {% if site.pk in form.sites.value %}selected{% endif %}>
+                                    {{ site.site_name }} ({{ site.organization.name }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.sites.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.sites.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Hold <kbd>Ctrl</kbd> (Windows/Linux) or <kbd>Cmd</kbd> (Mac) to select multiple</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% if object %}{% url 'audits:audit_detail' object.pk %}{% else %}{% url 'audits:audit_list' %}{% endif %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Audit</button>
+    </div>
+</form>
+{% endblock %}
+

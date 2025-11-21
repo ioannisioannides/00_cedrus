@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Audits - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Audits</h1>
+        <p class="page-subtitle">Manage and track audit activities</p>
+    </div>
+    <div class="page-actions">
+        {% if user.groups.all %}
+            {% for group in user.groups.all %}
+                {% if group.name == "cb_admin" %}
+                    <a href="{% url 'audits:audit_create' %}" class="btn btn-primary">
+                        <span>+</span> Create Audit
+                    </a>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+{% if audits %}
+    <!-- Filters -->
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="organization" class="form-label">Organization</label>
+                    <select name="organization" id="organization" class="form-select">
+                        <option value="">All Organizations</option>
+                        {% for org in organizations %}
+                            <option value="{{ org.pk }}" {% if request.GET.organization == org.pk|stringformat:"s" %}selected{% endif %}>{{ org.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Draft</option>
+                        <option value="client_review" {% if request.GET.status == "client_review" %}selected{% endif %}>Client Review</option>
+                        <option value="submitted_to_cb" {% if request.GET.status == "submitted_to_cb" %}selected{% endif %}>Submitted to CB</option>
+                        <option value="decided" {% if request.GET.status == "decided" %}selected{% endif %}>Decided</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="audit_type" class="form-label">Type</label>
+                    <select name="audit_type" id="audit_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="stage1" {% if request.GET.audit_type == "stage1" %}selected{% endif %}>Stage 1</option>
+                        <option value="stage2" {% if request.GET.audit_type == "stage2" %}selected{% endif %}>Stage 2</option>
+                        <option value="surveillance" {% if request.GET.audit_type == "surveillance" %}selected{% endif %}>Surveillance</option>
+                        <option value="recertification" {% if request.GET.audit_type == "recertification" %}selected{% endif %}>Recertification</option>
+                        <option value="transfer" {% if request.GET.audit_type == "transfer" %}selected{% endif %}>Transfer</option>
+                        <option value="special" {% if request.GET.audit_type == "special" %}selected{% endif %}>Special</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">Apply Filters</button>
+                        <a href="{% url 'audits:audit_list' %}" class="btn btn-outline-secondary">Clear</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audits Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Organization</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Dates</th>
+                            <th>Lead Auditor</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for audit in audits %}
+                            <tr>
+                                <td>
+                                    <strong>{{ audit.organization.name }}</strong>
+                                </td>
+                                <td>{{ audit.get_audit_type_display }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ audit.get_status_display }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ audit.total_audit_date_from|date:"M d, Y" }}<br>
+                                    to {{ audit.total_audit_date_to|date:"M d, Y" }}</small>
+                                </td>
+                                <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="{% url 'audits:audit_print' audit.pk %}" class="btn btn-sm btn-outline-secondary">Print</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    {% if is_paginated %}
+        <nav aria-label="Audits pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <p>No audits found.</p>
+                {% if user.groups.all %}
+                    {% for group in user.groups.all %}
+                        {% if group.name == "cb_admin" %}
+                            <a href="{% url 'audits:audit_create' %}" class="btn btn-primary">Create First Audit</a>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+

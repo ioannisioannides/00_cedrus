@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Audit Plan Review - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Audit Plan Review</h1>
+        <p class="page-subtitle">Audit #{{ audit.pk }} - {{ audit.organization.name }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Deviations from Audit Plan</h5>
+        </div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                {{ form.deviations_yes_no }}
+                <label class="form-check-label" for="{{ form.deviations_yes_no.id_for_label }}">
+                    Were there deviations from the audit plan?
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.deviations_details.id_for_label }}" class="form-label">Details of Deviations</label>
+                {{ form.deviations_details }}
+                {% if form.deviations_details.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.deviations_details.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Required if deviations occurred</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Issues Affecting the Audit</h5>
+        </div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                {{ form.issues_affecting_yes_no }}
+                <label class="form-check-label" for="{{ form.issues_affecting_yes_no.id_for_label }}">
+                    Were there issues affecting the audit?
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.issues_affecting_details.id_for_label }}" class="form-label">Details of Issues</label>
+                {{ form.issues_affecting_details }}
+                {% if form.issues_affecting_details.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.issues_affecting_details.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Required if issues occurred</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Proposed Next Audit</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.next_audit_date_from.id_for_label }}" class="form-label">Proposed Start Date</label>
+                        {{ form.next_audit_date_from }}
+                        {% if form.next_audit_date_from.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.next_audit_date_from.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="{{ form.next_audit_date_to.id_for_label }}" class="form-label">Proposed End Date</label>
+                        {{ form.next_audit_date_to }}
+                        {% if form.next_audit_date_to.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.next_audit_date_to.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Review</button>
+    </div>
+</form>
+{% endblock %}
+

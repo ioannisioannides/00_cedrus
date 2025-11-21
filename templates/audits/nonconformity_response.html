@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Respond to Nonconformity - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Respond to Nonconformity</h1>
+        <p class="page-subtitle">Clause {{ nc.clause }} - Audit #{{ nc.audit.pk }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:nonconformity_detail' nc.pk %}" class="btn btn-outline-secondary">Back to Nonconformity</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Nonconformity Details</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-{% if nc.category == 'major' %}danger{% else %}warning{% endif %}">
+                    {{ nc.get_category_display }}
+                </span>
+            </dd>
+            <dt class="col-sm-3">Clause</dt>
+            <dd class="col-sm-9"><strong>{{ nc.clause }}</strong></dd>
+            <dt class="col-sm-3">Statement</dt>
+            <dd class="col-sm-9">{{ nc.statement_of_nc|truncatewords:30 }}</dd>
+        </dl>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Response Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="form-group mb-3">
+                <label for="id_client_root_cause" class="form-label required">Root Cause Analysis</label>
+                <textarea 
+                    class="form-control {% if form.client_root_cause.errors %}is-invalid{% endif %}" 
+                    id="id_client_root_cause" 
+                    name="client_root_cause" 
+                    rows="5" 
+                    required>{{ form.client_root_cause.value|default:nc.client_root_cause }}</textarea>
+                {% if form.client_root_cause.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.client_root_cause.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Provide a detailed analysis of the root cause of this nonconformity.</small>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label for="id_client_correction" class="form-label required">Immediate Correction</label>
+                <textarea 
+                    class="form-control {% if form.client_correction.errors %}is-invalid{% endif %}" 
+                    id="id_client_correction" 
+                    name="client_correction" 
+                    rows="5" 
+                    required>{{ form.client_correction.value|default:nc.client_correction }}</textarea>
+                {% if form.client_correction.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.client_correction.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Describe the immediate action taken to address the nonconformity.</small>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label for="id_client_corrective_action" class="form-label required">Corrective Action Plan</label>
+                <textarea 
+                    class="form-control {% if form.client_corrective_action.errors %}is-invalid{% endif %}" 
+                    id="id_client_corrective_action" 
+                    name="client_corrective_action" 
+                    rows="5" 
+                    required>{{ form.client_corrective_action.value|default:nc.client_corrective_action }}</textarea>
+                {% if form.client_corrective_action.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.client_corrective_action.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Describe the plan to prevent recurrence of this nonconformity.</small>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label for="id_due_date" class="form-label">Due Date</label>
+                <input 
+                    type="date" 
+                    class="form-control {% if form.due_date.errors %}is-invalid{% endif %}" 
+                    id="id_due_date" 
+                    name="due_date" 
+                    value="{{ form.due_date.value|default:nc.due_date|date:'Y-m-d' }}">
+                {% if form.due_date.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.due_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Expected completion date for the corrective action (optional).</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'audits:nonconformity_detail' nc.pk %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-success">Submit Response</button>
+    </div>
+</form>
+{% endblock %}
+

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Nonconformity - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{% if object %}Edit{% else %}Create{% endif %} Nonconformity</h1>
+        <p class="page-subtitle">
+            {% if object %}
+                Update nonconformity details for Audit #{{ audit.pk }}
+            {% else %}
+                Add a new nonconformity finding to Audit #{{ audit.pk }}
+            {% endif %}
+        </p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    <div class="row g-4">
+        <!-- Basic Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <label for="id_standard" class="form-label required">Standard</label>
+                        <select 
+                            class="form-select {% if form.standard.errors %}is-invalid{% endif %}" 
+                            id="id_standard" 
+                            name="standard" 
+                            required>
+                            <option value="">Select a standard</option>
+                            {% for standard in form.standard.field.queryset %}
+                                <option value="{{ standard.pk }}" {% if form.standard.value == standard.pk %}selected{% endif %}>
+                                    {{ standard.code }} - {{ standard.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.standard.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.standard.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_clause" class="form-label required">Clause Reference</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.clause.errors %}is-invalid{% endif %}" 
+                            id="id_clause" 
+                            name="clause" 
+                            value="{{ form.clause.value|default:'' }}" 
+                            placeholder="e.g., 4.1, 7.5.1"
+                            required>
+                        {% if form.clause.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.clause.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_category" class="form-label required">Category</label>
+                        <select 
+                            class="form-select {% if form.category.errors %}is-invalid{% endif %}" 
+                            id="id_category" 
+                            name="category" 
+                            required>
+                            <option value="">Select category</option>
+                            {% for value, label in form.category.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}" {% if form.category.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.category.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.category.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_due_date" class="form-label">Due Date</label>
+                        <input 
+                            type="date" 
+                            class="form-control {% if form.due_date.errors %}is-invalid{% endif %}" 
+                            id="id_due_date" 
+                            name="due_date" 
+                            value="{{ form.due_date.value|default:'' }}">
+                        {% if form.due_date.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.due_date.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Due date for corrective action (optional)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Finding Details -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Finding Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <label for="id_objective_evidence" class="form-label required">Objective Evidence</label>
+                        <textarea 
+                            class="form-control {% if form.objective_evidence.errors %}is-invalid{% endif %}" 
+                            id="id_objective_evidence" 
+                            name="objective_evidence" 
+                            rows="4" 
+                            required>{{ form.objective_evidence.value|default:'' }}</textarea>
+                        {% if form.objective_evidence.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.objective_evidence.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_statement_of_nc" class="form-label required">Statement of Nonconformity</label>
+                        <textarea 
+                            class="form-control {% if form.statement_of_nc.errors %}is-invalid{% endif %}" 
+                            id="id_statement_of_nc" 
+                            name="statement_of_nc" 
+                            rows="4" 
+                            required>{{ form.statement_of_nc.value|default:'' }}</textarea>
+                        {% if form.statement_of_nc.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.statement_of_nc.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_auditor_explanation" class="form-label required">Auditor Explanation</label>
+                        <textarea 
+                            class="form-control {% if form.auditor_explanation.errors %}is-invalid{% endif %}" 
+                            id="id_auditor_explanation" 
+                            name="auditor_explanation" 
+                            rows="4" 
+                            required>{{ form.auditor_explanation.value|default:'' }}</textarea>
+                        {% if form.auditor_explanation.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.auditor_explanation.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Nonconformity</button>
+    </div>
+</form>
+{% endblock %}
+

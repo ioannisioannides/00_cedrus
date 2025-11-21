@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Report - {{ audit.organization.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            page-break-after: avoid;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            table-layout: fixed;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        table th {
+            background-color: #f2f2f2;
+        }
+        .nc-item {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            page-break-inside: avoid;
+        }
+        .nc-item p {
+            margin: 8px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                margin: 15px;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+            .header {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            table tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 20px;">
+        <button onclick="window.print()" class="btn">Print</button>
+        <a href="{% url 'audits:audit_detail' audit.pk %}">Back to Detail</a>
+    </div>
+
+    <div class="header">
+        <h1>Audit Report</h1>
+        <p><strong>Organization:</strong> {{ audit.organization.name }}</p>
+        <p><strong>Audit Type:</strong> {{ audit.get_audit_type_display }}</p>
+        <p><strong>Dates:</strong> {{ audit.total_audit_date_from }} to {{ audit.total_audit_date_to }}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Basic Information</div>
+        <table>
+            <tr>
+                <th>Organization</th>
+                <td>{{ audit.organization.name }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{{ audit.get_audit_type_display }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ audit.get_status_display }}</td>
+            </tr>
+            <tr>
+                <th>Dates</th>
+                <td>{{ audit.total_audit_date_from }} to {{ audit.total_audit_date_to }}</td>
+            </tr>
+            <tr>
+                <th>Duration</th>
+                <td>{{ audit.planned_duration_hours }} hours</td>
+            </tr>
+            <tr>
+                <th>Lead Auditor</th>
+                <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Nonconformities</div>
+        {% if nonconformities %}
+            {% for nc in nonconformities %}
+                <div class="nc-item">
+                    <p><strong>Clause:</strong> {{ nc.clause }} | <strong>Category:</strong> {{ nc.get_category_display }} | <strong>Status:</strong> {{ nc.get_verification_status_display }}</p>
+                    <p><strong>Objective Evidence:</strong> {{ nc.objective_evidence }}</p>
+                    <p><strong>Statement of NC:</strong> {{ nc.statement_of_nc }}</p>
+                    {% if nc.client_root_cause %}
+                        <p><strong>Root Cause:</strong> {{ nc.client_root_cause }}</p>
+                    {% endif %}
+                    {% if nc.client_corrective_action %}
+                        <p><strong>Corrective Action:</strong> {{ nc.client_corrective_action }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No nonconformities.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <div class="section-title">Observations</div>
+        {% if observations %}
+            {% for obs in observations %}
+                <p><strong>{{ obs.clause }}:</strong> {{ obs.statement }}</p>
+            {% endfor %}
+        {% else %}
+            <p>No observations.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <div class="section-title">Opportunities for Improvement</div>
+        {% if ofis %}
+            {% for ofi in ofis %}
+                <p><strong>{{ ofi.clause }}:</strong> {{ ofi.description }}</p>
+            {% endfor %}
+        {% else %}
+            <p>No opportunities for improvement.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+

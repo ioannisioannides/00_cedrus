@@ -1,0 +1,99 @@
+[MASTER]
+init-hook='import sys; sys.path.append(".")'
+load-plugins=pylint_django
+django-settings-module=cedrus.settings
+
+[MESSAGES CONTROL]
+disable=
+    C0111,  # missing-docstring
+    C0103,  # invalid-name
+    R0903,  # too-few-public-methods
+    E1101,  # no-member (Django dynamic attributes)
+    E5142,  # imported-auth-user (Django best practice, not an error)
+    W0212,  # protected-access
+    C0330,  # bad-continuation
+    R0801,  # duplicate-code
+
+[FORMAT]
+max-line-length=120
+indent-string='    '
+
+[BASIC]
+good-names=i,j,k,ex,_,id,pk
+
+[DESIGN]
+max-attributes=15
+max-args=10
+
+[TYPECHECK]
+# Django dynamic attributes that pylint doesn't recognize
+# Comprehensive list covering common Django patterns
+generated-members=
+    objects,
+    DoesNotExist,
+    MultipleObjectsReturned,
+    id,
+    pk,
+    _meta,
+    _default_manager,
+    _base_manager,
+    # Common reverse relation patterns
+    *_set,
+    # QuerySet methods
+    get,
+    filter,
+    exclude,
+    all,
+    count,
+    exists,
+    first,
+    last,
+    create,
+    update,
+    delete,
+    get_or_create,
+    update_or_create,
+    bulk_create,
+    select_related,
+    prefetch_related,
+    # Model instance methods
+    save,
+    clean,
+    full_clean,
+    # OneToOne reverse relations (common in our models)
+    changes,
+    plan_review,
+    summary,
+    recommendation,
+    technical_review,
+    certification_decision,
+    recurrence_data,
+    profile,
+    # ForeignKey reverse relations
+    team_members,
+    status_logs,
+    evidence_files,
+    competence_warnings,
+    sites,
+    certifications,
+    audits,
+    members,
+    subcategories,
+    nonconformities
+
+# Ignore missing member warnings for Django ForeignKey/OneToOne related fields
+ignored-classes=
+    ForeignKey,
+    OneToOneField,
+    ManyToManyField,
+    Manager,
+    QuerySet,
+    RelatedManager
+
+# Ignore specific modules that use Django patterns extensively
+ignored-modules=
+    django.db.models,
+    django.contrib.auth.models
+
+# Signature differences for Django test methods (assertContains has case_insensitive in Django)
+signature-mutators=django.test.TestCase.assertContains,django.test.TestCase.assertNotContains

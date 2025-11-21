@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Cedrus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: calc(100vh - 64px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .login-header {
+        text-align: center;
+        padding: 2rem 2rem 1rem;
+        background: linear-gradient(135deg, var(--cedrus-primary) 0%, var(--cedrus-primary-light) 100%);
+        color: #ffffff;
+        border-radius: var(--cedrus-radius-lg) var(--cedrus-radius-lg) 0 0;
+    }
+    
+    .login-header h1 {
+        color: #ffffff;
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .login-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+        font-size: 0.875rem;
+    }
+    
+    .login-body {
+        padding: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card login-card">
+        <div class="login-header">
+            <h1>Cedrus</h1>
+            <p>Audit & Compliance Platform</p>
+        </div>
+        <div class="login-body">
+            <h2 class="h4 mb-4" style="text-align: center; color: var(--cedrus-text);">Sign In</h2>
+            
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Authentication Error:</strong>
+                        {% if form.non_field_errors %}
+                            {{ form.non_field_errors }}
+                        {% else %}
+                            Please check your username and password.
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                {% if next %}
+                    {% if user.is_authenticated %}
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Access Denied:</strong> Your account doesn't have access to this page. Please log in with an account that has access.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            Please log in to access this page.
+                        </div>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="id_username" class="form-label required">Username</label>
+                    <input 
+                        type="text" 
+                        class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                        id="id_username" 
+                        name="username" 
+                        value="{{ form.username.value|default:'' }}" 
+                        required 
+                        autofocus
+                        autocomplete="username"
+                        placeholder="Enter your username">
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.username.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password" class="form-label required">Password</label>
+                    <input 
+                        type="password" 
+                        class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                        id="id_password" 
+                        name="password" 
+                        required
+                        autocomplete="current-password"
+                        placeholder="Enter your password">
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.password.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <input type="hidden" name="next" value="{{ next }}">
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'audits:audit_list' %}">Audits</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audits:audit_detail' audit.pk %}">{{ audit.audit_number }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ page_title }}</h2>
+            <p class="text-muted">
+                Audit: <strong>{{ audit.audit_number }}</strong> - {{ audit.organization.name }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        {% if finding %}
+                            Edit {{ finding_type }}
+                        {% else %}
+                            Add {{ finding_type }}
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Standard and Clause -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.standard.id_for_label }}" class="form-label">
+                                    Standard {% if form.standard.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ form.standard }}
+                                {% if form.standard.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.standard.errors }}
+                                </div>
+                                {% endif %}
+                                {% if form.standard.help_text %}
+                                <div class="form-text">{{ form.standard.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.clause.id_for_label }}" class="form-label">
+                                    Clause Reference {% if form.clause.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ form.clause }}
+                                {% if form.clause.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.clause.errors }}
+                                </div>
+                                {% endif %}
+                                {% if form.clause.help_text %}
+                                <div class="form-text">{{ form.clause.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Site (for multi-site audits) -->
+                        {% if form.site %}
+                        <div class="mb-3">
+                            <label for="{{ form.site.id_for_label }}" class="form-label">
+                                Site {% if form.site.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.site }}
+                            {% if form.site.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.site.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.site.help_text %}
+                            <div class="form-text">{{ form.site.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Category (for Nonconformities only) -->
+                        {% if form.category %}
+                        <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                Severity {% if form.category.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.category.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.category.help_text %}
+                            <div class="form-text">{{ form.category.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Nonconformity-specific fields -->
+                        {% if form.objective_evidence %}
+                        <div class="mb-3">
+                            <label for="{{ form.objective_evidence.id_for_label }}" class="form-label">
+                                Objective Evidence {% if form.objective_evidence.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.objective_evidence }}
+                            {% if form.objective_evidence.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.objective_evidence.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.objective_evidence.help_text %}
+                            <div class="form-text">{{ form.objective_evidence.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.statement_of_nc.id_for_label }}" class="form-label">
+                                Statement of Nonconformity {% if form.statement_of_nc.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.statement_of_nc }}
+                            {% if form.statement_of_nc.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.statement_of_nc.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.statement_of_nc.help_text %}
+                            <div class="form-text">{{ form.statement_of_nc.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.auditor_explanation.id_for_label }}" class="form-label">
+                                Auditor Explanation {% if form.auditor_explanation.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.auditor_explanation }}
+                            {% if form.auditor_explanation.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.auditor_explanation.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.auditor_explanation.help_text %}
+                            <div class="form-text">{{ form.auditor_explanation.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Observation-specific fields -->
+                        {% if form.statement and not form.objective_evidence %}
+                        <div class="mb-3">
+                            <label for="{{ form.statement.id_for_label }}" class="form-label">
+                                Observation Statement {% if form.statement.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.statement }}
+                            {% if form.statement.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.statement.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.statement.help_text %}
+                            <div class="form-text">{{ form.statement.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.explanation.id_for_label }}" class="form-label">
+                                Additional Explanation {% if form.explanation.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.explanation }}
+                            {% if form.explanation.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.explanation.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.explanation.help_text %}
+                            <div class="form-text">{{ form.explanation.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- OFI-specific fields -->
+                        {% if form.description %}
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description {% if form.description.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors }}
+                            </div>
+                            {% endif %}
+                            {% if form.description.help_text %}
+                            <div class="form-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> 
+                                {% if finding %}Update{% else %}Add{% endif %} {{ finding_type }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

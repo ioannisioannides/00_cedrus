@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Certification - Cedrus{% endblock %}
+
+{% block content %}
+<h1>{% if object %}Edit{% else %}Create{% endif %} Certification</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="id_organization" class="form-label">Organization *</label>
+                <select class="form-select" id="id_organization" name="organization" required>
+                    {% for org in form.organization.field.queryset %}
+                        <option value="{{ org.pk }}" {% if form.organization.value == org.pk %}selected{% endif %}>{{ org.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="id_standard" class="form-label">Standard *</label>
+                <select class="form-select" id="id_standard" name="standard" required>
+                    {% for std in form.standard.field.queryset %}
+                        <option value="{{ std.pk }}" {% if form.standard.value == std.pk %}selected{% endif %}>{{ std.code }} - {{ std.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="id_certification_scope" class="form-label">Certification Scope *</label>
+                <textarea class="form-control" id="id_certification_scope" name="certification_scope" rows="3" required>{{ form.certification_scope.value|default:'' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="id_certificate_id" class="form-label">Certificate ID</label>
+                <input type="text" class="form-control" id="id_certificate_id" name="certificate_id" value="{{ form.certificate_id.value|default:'' }}">
+            </div>
+            <div class="mb-3">
+                <label for="id_certificate_status" class="form-label">Status *</label>
+                <select class="form-select" id="id_certificate_status" name="certificate_status" required>
+                    {% for value, label in form.certificate_status.field.choices %}
+                        <option value="{{ value }}" {% if form.certificate_status.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="id_issue_date" class="form-label">Issue Date</label>
+                        <input type="date" class="form-control" id="id_issue_date" name="issue_date" value="{{ form.issue_date.value|default:'' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="id_expiry_date" class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control" id="id_expiry_date" name="expiry_date" value="{{ form.expiry_date.value|default:'' }}">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'core:certification_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

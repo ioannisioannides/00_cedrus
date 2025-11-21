@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Audit {{ audit.pk }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'audits:audit_list' %}">Audits</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audits:audit_detail' audit.pk %}">Audit #{{ audit.pk }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ page_title }}</h4>
+                    <p class="text-muted mb-0 mt-1">
+                        <small>{{ audit.organization.name }} - {{ audit.get_audit_type_display }}</small>
+                    </p>
+                </div>
+                <div class="card-body">
+                    {% if competence_warnings %}
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Competence Warnings</h5>
+                        <p>The following warnings have been identified for this team member:</p>
+                        <ul class="mb-0">
+                            {% for warning in competence_warnings %}
+                            <li><strong>{{ warning.get_warning_type_display }}:</strong> {{ warning.message }}</li>
+                            {% endfor %}
+                        </ul>
+                        <hr>
+                        <p class="mb-0"><small>These warnings do not prevent adding the team member but should be reviewed by the CB Admin.</small></p>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.user.id_for_label }}" class="form-label">
+                                    User (Internal Team Member)
+                                    {% if form.user.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ form.user }}
+                                {% if form.user.help_text %}
+                                <div class="form-text">{{ form.user.help_text }}</div>
+                                {% endif %}
+                                {% if form.user.errors %}
+                                <div class="invalid-feedback d-block">{{ form.user.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    Name
+                                    {% if form.name.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.help_text %}
+                                <div class="form-text">{{ form.name.help_text }}</div>
+                                {% endif %}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    Title/Designation
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.help_text %}
+                                <div class="form-text">{{ form.title.help_text }}</div>
+                                {% endif %}
+                                {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.role.id_for_label }}" class="form-label">
+                                    Role in Audit
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.role }}
+                                {% if form.role.help_text %}
+                                <div class="form-text">{{ form.role.help_text }}</div>
+                                {% endif %}
+                                {% if form.role.errors %}
+                                <div class="invalid-feedback d-block">{{ form.role.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_from.id_for_label }}" class="form-label">
+                                    Start Date
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date_from }}
+                                {% if form.date_from.help_text %}
+                                <div class="form-text">{{ form.date_from.help_text }}</div>
+                                {% endif %}
+                                {% if form.date_from.errors %}
+                                <div class="invalid-feedback d-block">{{ form.date_from.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_to.id_for_label }}" class="form-label">
+                                    End Date
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date_to }}
+                                {% if form.date_to.help_text %}
+                                <div class="form-text">{{ form.date_to.help_text }}</div>
+                                {% endif %}
+                                {% if form.date_to.errors %}
+                                <div class="invalid-feedback d-block">{{ form.date_to.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <small><strong>Note:</strong> Audit dates: {{ audit.total_audit_date_from|date:"M d, Y" }} to {{ audit.total_audit_date_to|date:"M d, Y" }}</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Save Team Member
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-fill name from user selection
+document.addEventListener('DOMContentLoaded', function() {
+    const userSelect = document.getElementById('{{ form.user.id_for_label }}');
+    const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+    
+    if (userSelect && nameInput) {
+        userSelect.addEventListener('change', function() {
+            if (this.value) {
+                // User selected - will auto-fill on server side
+                // For now, just clear placeholder
+                nameInput.placeholder = 'Will be auto-filled from user';
+                nameInput.disabled = true;
+            } else {
+                // External expert - enable manual entry
+                nameInput.placeholder = 'Enter name for external expert';
+                nameInput.disabled = false;
+                nameInput.value = '';
+            }
+        });
+        
+        // Initialize state
+        if (userSelect.value) {
+            nameInput.disabled = true;
+        }
+    }
+});
+</script>
+{% endblock %}

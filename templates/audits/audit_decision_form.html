@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Make Certification Decision - Audit {{ audit.pk }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Make Certification Decision</h1>
+        <p class="page-subtitle">Audit #{{ audit.pk }} - {{ audit.organization.name }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Warning Alert -->
+        <div class="alert alert-warning" role="alert">
+            <h6 class="alert-heading"><strong>⚠️ Final Decision</strong></h6>
+            <p class="mb-0">Making a certification decision will mark this audit as "Decided" and lock it from further editing. Please review all audit findings, responses, and recommendations before proceeding.</p>
+        </div>
+        
+        <!-- Audit Summary Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Audit Summary</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Organization</dt>
+                    <dd class="col-sm-8">{{ audit.organization.name }}</dd>
+                    
+                    <dt class="col-sm-4">Audit Type</dt>
+                    <dd class="col-sm-8">{{ audit.get_audit_type_display }}</dd>
+                    
+                    <dt class="col-sm-4">Lead Auditor</dt>
+                    <dd class="col-sm-8">{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</dd>
+                    
+                    <dt class="col-sm-4">Major NCs</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-danger">{{ audit.nonconformity_set.filter|length }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Standards</dt>
+                    <dd class="col-sm-8">
+                        {% for cert in audit.certifications.all %}
+                            <span class="badge bg-secondary">{{ cert.standard.code }}</span>
+                        {% endfor %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        
+        <!-- Decision Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Review Recommendations and Make Decision</h5>
+                <p class="mb-0 text-muted">Review or update the audit recommendations, then finalize the decision</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Special Audit -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check mb-3">
+                            {{ form.special_audit_required }}
+                            <label class="form-check-label" for="{{ form.special_audit_required.id_for_label }}">
+                                <strong>Special Audit Required</strong>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.special_audit_details.id_for_label }}" class="form-label">
+                                Special Audit Details
+                            </label>
+                            {{ form.special_audit_details }}
+                            {% if form.special_audit_details.errors %}
+                                <div class="text-danger small">{{ form.special_audit_details.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Suspension -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check mb-3">
+                            {{ form.suspension_recommended }}
+                            <label class="form-check-label" for="{{ form.suspension_recommended.id_for_label }}">
+                                <strong>Suspend Certification(s)</strong>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.suspension_certificates.id_for_label }}" class="form-label">
+                                Certificates to Suspend
+                            </label>
+                            {{ form.suspension_certificates }}
+                            {% if form.suspension_certificates.errors %}
+                                <div class="text-danger small">{{ form.suspension_certificates.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Revocation -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check mb-3">
+                            {{ form.revocation_recommended }}
+                            <label class="form-check-label" for="{{ form.revocation_recommended.id_for_label }}">
+                                <strong>Revoke Certification(s)</strong>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.revocation_certificates.id_for_label }}" class="form-label">
+                                Certificates to Revoke
+                            </label>
+                            {{ form.revocation_certificates }}
+                            {% if form.revocation_certificates.errors %}
+                                <div class="text-danger small">{{ form.revocation_certificates.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Stage 2 Required -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check">
+                            {{ form.stage2_required }}
+                            <label class="form-check-label" for="{{ form.stage2_required.id_for_label }}">
+                                <strong>Stage 2 Audit Required</strong>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Decision Notes -->
+                    <div class="mb-4">
+                        <label for="{{ form.decision_notes.id_for_label }}" class="form-label">
+                            <strong>Final Decision Notes</strong>
+                        </label>
+                        {{ form.decision_notes }}
+                        {% if form.decision_notes.errors %}
+                            <div class="text-danger small">{{ form.decision_notes.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Document the rationale for this certification decision.</div>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <strong>Next Steps:</strong> After clicking "Finalize Decision", the audit status will change to "Decided" and certification statuses will be updated according to your selections.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to finalize this certification decision? This action cannot be undone.');">
+                            <strong>✓ Finalize Decision</strong>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6>Decision Guidance</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-2"><strong>Grant Certification:</strong> No major NCs, all requirements met.</p>
+                <p class="small mb-2"><strong>Suspend:</strong> Serious non-compliance requiring corrective action within timeframe.</p>
+                <p class="small mb-2"><strong>Revoke:</strong> Severe non-compliance, loss of confidence, or persistent failures.</p>
+                <p class="small mb-0"><strong>ISO Reference:</strong> ISO/IEC 17021-1:2015, 9.4-9.6</p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6>Recommendations</h6>
+            </div>
+            <div class="card-body">
+                {% if recommendation.special_audit_required %}
+                    <p class="small mb-1">✓ Special audit recommended</p>
+                {% endif %}
+                {% if recommendation.suspension_recommended %}
+                    <p class="small mb-1 text-warning">⚠️ Suspension recommended</p>
+                {% endif %}
+                {% if recommendation.revocation_recommended %}
+                    <p class="small mb-1 text-danger">⛔ Revocation recommended</p>
+                {% endif %}
+                {% if recommendation.stage2_required %}
+                    <p class="small mb-1">✓ Stage 2 required</p>
+                {% endif %}
+                {% if not recommendation.special_audit_required and not recommendation.suspension_recommended and not recommendation.revocation_recommended and not recommendation.stage2_required %}
+                    <p class="small text-muted mb-0">No special recommendations</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

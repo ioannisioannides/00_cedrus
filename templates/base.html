@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cedrus - Professional Audit & Compliance Management Platform">
+    <title>{% block title %}Cedrus - Audit & Compliance Platform{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Cedrus Design System -->
+    <link href="{% static 'css/cedrus.css' %}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'accounts:dashboard' %}">Cedrus</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
+                        {% if user.groups.all %}
+                            {% for group in user.groups.all %}
+                                {% if group.name == "cb_admin" %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_cb' %}active{% endif %}" href="{% url 'accounts:dashboard_cb' %}">Dashboard</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'organization' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:organization_list' %}">Organizations</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'site' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:site_list' %}">Sites</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'standard' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:standard_list' %}">Standards</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'certification' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:certification_list' %}">Certifications</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audits:audit_list' %}">Audits</a>
+                                    </li>
+                                {% elif group.name == "lead_auditor" or group.name == "auditor" %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_auditor' %}active{% endif %}" href="{% url 'accounts:dashboard_auditor' %}">Dashboard</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audits:audit_list' %}">My Audits</a>
+                                    </li>
+                                {% elif group.name == "client_admin" or group.name == "client_user" %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_client' %}active{% endif %}" href="{% url 'accounts:dashboard_client' %}">Dashboard</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audits:audit_list' %}">Our Audits</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span>{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</span>
+                                {% if user.profile %}
+                                    <small class="d-block" style="font-size: 0.75rem; opacity: 0.8;">{{ user.profile.get_role_display }}</small>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <div>{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container-fluid text-center">
+            <small>&copy; {% now "Y" %} Cedrus - Audit & Compliance Platform. All rights reserved.</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

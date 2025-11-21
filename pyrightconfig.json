@@ -1,0 +1,43 @@
+{
+  "include": [
+    "audits",
+    "trunk",
+    "core",
+    "accounts",
+    "cedrus"
+  ],
+  "exclude": [
+    "**/migrations",
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.venv"
+  ],
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportGeneralTypeIssues": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportOptionalSubscript": "none",
+  "reportOptionalCall": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownVariableType": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportPossiblyUnboundVariable": "none",
+  "reportUnusedVariable": "warning",
+  "reportIncompatibleMethodOverride": "none",
+  "reportIncompatibleVariableOverride": "none",
+  "reportUndefinedVariable": "none",
+  "reportRedeclaration": "none",
+  "stubPath": "",
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Darwin",
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonVersion": "3.13",
+      "extraPaths": [
+        "."
+      ]
+    }
+  ]
+}

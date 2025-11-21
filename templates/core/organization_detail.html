@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}{{ organization.name }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{{ organization.name }}</h1>
+        <p class="page-subtitle">Organization Details</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'core:organization_update' organization.pk %}" class="btn btn-primary">Edit</a>
+        <a href="{% url 'core:organization_list' %}" class="btn btn-outline-secondary">Back to List</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Basic Information -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Customer ID</dt>
+                    <dd class="col-sm-7">
+                        <code style="background-color: var(--cedrus-gray-100); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">{{ organization.customer_id }}</code>
+                    </dd>
+                    
+                    <dt class="col-sm-5">Registered ID</dt>
+                    <dd class="col-sm-7">{{ organization.registered_id|default:"—" }}</dd>
+                    
+                    <dt class="col-sm-5">Registered Address</dt>
+                    <dd class="col-sm-7">{{ organization.registered_address|linebreaks }}</dd>
+                    
+                    <dt class="col-sm-5">Total Employees</dt>
+                    <dd class="col-sm-7">
+                        <strong>{{ organization.total_employee_count|default:"—" }}</strong>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contact Information -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Contact Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Telephone</dt>
+                    <dd class="col-sm-7">
+                        {% if organization.contact_telephone %}
+                            <a href="tel:{{ organization.contact_telephone }}">{{ organization.contact_telephone }}</a>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-5">Fax</dt>
+                    <dd class="col-sm-7">{{ organization.contact_fax|default:"—" }}</dd>
+                    
+                    <dt class="col-sm-5">Email</dt>
+                    <dd class="col-sm-7">
+                        {% if organization.contact_email %}
+                            <a href="mailto:{{ organization.contact_email }}">{{ organization.contact_email }}</a>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-5">Website</dt>
+                    <dd class="col-sm-7">
+                        {% if organization.contact_website %}
+                            <a href="{{ organization.contact_website }}" target="_blank" rel="noopener noreferrer">
+                                {{ organization.contact_website }}
+                                <small class="text-muted">↗</small>
+                            </a>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-0">
+    <!-- Signatory -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Signatory</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Name</dt>
+                    <dd class="col-sm-7">{{ organization.signatory_name|default:"—" }}</dd>
+                    
+                    <dt class="col-sm-5">Title</dt>
+                    <dd class="col-sm-7">{{ organization.signatory_title|default:"—" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MS Representative -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>MS Representative</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Name</dt>
+                    <dd class="col-sm-7">{{ organization.ms_representative_name|default:"—" }}</dd>
+                    
+                    <dt class="col-sm-5">Title</dt>
+                    <dd class="col-sm-7">{{ organization.ms_representative_title|default:"—" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

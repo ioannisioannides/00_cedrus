@@ -1,0 +1,29 @@
+[tool.black]
+line-length = 120
+target-version = ['py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip_gitignore = true
+known_django = "django"
+known_first_party = ["cedrus", "accounts", "audits", "core", "trunk"]
+sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]

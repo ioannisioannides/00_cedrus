@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Recommendations - Audit {{ audit.pk }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Audit Recommendations</h1>
+        <p class="page-subtitle">Audit #{{ audit.pk }} - {{ audit.organization.name }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Lead Auditor Recommendations</h5>
+                <p class="mb-0 text-muted">Provide recommendations for certification decisions</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Special Audit -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check mb-3">
+                            {{ form.special_audit_required }}
+                            <label class="form-check-label" for="{{ form.special_audit_required.id_for_label }}">
+                                <strong>Special Audit Required</strong>
+                            </label>
+                            {% if form.special_audit_required.errors %}
+                                <div class="text-danger small">{{ form.special_audit_required.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.special_audit_details.id_for_label }}" class="form-label">
+                                Special Audit Details
+                                <span class="text-muted">(required if special audit is recommended)</span>
+                            </label>
+                            {{ form.special_audit_details }}
+                            {% if form.special_audit_details.errors %}
+                                <div class="text-danger small">{{ form.special_audit_details.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Specify scope, reason, and timing for the special audit.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Suspension -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check mb-3">
+                            {{ form.suspension_recommended }}
+                            <label class="form-check-label" for="{{ form.suspension_recommended.id_for_label }}">
+                                <strong>Suspension Recommended</strong>
+                            </label>
+                            {% if form.suspension_recommended.errors %}
+                                <div class="text-danger small">{{ form.suspension_recommended.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.suspension_certificates.id_for_label }}" class="form-label">
+                                Certificates to Suspend
+                                <span class="text-muted">(required if suspension is recommended)</span>
+                            </label>
+                            {{ form.suspension_certificates }}
+                            {% if form.suspension_certificates.errors %}
+                                <div class="text-danger small">{{ form.suspension_certificates.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">List certificate numbers and standards to be suspended.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Revocation -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check mb-3">
+                            {{ form.revocation_recommended }}
+                            <label class="form-check-label" for="{{ form.revocation_recommended.id_for_label }}">
+                                <strong>Revocation Recommended</strong>
+                            </label>
+                            {% if form.revocation_recommended.errors %}
+                                <div class="text-danger small">{{ form.revocation_recommended.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.revocation_certificates.id_for_label }}" class="form-label">
+                                Certificates to Revoke
+                                <span class="text-muted">(required if revocation is recommended)</span>
+                            </label>
+                            {{ form.revocation_certificates }}
+                            {% if form.revocation_certificates.errors %}
+                                <div class="text-danger small">{{ form.revocation_certificates.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">List certificate numbers and standards to be revoked/withdrawn.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stage 2 Required -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="form-check">
+                            {{ form.stage2_required }}
+                            <label class="form-check-label" for="{{ form.stage2_required.id_for_label }}">
+                                <strong>Stage 2 Audit Required</strong>
+                            </label>
+                            {% if form.stage2_required.errors %}
+                                <div class="text-danger small">{{ form.stage2_required.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Check if this Stage 1 audit requires a Stage 2 audit before certification.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Decision Notes -->
+                    <div class="mb-4">
+                        <label for="{{ form.decision_notes.id_for_label }}" class="form-label">
+                            <strong>Additional Decision Notes</strong>
+                        </label>
+                        {{ form.decision_notes }}
+                        {% if form.decision_notes.errors %}
+                            <div class="text-danger small">{{ form.decision_notes.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Any additional notes or recommendations for the Certification Body.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Recommendations</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6>Guidance</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-2"><strong>Purpose:</strong> Provide clear recommendations to support CB decision-making.</p>
+                <p class="small mb-2"><strong>Suspension:</strong> Temporary withdrawal for corrective action.</p>
+                <p class="small mb-2"><strong>Revocation:</strong> Permanent withdrawal of certification.</p>
+                <p class="small mb-0"><strong>ISO Reference:</strong> ISO/IEC 17021-1:2015, 9.4</p>
+            </div>
+        </div>
+        
+        {% if audit.status == 'submitted_to_cb' %}
+        <div class="card mt-3 border-warning">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h6 class="mb-0">⚠️ Audit Status</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-0">This audit has been submitted to the CB for decision. CB Admin can now make the final certification decision.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Organization - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{% if object %}Edit{% else %}Create{% endif %} Organization</h1>
+        <p class="page-subtitle">{% if object %}Update organization information{% else %}Add a new organization to the system{% endif %}</p>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    <div class="row g-4">
+        <!-- Basic Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="id_name" class="form-label required">Organization Name</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                            id="id_name" 
+                            name="name" 
+                            value="{{ form.name.value|default:'' }}" 
+                            required
+                            placeholder="Enter organization name">
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_customer_id" class="form-label required">Customer ID</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.customer_id.errors %}is-invalid{% endif %}" 
+                            id="id_customer_id" 
+                            name="customer_id" 
+                            value="{{ form.customer_id.value|default:'' }}" 
+                            required
+                            placeholder="Enter customer ID">
+                        {% if form.customer_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.customer_id.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_registered_id" class="form-label">Registered ID</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.registered_id.errors %}is-invalid{% endif %}" 
+                            id="id_registered_id" 
+                            name="registered_id" 
+                            value="{{ form.registered_id.value|default:'' }}"
+                            placeholder="Enter registered ID (optional)">
+                        {% if form.registered_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.registered_id.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_registered_address" class="form-label required">Registered Address</label>
+                        <textarea 
+                            class="form-control {% if form.registered_address.errors %}is-invalid{% endif %}" 
+                            id="id_registered_address" 
+                            name="registered_address" 
+                            rows="4" 
+                            required
+                            placeholder="Enter registered address">{{ form.registered_address.value|default:'' }}</textarea>
+                        {% if form.registered_address.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.registered_address.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_total_employee_count" class="form-label required">Total Employee Count</label>
+                        <input 
+                            type="number" 
+                            class="form-control {% if form.total_employee_count.errors %}is-invalid{% endif %}" 
+                            id="id_total_employee_count" 
+                            name="total_employee_count" 
+                            value="{{ form.total_employee_count.value|default:'' }}" 
+                            min="1" 
+                            required
+                            placeholder="Enter total number of employees">
+                        {% if form.total_employee_count.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.total_employee_count.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="id_contact_telephone" class="form-label">Telephone</label>
+                        <input 
+                            type="tel" 
+                            class="form-control {% if form.contact_telephone.errors %}is-invalid{% endif %}" 
+                            id="id_contact_telephone" 
+                            name="contact_telephone" 
+                            value="{{ form.contact_telephone.value|default:'' }}"
+                            placeholder="Enter telephone number">
+                        {% if form.contact_telephone.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contact_telephone.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_contact_fax" class="form-label">Fax</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.contact_fax.errors %}is-invalid{% endif %}" 
+                            id="id_contact_fax" 
+                            name="contact_fax" 
+                            value="{{ form.contact_fax.value|default:'' }}"
+                            placeholder="Enter fax number">
+                        {% if form.contact_fax.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contact_fax.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_contact_email" class="form-label">Email</label>
+                        <input 
+                            type="email" 
+                            class="form-control {% if form.contact_email.errors %}is-invalid{% endif %}" 
+                            id="id_contact_email" 
+                            name="contact_email" 
+                            value="{{ form.contact_email.value|default:'' }}"
+                            placeholder="Enter email address">
+                        {% if form.contact_email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contact_email.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_contact_website" class="form-label">Website</label>
+                        <input 
+                            type="url" 
+                            class="form-control {% if form.contact_website.errors %}is-invalid{% endif %}" 
+                            id="id_contact_website" 
+                            name="contact_website" 
+                            value="{{ form.contact_website.value|default:'' }}"
+                            placeholder="https://example.com">
+                        {% if form.contact_website.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contact_website.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mt-0">
+        <!-- Signatory -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Signatory</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="id_signatory_name" class="form-label">Name</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.signatory_name.errors %}is-invalid{% endif %}" 
+                            id="id_signatory_name" 
+                            name="signatory_name" 
+                            value="{{ form.signatory_name.value|default:'' }}"
+                            placeholder="Enter signatory name">
+                        {% if form.signatory_name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.signatory_name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_signatory_title" class="form-label">Title</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.signatory_title.errors %}is-invalid{% endif %}" 
+                            id="id_signatory_title" 
+                            name="signatory_title" 
+                            value="{{ form.signatory_title.value|default:'' }}"
+                            placeholder="Enter signatory title">
+                        {% if form.signatory_title.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.signatory_title.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MS Representative -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>MS Representative</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="id_ms_representative_name" class="form-label">Name</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.ms_representative_name.errors %}is-invalid{% endif %}" 
+                            id="id_ms_representative_name" 
+                            name="ms_representative_name" 
+                            value="{{ form.ms_representative_name.value|default:'' }}"
+                            placeholder="Enter MS representative name">
+                        {% if form.ms_representative_name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.ms_representative_name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_ms_representative_title" class="form-label">Title</label>
+                        <input 
+                            type="text" 
+                            class="form-control {% if form.ms_representative_title.errors %}is-invalid{% endif %}" 
+                            id="id_ms_representative_title" 
+                            name="ms_representative_title" 
+                            value="{{ form.ms_representative_title.value|default:'' }}"
+                            placeholder="Enter MS representative title">
+                        {% if form.ms_representative_title.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.ms_representative_title.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% if object %}{% url 'core:organization_detail' object.pk %}{% else %}{% url 'core:organization_list' %}{% endif %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Organization</button>
+    </div>
+</form>
+{% endblock %}
+

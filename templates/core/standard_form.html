@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Standard - Cedrus{% endblock %}
+
+{% block content %}
+<h1>{% if object %}Edit{% else %}Create{% endif %} Standard</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="id_code" class="form-label">Code *</label>
+                <input type="text" class="form-control" id="id_code" name="code" value="{{ form.code.value|default:'' }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="id_title" class="form-label">Title *</label>
+                <input type="text" class="form-control" id="id_title" name="title" value="{{ form.title.value|default:'' }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="id_nace_code" class="form-label">NACE Code</label>
+                <input type="text" class="form-control" id="id_nace_code" name="nace_code" value="{{ form.nace_code.value|default:'' }}">
+            </div>
+            <div class="mb-3">
+                <label for="id_ea_code" class="form-label">EA Code</label>
+                <input type="text" class="form-control" id="id_ea_code" name="ea_code" value="{{ form.ea_code.value|default:'' }}">
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'core:standard_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

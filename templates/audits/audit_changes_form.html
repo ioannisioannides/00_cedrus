@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Organization Changes - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Organization Changes</h1>
+        <p class="page-subtitle">Audit #{{ audit.pk }} - {{ audit.organization.name }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Track Changes to Organization</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-check mb-3">
+                        {{ form.change_of_name }}
+                        <label class="form-check-label" for="{{ form.change_of_name.id_for_label }}">
+                            Change of Name
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.change_of_scope }}
+                        <label class="form-check-label" for="{{ form.change_of_scope.id_for_label }}">
+                            Change of Scope
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.change_of_sites }}
+                        <label class="form-check-label" for="{{ form.change_of_sites.id_for_label }}">
+                            Change of Sites
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.change_of_ms_rep }}
+                        <label class="form-check-label" for="{{ form.change_of_ms_rep.id_for_label }}">
+                            Change of Management System Representative
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-check mb-3">
+                        {{ form.change_of_signatory }}
+                        <label class="form-check-label" for="{{ form.change_of_signatory.id_for_label }}">
+                            Change of Signatory
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.change_of_employee_count }}
+                        <label class="form-check-label" for="{{ form.change_of_employee_count.id_for_label }}">
+                            Change of Employee Count
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.change_of_contact_info }}
+                        <label class="form-check-label" for="{{ form.change_of_contact_info.id_for_label }}">
+                            Change of Contact Information
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.other_has_change }}
+                        <label class="form-check-label" for="{{ form.other_has_change.id_for_label }}">
+                            Other Changes
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mt-3">
+                <label for="{{ form.other_description.id_for_label }}" class="form-label">Other Changes Description</label>
+                {{ form.other_description }}
+                {% if form.other_description.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.other_description.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Required if "Other Changes" is selected</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
+{% endblock %}
+

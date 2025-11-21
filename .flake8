@@ -1,0 +1,37 @@
+[flake8]
+# Enterprise Excellence Initiative - Week 1, Day 3-4
+# Flake8 linting configuration
+
+max-line-length = 100
+max-complexity = 10
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    .venv,
+    */migrations/*,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    .pytest_cache,
+    htmlcov
+
+# Error codes
+extend-ignore = 
+    E203,  # whitespace before ':' (conflicts with Black)
+    E501,  # line too long (handled by Black)
+    W503,  # line break before binary operator (conflicts with Black)
+
+per-file-ignores =
+    __init__.py:F401
+    */tests/*:F401,F811
+    */test_*.py:F401,F811
+
+# Statistics
+statistics = True
+count = True
+show-source = True
+
+# Warnings
+doctests = True

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Cedrus{% endblock %}
+
+{% block content %}
+<div class="alert alert-warning">
+    {{ message|default:"No role assigned. Please contact an administrator." }}
+</div>
+{% endblock %}
+

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Nonconformity {{ nc.clause }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Nonconformity Details</h1>
+        <p class="page-subtitle">Clause {{ nc.clause }} - Audit #{{ nc.audit.pk }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' nc.audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+        {% if can_edit %}
+            <a href="{% url 'audits:nonconformity_update' nc.pk %}" class="btn btn-primary">Edit</a>
+        {% endif %}
+        {% if can_respond %}
+            <a href="{% url 'audits:nonconformity_respond' nc.pk %}" class="btn btn-success">Respond</a>
+        {% endif %}
+        {% if can_verify %}
+            <a href="{% url 'audits:nonconformity_verify' nc.pk %}" class="btn btn-warning">Verify Response</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Basic Information -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Standard</dt>
+                    <dd class="col-sm-7">
+                        {% if nc.standard %}
+                            <strong>{{ nc.standard.code }}</strong> - {{ nc.standard.title }}
+                        {% else %}
+                            <span class="text-muted">Not specified</span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-5">Clause</dt>
+                    <dd class="col-sm-7"><strong>{{ nc.clause }}</strong></dd>
+                    
+                    <dt class="col-sm-5">Category</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge bg-{% if nc.category == 'major' %}danger{% else %}warning{% endif %}">
+                            {{ nc.get_category_display }}
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-5">Status</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge bg-secondary">{{ nc.get_verification_status_display }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-5">Due Date</dt>
+                    <dd class="col-sm-7">
+                        {% if nc.due_date %}
+                            {{ nc.due_date|date:"F d, Y" }}
+                        {% else %}
+                            <span class="text-muted">Not set</span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-5">Created By</dt>
+                    <dd class="col-sm-7">{{ nc.created_by.get_full_name|default:nc.created_by.username }}</dd>
+                    
+                    <dt class="col-sm-5">Created At</dt>
+                    <dd class="col-sm-7">{{ nc.created_at|date:"F d, Y H:i" }}</dd>
+                    
+                    {% if nc.verified_by %}
+                        <dt class="col-sm-5">Verified By</dt>
+                        <dd class="col-sm-7">{{ nc.verified_by.get_full_name|default:nc.verified_by.username }}</dd>
+                        
+                        <dt class="col-sm-5">Verified At</dt>
+                        <dd class="col-sm-7">{{ nc.verified_at|date:"F d, Y H:i" }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Finding Details -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Finding Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Objective Evidence</label>
+                    <p class="mb-0">{{ nc.objective_evidence|linebreaks }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Statement of Nonconformity</label>
+                    <p class="mb-0">{{ nc.statement_of_nc|linebreaks }}</p>
+                </div>
+                
+                <div class="mb-0">
+                    <label class="form-label fw-bold">Auditor Explanation</label>
+                    <p class="mb-0">{{ nc.auditor_explanation|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client Response Section -->
+{% if nc.client_root_cause or nc.client_correction or nc.client_corrective_action or can_respond %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Client Response</h5>
+    </div>
+    <div class="card-body">
+        {% if nc.verification_status == 'open' and not nc.client_root_cause %}
+            <div class="alert alert-info">
+                <strong>Awaiting client response.</strong>
+                {% if can_respond %}
+                    <a href="{% url 'audits:nonconformity_respond' nc.pk %}" class="btn btn-sm btn-success ms-2">Submit Response</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Root Cause Analysis</label>
+                    <p class="mb-0">
+                        {% if nc.client_root_cause %}
+                            {{ nc.client_root_cause|linebreaks }}
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Immediate Correction</label>
+                    <p class="mb-0">
+                        {% if nc.client_correction %}
+                            {{ nc.client_correction|linebreaks }}
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Corrective Action Plan</label>
+                    <p class="mb-0">
+                        {% if nc.client_corrective_action %}
+                            {{ nc.client_corrective_action|linebreaks }}
+                        {% else %}
+                            <span class="text-muted">Not provided</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            {% if can_respond and nc.verification_status == 'client_responded' %}
+                <div class="mt-3">
+                    <a href="{% url 'audits:nonconformity_respond' nc.pk %}" class="btn btn-sm btn-outline-primary">Update Response</a>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
