@@ -9,6 +9,8 @@
 # Built by: Dr. Thomas Berg (Caltech PhD, DevOps, 23 years)
 # ==============================================================================
 
+import sys
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -17,8 +19,6 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
-
-import sys
 
 
 @never_cache
