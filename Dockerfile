@@ -73,12 +73,15 @@ LABEL org.opencontainers.image.source="https://github.com/yourorg/cedrus"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # PostgreSQL client library
     libpq5 \
+    # PostgreSQL client for wait script
+    postgresql-client \
     # Security: CA certificates for HTTPS
     ca-certificates \
     # Timezone data
     tzdata \
-    # Network utilities for health checks
+    # Network utilities for health checks and startup
     curl \
+    netcat-openbsd \
     # File utilities
     gettext \
     && rm -rf /var/lib/apt/lists/* \
