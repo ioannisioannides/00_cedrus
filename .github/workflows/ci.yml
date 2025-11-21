@@ -64,8 +64,9 @@ jobs:
     
     - name: Security scan (Bandit)
       run: |
-        bandit -r accounts audits core cedrus -f json -o bandit-report.json
-        bandit -r accounts audits core cedrus -ll  # Low and above
+        # Use .bandit config to exclude test files and skip B101 (assert) warnings
+        bandit -r accounts audits core cedrus trunk -c .bandit -f json -o bandit-report.json
+        bandit -r accounts audits core cedrus trunk -c .bandit -ll  # Medium and above (B101 skipped)
     
     - name: Dependency vulnerability scan (pip-audit)
       run: |

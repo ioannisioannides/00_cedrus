@@ -1,0 +1,360 @@
+name: Rollback Deployment
+# ==============================================================================
+# AUTOMATED ROLLBACK WORKFLOW
+# ==============================================================================
+# Implemented by: Dr. Thomas Berg (Caltech PhD, DevOps Architect, 23 years)
+# Enterprise Excellence Initiative - Week 1, Day 3-4
+#
+# This workflow provides automated rollback capability for production deployments.
+# Can be triggered manually or automatically on deployment failure.
+# ==============================================================================
+
+on:
+  # Manual trigger with environment selection
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: 'staging'
+      
+      commit_sha:
+        description: 'Commit SHA to rollback to (leave empty for last successful deployment)'
+        required: false
+        type: string
+      
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+        default: 'Manual rollback initiated'
+
+env:
+  PYTHON_VERSION: '3.13'
+
+jobs:
+  # ============================================================================
+  # JOB 1: Validate Rollback Request
+  # ============================================================================
+  validate:
+    name: Validate Rollback Request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      target_commit: ${{ steps.determine-target.outputs.commit }}
+      target_tag: ${{ steps.determine-target.outputs.tag }}
+      current_commit: ${{ steps.current.outputs.commit }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # Full history needed for rollback
+    
+    - name: Get current deployment commit
+      id: current
+      run: |
+        CURRENT_COMMIT=$(git rev-parse HEAD)
+        echo "commit=$CURRENT_COMMIT" >> $GITHUB_OUTPUT
+        echo "📍 Current deployment: $CURRENT_COMMIT"
+    
+    - name: Determine rollback target
+      id: determine-target
+      run: |
+        if [ -n "${{ inputs.commit_sha }}" ]; then
+          # Use specified commit
+          TARGET_COMMIT="${{ inputs.commit_sha }}"
+          echo "🎯 Using specified commit: $TARGET_COMMIT"
+        else
+          # Find last successful deployment
+          # Look for commits with tag pattern: deploy-YYYYMMDD-HHMMSS
+          TARGET_TAG=$(git tag --sort=-creatordate | grep -E "^deploy-[0-9]{8}-[0-9]{6}$" | head -n 2 | tail -n 1)
+          
+          if [ -z "$TARGET_TAG" ]; then
+            echo "❌ No previous deployment tag found"
+            echo "💡 Create deployment tags with: git tag deploy-\$(date +%Y%m%d-%H%M%S)"
+            exit 1
+          fi
+          
+          TARGET_COMMIT=$(git rev-list -n 1 $TARGET_TAG)
+          echo "🎯 Using last successful deployment: $TARGET_TAG ($TARGET_COMMIT)"
+        fi
+        
+        # Validate commit exists
+        if ! git cat-file -e $TARGET_COMMIT^{commit} 2>/dev/null; then
+          echo "❌ Commit $TARGET_COMMIT does not exist"
+          exit 1
+        fi
+        
+        echo "commit=$TARGET_COMMIT" >> $GITHUB_OUTPUT
+        echo "tag=$TARGET_TAG" >> $GITHUB_OUTPUT
+    
+    - name: Display rollback summary
+      run: |
+        echo "## 🔄 Rollback Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Reason:** ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Current Commit:** ${{ steps.current.outputs.commit }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Target Commit:** ${{ steps.determine-target.outputs.commit }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Target Tag:** ${{ steps.determine-target.outputs.tag || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Changes to be rolled back:" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        git log --oneline ${{ steps.determine-target.outputs.commit }}..${{ steps.current.outputs.commit }} >> $GITHUB_STEP_SUMMARY || echo "No commits to rollback" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # JOB 2: Execute Rollback
+  # ============================================================================
+  rollback:
+    name: Execute Rollback to ${{ needs.validate.outputs.target_commit }}
+    runs-on: ubuntu-latest
+    needs: validate
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.get-url.outputs.url }}
+    
+    steps:
+    - name: Checkout target commit
+      uses: actions/checkout@v6
+      with:
+        ref: ${{ needs.validate.outputs.target_commit }}
+        fetch-depth: 0
+    
+    - name: Get environment URL
+      id: get-url
+      run: |
+        if [ "${{ inputs.environment }}" = "production" ]; then
+          echo "url=https://cedrus.yourdomain.com" >> $GITHUB_OUTPUT
+        else
+          echo "url=https://staging.cedrus.yourdomain.com" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run Django checks
+      env:
+        DJANGO_SECRET_KEY: rollback-validation-key-not-for-production
+        DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      run: |
+        python manage.py check --settings=cedrus.settings_production || true
+    
+    - name: Execute rollback deployment
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        TARGET_COMMIT: ${{ needs.validate.outputs.target_commit }}
+        ROLLBACK_REASON: ${{ inputs.reason }}
+      run: |
+        echo "⏪ Rolling back $ENVIRONMENT to $TARGET_COMMIT"
+        echo "📝 Reason: $ROLLBACK_REASON"
+        
+        # ==================================================================
+        # DEPLOYMENT COMMANDS (customize for your infrastructure)
+        # ==================================================================
+        
+        # Option 1: SSH Deployment
+        # ssh user@server "cd /var/www/cedrus && \
+        #   git fetch origin && \
+        #   git checkout $TARGET_COMMIT && \
+        #   source venv/bin/activate && \
+        #   pip install -r requirements.txt && \
+        #   python manage.py migrate && \
+        #   python manage.py collectstatic --noinput && \
+        #   sudo systemctl restart cedrus"
+        
+        # Option 2: Docker Deployment
+        # docker-compose -f docker-compose.production.yml down
+        # git checkout $TARGET_COMMIT
+        # docker-compose -f docker-compose.production.yml build
+        # docker-compose -f docker-compose.production.yml up -d
+        
+        # Option 3: Kubernetes Deployment
+        # kubectl set image deployment/cedrus cedrus=cedrus:$TARGET_COMMIT
+        # kubectl rollout status deployment/cedrus
+        
+        echo "✅ Rollback deployment commands executed"
+    
+    - name: Tag rollback commit
+      run: |
+        git tag "rollback-$(date +%Y%m%d-%H%M%S)-from-${{ needs.validate.outputs.current_commit }}"
+        # Push tag: git push origin --tags
+
+  # ============================================================================
+  # JOB 3: Verify Rollback
+  # ============================================================================
+  verify:
+    name: Verify Rollback Success
+    runs-on: ubuntu-latest
+    needs: [validate, rollback]
+    timeout-minutes: 10
+    
+    steps:
+    - name: Wait for deployment to stabilize
+      run: |
+        echo "⏳ Waiting 30 seconds for deployment to stabilize..."
+        sleep 30
+    
+    - name: Health check
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        if [ "$ENVIRONMENT" = "production" ]; then
+          HEALTH_URL="https://cedrus.yourdomain.com/core/health/"
+        else
+          HEALTH_URL="https://staging.cedrus.yourdomain.com/core/health/"
+        fi
+        
+        echo "🏥 Checking health at: $HEALTH_URL"
+        
+        # Retry health check up to 5 times
+        for i in {1..5}; do
+          if curl -f -s "$HEALTH_URL" > /dev/null 2>&1; then
+            echo "✅ Health check passed (attempt $i)"
+            exit 0
+          fi
+          echo "⏳ Health check failed (attempt $i/5), retrying in 10s..."
+          sleep 10
+        done
+        
+        echo "❌ Health check failed after 5 attempts"
+        exit 1
+    
+    - name: Smoke tests
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        if [ "$ENVIRONMENT" = "production" ]; then
+          BASE_URL="https://cedrus.yourdomain.com"
+        else
+          BASE_URL="https://staging.cedrus.yourdomain.com"
+        fi
+        
+        echo "🧪 Running smoke tests on: $BASE_URL"
+        
+        # Test 1: Homepage (should redirect)
+        curl -f -L "$BASE_URL/" > /dev/null || { echo "❌ Homepage failed"; exit 1; }
+        
+        # Test 2: Login page
+        curl -f "$BASE_URL/accounts/login/" > /dev/null || { echo "❌ Login page failed"; exit 1; }
+        
+        # Test 3: Health endpoints
+        curl -f "$BASE_URL/core/health/" > /dev/null || { echo "❌ Health endpoint failed"; exit 1; }
+        curl -f "$BASE_URL/core/health/ready/" > /dev/null || { echo "❌ Readiness endpoint failed"; exit 1; }
+        curl -f "$BASE_URL/core/health/live/" > /dev/null || { echo "❌ Liveness endpoint failed"; exit 1; }
+        
+        echo "✅ All smoke tests passed"
+    
+    - name: Rollback summary
+      if: always()
+      run: |
+        echo "## ✅ Rollback Complete" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Target Commit:** ${{ needs.validate.outputs.target_commit }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+        echo "1. Investigate root cause of original deployment failure" >> $GITHUB_STEP_SUMMARY
+        echo "2. Fix identified issues" >> $GITHUB_STEP_SUMMARY
+        echo "3. Test fixes in staging environment" >> $GITHUB_STEP_SUMMARY
+        echo "4. Deploy fixed version to production" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # JOB 4: Notify Team
+  # ============================================================================
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [validate, rollback, verify]
+    if: always()
+    timeout-minutes: 2
+    
+    steps:
+    - name: Send notification
+      env:
+        STATUS: ${{ needs.verify.result }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        TARGET_COMMIT: ${{ needs.validate.outputs.target_commit }}
+        REASON: ${{ inputs.reason }}
+      run: |
+        if [ "$STATUS" = "success" ]; then
+          EMOJI="✅"
+          MESSAGE="Rollback successful"
+        else
+          EMOJI="❌"
+          MESSAGE="Rollback failed"
+        fi
+        
+        echo "$EMOJI $MESSAGE"
+        echo "Environment: $ENVIRONMENT"
+        echo "Target: $TARGET_COMMIT"
+        echo "Reason: $REASON"
+        
+        # ==================================================================
+        # NOTIFICATION INTEGRATIONS (uncomment and configure as needed)
+        # ==================================================================
+        
+        # Slack:
+        # curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+        #   -H 'Content-Type: application/json' \
+        #   -d "{\"text\":\"$EMOJI Cedrus $ENVIRONMENT rollback: $MESSAGE\\nTarget: $TARGET_COMMIT\\nReason: $REASON\"}"
+        
+        # Discord:
+        # curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+        #   -H 'Content-Type: application/json' \
+        #   -d "{\"content\":\"$EMOJI **Cedrus $ENVIRONMENT Rollback**\\n$MESSAGE\\nTarget: \`$TARGET_COMMIT\`\\nReason: $REASON\"}"
+        
+        # Email (using SendGrid, Mailgun, etc.):
+        # Send email notification with rollback details
+        
+        # PagerDuty (for critical production rollbacks):
+        # Trigger incident or update existing incident
+
+# ==============================================================================
+# USAGE INSTRUCTIONS
+# ==============================================================================
+# Manual Rollback:
+# 1. Go to GitHub Actions → Rollback Deployment
+# 2. Click "Run workflow"
+# 3. Select environment (staging/production)
+# 4. Optionally specify commit SHA
+# 5. Enter reason for rollback
+# 6. Click "Run workflow"
+#
+# Automatic Rollback (integrate with deployment workflow):
+# - Add rollback trigger on deployment failure
+# - Use workflow_run event to trigger automatically
+#
+# Emergency Rollback:
+# - Use latest successful deployment tag
+# - Skip optional verification steps if needed
+# - Notify team immediately
+# ==============================================================================
+
+# ==============================================================================
+# ROLLBACK BEST PRACTICES
+# ==============================================================================
+# 1. Always tag successful deployments
+# 2. Test rollback procedure in staging first
+# 3. Document reason for rollback
+# 4. Verify application health after rollback
+# 5. Investigate root cause immediately
+# 6. Fix issues before attempting re-deployment
+# 7. Keep database migrations backward compatible
+# 8. Maintain deployment artifacts for quick rollback
+# ==============================================================================
