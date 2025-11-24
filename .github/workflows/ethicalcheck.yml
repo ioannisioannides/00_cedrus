@@ -45,7 +45,7 @@ jobs:
         python manage.py generate_swagger > openapi.json || echo '{"openapi": "3.0.0", "info": {"title": "Cedrus API", "version": "1.0.0"}, "paths": {}}' > openapi.json
 
     - name: Run OWASP ZAP API Security Scan
-      uses: zaproxy/action-api-scan@v0.3.0
+      uses: zaproxy/action-api-scan@v0.10.0
       with:
         target: 'http://localhost:8000'
         format: 'json'
