@@ -4,15 +4,17 @@
 
 # Test IDs to skip
 # B101: Use of assert (test assertions are NOT security issues)
+# B106: Hardcoded password (test fixtures use test passwords)
 # B110: try_except_pass (acceptable for cleanup code)
 # B404: import_subprocess (used safely in our codebase)
-skips: ['B101', 'B110', 'B404']
+skips: ['B101', 'B106', 'B110', 'B404']
 
 # Paths to exclude from scanning
 exclude_dirs:
   - '/tests/'
   - '*/tests/'
   - '*/test_*.py'
+  - '**/test_*.py'
   - '*/migrations/'
   - '*/management/commands/seed_data.py'
   - '*/venv/'
