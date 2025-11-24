@@ -24,7 +24,7 @@ authlib==1.6.5
     # via
     #   -r requirements.in
     #   safety
-bandit==1.9.1
+bandit==1.9.2
     # via -r requirements.in
 black==25.11.0
     # via -r requirements.in
@@ -78,7 +78,7 @@ dparse==0.6.4
     #   -r requirements.in
     #   safety
     #   safety-schemas
-filelock==3.12.4
+filelock==3.20.0
     # via
     #   -r requirements.in
     #   safety
@@ -176,7 +176,7 @@ pylint==4.0.3
     #   -r requirements.in
     #   pylint-django
     #   pylint-plugin-utils
-pylint-django==2.5.2
+pylint-django==2.6.1
     # via -r requirements.in
 pylint-plugin-utils==0.9.0
     # via
@@ -213,7 +213,7 @@ ruamel-yaml-clib==0.2.15
     # via
     #   -r requirements.in
     #   ruamel-yaml
-safety==3.2.11
+safety==3.7.0
     # via -r requirements.in
 safety-schemas==0.0.17
     # via
