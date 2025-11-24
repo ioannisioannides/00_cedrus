@@ -78,7 +78,7 @@ dparse==0.6.4
     #   -r requirements.in
     #   safety
     #   safety-schemas
-filelock==3.12.4
+filelock==3.20.0
     # via
     #   -r requirements.in
     #   safety
