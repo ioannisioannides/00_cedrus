@@ -46,20 +46,29 @@ class AuditWorkflow:
         Returns:
             tuple: (allowed: bool, reason: str)
         """
-        # Check if transition is in valid transitions
-        if new_status not in self.VALID_TRANSITIONS.get(self.current_status, []):
-            return False, f"Invalid transition from '{self.current_status}' to '{new_status}'"
+        # Delegate to new state machine while preserving legacy API
+        try:
+            from trunk.workflows.audit_state_machine import AuditStateMachine
 
-        # Check role-based permissions
-        if not self._can_user_transition(user, new_status):
-            return False, "You do not have permission to perform this transition"
+            sm = AuditStateMachine(self.audit)
+            allowed, reason = sm.can_transition(new_status, user)
+            return allowed, reason
+        except Exception:
+            # Fallback to legacy checks if new workflow is unavailable
+            # Check if transition is in valid transitions
+            if new_status not in self.VALID_TRANSITIONS.get(self.current_status, []):
+                return False, f"Invalid transition from '{self.current_status}' to '{new_status}'"
 
-        # Check business rules
-        validation_result = self._validate_transition(new_status, user)
-        if not validation_result[0]:
-            return False, validation_result[1]
+            # Check role-based permissions
+            if not self._can_user_transition(user, new_status):
+                return False, "You do not have permission to perform this transition"
 
-        return True, "Transition allowed"
+            # Check business rules
+            validation_result = self._validate_transition(new_status, user)
+            if not validation_result[0]:
+                return False, validation_result[1]
+
+            return True, "Transition allowed"
 
     def _can_user_transition(self, user, new_status):
         """Check if user has permission to make this transition."""
@@ -239,26 +248,34 @@ class AuditWorkflow:
         Raises:
             ValidationError: If transition is not allowed
         """
-        allowed, reason = self.can_transition(new_status, user)
-        if not allowed:
-            raise ValidationError(reason)
+        # Delegate to state machine to perform and log transition
+        try:
+            from trunk.workflows.audit_state_machine import AuditStateMachine
 
-        old_status = self.audit.status
-        self.audit.status = new_status
-        self.audit.save()
+            sm = AuditStateMachine(self.audit)
+            return sm.transition(new_status, user, notes)
+        except Exception:
+            # Fallback to legacy behavior
+            allowed, reason = self.can_transition(new_status, user)
+            if not allowed:
+                raise ValidationError(reason)
 
-        # Create audit status log entry
-        from audits.models import AuditStatusLog
+            old_status = self.audit.status
+            self.audit.status = new_status
+            self.audit.save()
 
-        AuditStatusLog.objects.create(
-            audit=self.audit,
-            from_status=old_status,
-            to_status=new_status,
-            changed_by=user,
-            notes=notes or "",
-        )
+            # Create audit status log entry
+            from audits.models import AuditStatusLog
 
-        return self.audit
+            AuditStatusLog.objects.create(
+                audit=self.audit,
+                from_status=old_status,
+                to_status=new_status,
+                changed_by=user,
+                notes=notes or "",
+            )
+
+            return self.audit
 
     def get_available_transitions(self, user):
         """
@@ -267,13 +284,19 @@ class AuditWorkflow:
         Returns:
             list: List of (status_code, status_display) tuples
         """
-        available = []
-        valid_targets = self.VALID_TRANSITIONS.get(self.current_status, [])
+        try:
+            from trunk.workflows.audit_state_machine import AuditStateMachine
 
-        for target_status in valid_targets:
-            if self._can_user_transition(user, target_status):
-                # Get display name
-                status_choices = dict(self.audit.STATUS_CHOICES)
-                available.append((target_status, status_choices.get(target_status, target_status)))
+            sm = AuditStateMachine(self.audit)
+            return sm.available_transitions(user)
+        except Exception:
+            available = []
+            valid_targets = self.VALID_TRANSITIONS.get(self.current_status, [])
 
-        return available
+            for target_status in valid_targets:
+                if self._can_user_transition(user, target_status):
+                    # Get display name
+                    status_choices = dict(self.audit.STATUS_CHOICES)
+                    available.append((target_status, status_choices.get(target_status, target_status)))
+
+            return available

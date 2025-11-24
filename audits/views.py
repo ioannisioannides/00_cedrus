@@ -464,11 +464,9 @@ def audit_transition_status(request, pk, new_status):
         messages.error(request, "You do not have permission to change this audit's status.")
         return redirect("audits:audit_detail", pk=pk)
 
-    workflow = AuditWorkflow(audit)
-
     try:
-        # Validate and perform the transition
-        workflow.transition(new_status, user)
+        # Validate and perform the transition via service layer
+        AuditService.transition_status(audit, new_status, user)
 
         # Success messages based on transition
         if new_status == "client_review":
@@ -651,8 +649,7 @@ def audit_make_decision(request, audit_pk):
 
             # Transition to decided status
             try:
-                workflow = AuditWorkflow(audit)
-                workflow.transition("decided", request.user)
+                AuditService.transition_status(audit, "decided", request.user)
 
                 # Update certification statuses based on recommendations
                 # This is a simplified version - can be enhanced

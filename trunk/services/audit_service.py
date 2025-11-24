@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 
 from audits.models import Audit
 from trunk.events import EventType, event_dispatcher
+from trunk.workflows.audit_state_machine import AuditStateMachine
 
 
 class AuditService:
@@ -103,3 +104,30 @@ class AuditService:
 
         if errors:
             raise ValidationError(" ".join(errors))
+
+    # -------------------------------------------------------------
+    # Workflow operations (State Machine adapter)
+    # -------------------------------------------------------------
+    @staticmethod
+    def transition_status(audit: Audit, new_status: str, user, notes: str = "") -> Audit:
+        """
+        Transition audit status using the audit state machine.
+
+        Emits AUDIT_STATUS_CHANGED on success.
+        """
+        sm = AuditStateMachine(audit)
+        old_status = audit.status
+        audit = sm.transition(new_status, user, notes)
+
+        # Emit status changed event
+        event_dispatcher.emit(
+            EventType.AUDIT_STATUS_CHANGED,
+            {"audit": audit, "old_status": old_status, "new_status": audit.status, "changed_by": user, "notes": notes},
+        )
+        return audit
+
+    @staticmethod
+    def get_available_transitions(audit: Audit, user) -> list[tuple[str, str]]:
+        """Return available transitions for the given user."""
+        sm = AuditStateMachine(audit)
+        return sm.available_transitions(user)
