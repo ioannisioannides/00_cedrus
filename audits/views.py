@@ -636,9 +636,9 @@ def audit_make_decision(request, audit_pk):
         )
         return redirect("audits:audit_detail", pk=audit_pk)
 
-    # Audit must be in submitted_to_cb status
-    if audit.status != "submitted_to_cb":
-        messages.error(request, "Audit must be in 'Submitted to CB' status to make a decision.")
+    # Audit must be in submitted status
+    if audit.status != "submitted":
+        messages.error(request, "Audit must be in 'Submitted' status to make a decision.")
         return redirect("audits:audit_detail", pk=audit_pk)
 
     recommendation, _ = AuditRecommendation.objects.get_or_create(audit=audit)

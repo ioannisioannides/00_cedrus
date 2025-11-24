@@ -150,7 +150,22 @@ class AuditWorkflow:
                 )
 
         # client_review → submitted: Check all major NCs have client responses
+        # AND check that technical review is approved (ISO 17021-1 Clause 9.5)
         if self.current_status == "client_review" and new_status == "submitted":
+            # Check technical review exists and is approved
+            if not hasattr(self.audit, "technical_review"):
+                return (
+                    False,
+                    "Cannot submit audit: Technical review is required before submission (ISO 17021-1 Clause 9.5)",
+                )
+            
+            technical_review = self.audit.technical_review
+            if technical_review.status != "approved":
+                return (
+                    False,
+                    f"Cannot submit audit: Technical review status is '{technical_review.get_status_display()}', must be 'Approved'",
+                )
+            
             major_ncs = self.audit.nonconformity_set.filter(category="major")
 
             for nc in major_ncs:

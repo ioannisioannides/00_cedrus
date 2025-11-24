@@ -184,10 +184,8 @@ class NonconformityCreationTests(TestCase):
         )
 
         # Should be forbidden (403) - test_func blocks this
-        # Note: The view's test_func checks if audit.status == "decided" which our workflow doesn't use,
-        # but the fact that closed audits can't have findings is business logic that's enforced.
-        # For now, we'll just verify the response is handled (200 is OK for display, POST would fail)
-        self.assertEqual(response.status_code, 200)
+        # Audits in "decided" status are closed and cannot have new findings added
+        self.assertEqual(response.status_code, 403)
 
 
 class ObservationCreationTests(TestCase):
@@ -774,27 +772,41 @@ class StatusWorkflowEnforcementTests(TestCase):
         """Test that only authorized roles can make specific transitions."""
         workflow = AuditWorkflow(self.audit)
 
-        # Lead auditor can move draft → in_review
+        # Lead auditor can move draft → scheduled
         allowed, _ = workflow.can_transition("scheduled", self.lead_auditor)
         self.assertTrue(allowed)
 
         workflow.transition("scheduled", self.lead_auditor)
         self.audit.refresh_from_db()
 
-        # Lead auditor can move in_review → submitted_to_cb
+        # Lead auditor can move scheduled → in_progress
         workflow = AuditWorkflow(self.audit)
-        allowed, _ = workflow.can_transition("client_review", self.lead_auditor)
+        allowed, _ = workflow.can_transition("in_progress", self.lead_auditor)
         self.assertTrue(allowed)
 
     def test_technical_review_gate_enforcement(self):
         """Test that technical review gate is mandatory (ISO 17021 Clause 9.5)."""
-        # Move audit to submitted_to_cb
+        from audits.models import TechnicalReview
+
+        # Move audit to client_review
         self.audit.status = "client_review"
         self.audit.save()
 
+        # Create and approve technical review (required before submission)
+        TechnicalReview.objects.create(
+            audit=self.audit,
+            reviewer=self.cb_admin,
+            scope_verified=True,
+            objectives_verified=True,
+            findings_reviewed=True,
+            conclusion_clear=True,
+            reviewer_notes="All requirements met",
+            status="approved",
+        )
+
         workflow = AuditWorkflow(self.audit)
 
-        # CB Admin can initiate technical review
+        # CB Admin can now submit after technical review is approved
         allowed, _ = workflow.can_transition("submitted", self.cb_admin)
         self.assertTrue(allowed)
 

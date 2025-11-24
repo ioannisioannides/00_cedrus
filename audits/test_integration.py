@@ -81,7 +81,7 @@ class AuditWorkflowIntegrationTest(TestCase):
             certifications=[self.cert],
             sites=[self.site],
             audit_data={
-                "audit_type": "stage2",
+                "audit_type": "surveillance",  # Use surveillance to avoid stage1 requirement
                 "total_audit_date_from": date.today(),
                 "total_audit_date_to": date.today() + timedelta(days=3),
                 "planned_duration_hours": 24.0,
@@ -138,13 +138,34 @@ class AuditWorkflowIntegrationTest(TestCase):
         self.assertIsNotNone(obs)
         self.assertIsNotNone(ofi)
 
-        # Step 4: Lead Auditor submits to client
+        # Step 4: Lead Auditor transitions through workflow
+        # draft → scheduled
         response = self.client.post(
             reverse("audits:audit_transition_status", args=[audit.pk, "scheduled"])
         )
-
         audit.refresh_from_db()
         self.assertEqual(audit.status, "scheduled")
+
+        # scheduled → in_progress
+        response = self.client.post(
+            reverse("audits:audit_transition_status", args=[audit.pk, "in_progress"])
+        )
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, "in_progress")
+
+        # in_progress → report_draft (requires findings, which we have)
+        response = self.client.post(
+            reverse("audits:audit_transition_status", args=[audit.pk, "report_draft"])
+        )
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, "report_draft")
+
+        # report_draft → client_review
+        response = self.client.post(
+            reverse("audits:audit_transition_status", args=[audit.pk, "client_review"])
+        )
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, "client_review")
 
         # Step 5: Client responds to nonconformity
         self.client.login(username="clientadmin", password="pass123")
@@ -177,25 +198,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         self.assertEqual(nc.verification_status, "accepted")
         self.assertEqual(nc.verified_by, self.lead_auditor)
 
-        # Step 7: Lead Auditor submits to CB
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "client_review"])
-        )
-
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "client_review")
-
-        # Step 8: CB Admin moves to technical review
-        self.client.login(username="cbadmin", password="pass123")
-
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "submitted"])
-        )
-
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "submitted")
-
-        # Step 9: Create and approve technical review
+        # Step 7: Create and approve technical review (required before submission)
         from audits.models import TechnicalReview
 
         tech_review = TechnicalReview.objects.create(
@@ -209,7 +212,9 @@ class AuditWorkflowIntegrationTest(TestCase):
             status="approved",
         )
 
-        # Step 10: Transition to decision_pending
+        # Step 8: CB Admin or Lead Auditor moves to submitted (after technical review)
+        self.client.login(username="cbadmin", password="pass123")
+
         response = self.client.post(
             reverse("audits:audit_transition_status", args=[audit.pk, "submitted"])
         )
@@ -217,7 +222,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.status, "submitted")
 
-        # Step 11: Create certification decision
+        # Step 9: Create certification decision (audit is now in 'submitted' status)
         from audits.models import CertificationDecision
 
         decision = CertificationDecision.objects.create(

@@ -268,7 +268,8 @@ class RoleBasedAccessTest(TestCase):
 
     def test_cb_admin_can_make_decision(self):
         """CB Admin can make certification decisions."""
-        self.audit1.status = "client_review"
+        # Audit must be in "submitted" status to make decision (after technical review)
+        self.audit1.status = "submitted"
         self.audit1.save()
 
         self.client.login(username="cbadmin", password="pass123")
