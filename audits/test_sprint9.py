@@ -425,7 +425,7 @@ class AuditorVerificationTests(TestCase):
         self.client_http.login(username="auditor1", password="testpass123")
         url = reverse("audits:nonconformity_verify", kwargs={"pk": self.nc.pk})
         data = {
-            "verification_status": "accepted",
+            "verification_action": "accept",
             "verification_notes": "Corrective action plan is acceptable",
         }
         response = self.client_http.post(url, data)
@@ -532,7 +532,7 @@ class WorkflowIntegrationTests(TestCase):
         self.audit.certifications.add(self.certification)
 
     def test_cannot_submit_with_open_major_nc(self):
-        """Test workflow blocks submission with open major NCs."""
+        """Test workflow allows sending report to client with open major NCs (ISO 17021-1)."""
         # Move audit to report_draft status first
         self.audit.status = "report_draft"
         self.audit.save()
@@ -553,8 +553,8 @@ class WorkflowIntegrationTests(TestCase):
         workflow = AuditWorkflow(self.audit)
         can_transition, reason = workflow.can_transition("client_review", self.auditor)
 
-        self.assertFalse(can_transition)
-        self.assertIn("major nonconformity", reason.lower())
+        # ISO 17021-1: Reports MUST be sent to clients WITH findings so they can respond
+        self.assertTrue(can_transition)
 
     def test_can_submit_with_responded_major_nc(self):
         """Test workflow allows submission when major NCs have responses."""

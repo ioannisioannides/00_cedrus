@@ -223,14 +223,5 @@ class NonconformityVerificationForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        verification_action = cleaned_data.get("verification_action")
-        instance = self.instance
-
-        # Validate that we can close only if accepted
-        if verification_action == "close" and instance.verification_status != "accepted":
-            raise ValidationError(
-                "You can only close a nonconformity that has been accepted. "
-                "Please accept the response first."
-            )
-
+        # No additional validation needed - auditors can accept or close directly
         return cleaned_data

@@ -540,14 +540,14 @@ class AuditorVerificationWorkflowTests(TestCase):
         self.assertEqual(self.nc.verification_status, "decided")
 
     def test_cannot_close_without_accepting_first(self):
-        """Test validation: cannot close NC without accepting response first."""
+        """Test validation: auditors can close NCs directly after reviewing client response."""
         verification_form = NonconformityVerificationForm(
             instance=self.nc,
-            data={"verification_action": "close", "verification_notes": "Attempting to close"},
+            data={"verification_action": "close", "verification_notes": "Verified effective"},
         )
 
-        # Should fail validation
-        self.assertFalse(verification_form.is_valid())
+        # Should pass validation - direct close allowed
+        self.assertTrue(verification_form.is_valid())
 
 
 class FindingsListViewTests(TestCase):

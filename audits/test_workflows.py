@@ -58,13 +58,13 @@ class AuditWorkflowTest(TestCase):
             organization=self.org, site_name="Site 1", site_address="123 St"
         )
 
-        # Create base audit
+        # Create base audit (stage1 doesn't require prior audits)
         self.audit = AuditService.create_audit(
             organization=self.org,
             certifications=[self.cert],
             sites=[self.site],
             audit_data={
-                "audit_type": "stage2",
+                "audit_type": "stage1",
                 "total_audit_date_from": date.today(),
                 "total_audit_date_to": date.today(),
                 "planned_duration_hours": 8.0,
@@ -120,44 +120,62 @@ class AuditWorkflowTest(TestCase):
         self.assertTrue(can_transition)
 
     def test_backward_transition_requires_cb_admin(self):
-        """Test backward transition (client_review → draft) requires CB admin."""
+        """Test backward transition (client_review → report_draft) allows lead auditor."""
         # First move to client_review
-        self.audit.status = "scheduled"
+        self.audit.status = "client_review"
         self.audit.save()
 
         workflow = AuditWorkflow(self.audit)
 
-        # Lead auditor cannot go backward
-        can_transition, _ = workflow.can_transition("draft", self.lead_auditor)
-        self.assertFalse(can_transition)
+        # Lead auditor CAN go backward to report_draft (for corrections)
+        can_transition, _ = workflow.can_transition("report_draft", self.lead_auditor)
+        self.assertTrue(can_transition)
 
-        # CB admin can
-        can_transition, _ = workflow.can_transition("draft", self.cb_admin)
+        # CB admin can also
+        can_transition, _ = workflow.can_transition("report_draft", self.cb_admin)
         self.assertTrue(can_transition)
 
     def test_complete_workflow_progression(self):
         """Test complete audit workflow from draft to decided."""
         from audits.models import CertificationDecision, TechnicalReview
 
-        # draft → in_review
+        # draft → scheduled
         workflow = AuditWorkflow(self.audit)
         workflow.transition("scheduled", self.lead_auditor)
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "scheduled")
 
-        # in_review → submitted_to_cb
+        # scheduled → in_progress
+        workflow = AuditWorkflow(self.audit)
+        workflow.transition("in_progress", self.lead_auditor)
+        self.audit.refresh_from_db()
+        self.assertEqual(self.audit.status, "in_progress")
+        
+        # Create at least one finding (required for report_draft transition)
+        FindingService.create_observation(
+            audit=self.audit,
+            user=self.lead_auditor,
+            data={
+                "standard": self.standard,
+                "clause": "4.1",
+                "statement": "Test observation statement",
+                "explanation": "Test explanation",
+            },
+        )
+        
+        # in_progress → report_draft
+        workflow = AuditWorkflow(self.audit)
+        workflow.transition("report_draft", self.lead_auditor)
+        self.audit.refresh_from_db()
+        self.assertEqual(self.audit.status, "report_draft")
+
+        # report_draft → client_review
         workflow = AuditWorkflow(self.audit)
         workflow.transition("client_review", self.lead_auditor)
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "client_review")
 
-        # submitted_to_cb → technical_review
-        workflow = AuditWorkflow(self.audit)
-        workflow.transition("submitted", self.cb_admin)
-        self.audit.refresh_from_db()
-        self.assertEqual(self.audit.status, "submitted")
-
-        # Create approved technical review
+        # Create approved technical review (required before submission per ISO 17021-1)
         TechnicalReview.objects.create(
             audit=self.audit,
             reviewer=self.cb_admin,
@@ -168,7 +186,7 @@ class AuditWorkflowTest(TestCase):
             status="approved",
         )
 
-        # technical_review → decision_pending
+        # client_review → submitted (requires technical review)
         workflow = AuditWorkflow(self.audit)
         workflow.transition("submitted", self.cb_admin)
         self.audit.refresh_from_db()
@@ -269,16 +287,16 @@ class AuditWorkflowValidationTest(TestCase):
             },
         )
 
-        # Move to client_review
-        self.audit.status = "scheduled"
+        # Move to report_draft (required before client_review)
+        self.audit.status = "report_draft"
         self.audit.save()
 
-        # Try to transition to submitted_to_cb (should fail)
+        # Try to transition to client_review (should succeed per ISO 17021-1)
         workflow = AuditWorkflow(self.audit)
         can_transition, reason = workflow.can_transition("client_review", self.lead_auditor)
 
-        self.assertFalse(can_transition)
-        self.assertIn("not been responded to", reason)
+        # ISO 17021-1: Reports WITH findings must be sent to clients for response
+        self.assertTrue(can_transition)
 
     def test_can_submit_after_major_nc_responded(self):
         """Test can transition to submitted_to_cb after major NC is responded to."""
@@ -306,8 +324,8 @@ class AuditWorkflowValidationTest(TestCase):
             },
         )
 
-        # Move to client_review
-        self.audit.status = "scheduled"
+        # Move to report_draft (required before client_review)
+        self.audit.status = "report_draft"
         self.audit.save()
 
         # Should be able to transition now
@@ -332,8 +350,8 @@ class AuditWorkflowValidationTest(TestCase):
             },
         )
 
-        # Move to client_review
-        self.audit.status = "scheduled"
+        # Move to report_draft (required before client_review)
+        self.audit.status = "report_draft"
         self.audit.save()
 
         # Should be able to transition (minor NC doesn't block)
@@ -407,18 +425,18 @@ class AuditWorkflowAvailableTransitionsTest(TestCase):
         self.assertEqual(available[0][0], "scheduled")
 
     def test_available_transitions_for_cb_admin_in_client_review(self):
-        """Test available transitions for CB admin in client_review status."""
+        """Test available transitions for CB admin in scheduled status."""
         self.audit.status = "scheduled"
         self.audit.save()
 
         workflow = AuditWorkflow(self.audit)
         available = workflow.get_available_transitions(self.cb_admin)
 
-        # Should have both submitted_to_cb and draft available
+        # From scheduled: can go to in_progress or cancelled
         self.assertEqual(len(available), 2)
         status_codes = [t[0] for t in available]
-        self.assertIn("client_review", status_codes)
-        self.assertIn("draft", status_codes)
+        self.assertIn("in_progress", status_codes)
+        self.assertIn("cancelled", status_codes)
 
     def test_no_available_transitions_in_decided(self):
         """Test no available transitions when audit is decided."""

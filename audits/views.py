@@ -977,18 +977,31 @@ class NonconformityVerifyView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
 
     def form_valid(self, form):
         """Process valid form submission."""
+        # Get verification action from form
+        action = form.cleaned_data["verification_action"]
+        
         # Set verification metadata
         nc = form.save(commit=False)
         nc.verified_by = self.request.user
         from django.utils import timezone
         nc.verified_at = timezone.now()
-        nc.save()
-
-        status = form.cleaned_data["verification_status"]
-        if status == "accepted":
+        
+        # Map verification action to status
+        if action == "accept":
+            nc.verification_status = "accepted"
             messages.success(self.request, "Response accepted.")
-        elif status == "closed":
+        elif action == "request_changes":
+            nc.verification_status = "open"
+            messages.info(self.request, "Changes requested. Nonconformity remains open.")
+        elif action == "close":
+            nc.verification_status = "closed"
             messages.success(self.request, "Nonconformity closed and verified effective.")
+        
+        # Save verification notes if provided
+        if form.cleaned_data.get("verification_notes"):
+            nc.verification_notes = form.cleaned_data["verification_notes"]
+        
+        nc.save()
 
         return redirect(self.get_success_url())
 

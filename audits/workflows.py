@@ -149,17 +149,9 @@ class AuditWorkflow:
                     "Cannot move to report draft: At least one finding (NC, Observation, or OFI) is required",
                 )
 
-        # report_draft → client_review: Check all major NCs are closed or have responses
-        # (Don't send incomplete reports to clients)
-        if self.current_status == "report_draft" and new_status == "client_review":
-            major_ncs = self.audit.nonconformity_set.filter(category="major")
-            open_major_ncs = major_ncs.filter(verification_status="open")
-            
-            if open_major_ncs.exists():
-                return (
-                    False,
-                    f"Cannot send to client: {open_major_ncs.count()} open major nonconformity(ies) must be addressed or have client responses",
-                )
+        # report_draft → client_review: Allow transition with open NCs
+        # ISO 17021-1 Clause 9.3.1.2: Report MUST be sent to client WITH findings
+        # so they can provide responses. Validation moved to client_review → submitted.
 
         # client_review → submitted: Check all major NCs have client responses
         # AND check that technical review is approved (ISO 17021-1 Clause 9.5)
