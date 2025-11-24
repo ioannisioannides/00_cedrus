@@ -24,7 +24,7 @@ authlib==1.6.5
     # via
     #   -r requirements.in
     #   safety
-bandit==1.9.1
+bandit==1.9.2
     # via -r requirements.in
 black==25.11.0
     # via -r requirements.in
