@@ -27,13 +27,7 @@ from audits.forms import (
     ObservationForm,
     OpportunityForImprovementForm,
 )
-from audits.models import (
-    Audit,
-    AuditStatusLog,
-    Nonconformity,
-    Observation,
-    OpportunityForImprovement,
-)
+from audits.models import Audit, AuditStatusLog, Nonconformity, Observation, OpportunityForImprovement
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Site, Standard
 from trunk.services.finding_service import FindingService
@@ -911,11 +905,22 @@ class Phase3IntegrationTests(TestCase):
 
         self.assertEqual(nc.verification_status, "open")
 
-        # Step 2: Move audit to in_review
+        # Step 2: Move audit through workflow stages
         workflow = AuditWorkflow(self.audit)
+        # draft → scheduled
         workflow.transition("scheduled", self.lead_auditor)
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "scheduled")
+        
+        # scheduled → in_progress
+        workflow = AuditWorkflow(self.audit)
+        workflow.transition("in_progress", self.lead_auditor)
+        self.audit.refresh_from_db()
+        
+        # in_progress → report_draft
+        workflow = AuditWorkflow(self.audit)
+        workflow.transition("report_draft", self.lead_auditor)
+        self.audit.refresh_from_db()
 
         # Step 3: Client submits response
         nc.client_root_cause = "Lack of documented procedures"
@@ -924,16 +929,13 @@ class Phase3IntegrationTests(TestCase):
         nc.verification_status = "client_responded"
         nc.save()
 
-        # Step 4: Workflow check - major NC has response, can proceed
-        # (The workflow checks if status == 'open', client_responded is acceptable)
-        workflow = AuditWorkflow(self.audit)
-
-        # Step 5: Auditor accepts response
+        # Step 4: Auditor accepts response
         nc.verification_status = "accepted"
         nc.verified_by = self.lead_auditor
         nc.save()
 
-        # Step 6: Now can submit to CB
+        # Step 5: Now can transition to client_review
+        workflow = AuditWorkflow(self.audit)
         allowed, _ = workflow.can_transition("client_review", self.lead_auditor)
         self.assertTrue(allowed)
         workflow.transition("client_review", self.lead_auditor)
@@ -943,7 +945,7 @@ class Phase3IntegrationTests(TestCase):
 
         # Verify audit log entries created
         logs = AuditStatusLog.objects.filter(audit=self.audit)
-        self.assertEqual(logs.count(), 2)  # draft→in_review, in_review→submitted_to_cb
+        self.assertEqual(logs.count(), 4)  # draft→scheduled→in_progress→report_draft→client_review
 
     def test_multi_finding_type_audit(self):
         """Test audit with all finding types: NC, Observation, OFI."""

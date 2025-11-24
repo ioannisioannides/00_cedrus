@@ -911,6 +911,9 @@ class NonconformityUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
         # Can't edit if audit is decided
         if nc.audit.status == "decided":
             return False
+        # Can't edit if client has responded
+        if nc.verification_status in ["client_responded", "accepted", "closed"]:
+            return False
         return can_edit_finding(self.request.user, nc)
 
     def get_form_kwargs(self):

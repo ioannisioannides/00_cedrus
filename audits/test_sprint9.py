@@ -27,9 +27,10 @@ from audits.finding_forms import (
     ObservationForm,
     OpportunityForImprovementForm,
 )
+from accounts.models import Profile
 from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from audits.workflows import AuditWorkflow
-from core.models import Organization, Standard
+from core.models import Certification, Organization, Standard
 
 User = get_user_model()
 
@@ -59,6 +60,14 @@ class NonconformityFormTests(TestCase):
         self.standard = Standard.objects.create(
             code="ISO 9001:2015", title="Quality management systems - Requirements"
         )
+        # Create certification and link to audit
+        self.certification = Certification.objects.create(
+            organization=self.org,
+            standard=self.standard,
+            certification_scope="Quality Management",
+            certificate_status="active",
+        )
+        self.audit.certifications.add(self.certification)
 
     def test_form_valid_major_nc(self):
         """Test form with valid major NC data."""
@@ -125,32 +134,40 @@ class NonconformityViewTests(TestCase):
         self.standard = Standard.objects.create(
             code="ISO 9001:2015", title="Quality management systems - Requirements"
         )
+        # Create certification and link to audit
+        self.certification = Certification.objects.create(
+            organization=self.org,
+            standard=self.standard,
+            certification_scope="Quality Management",
+            certificate_status="active",
+        )
+        self.audit.certifications.add(self.certification)
 
     def test_auditor_can_add_nc(self):
         """Test auditor can access NC add form."""
         self.client.login(username="auditor1", password="testpass123")
-        url = reverse("audits:nonconformity_add", kwargs={"audit_pk": self.audit.pk})
+        url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_client_cannot_add_nc(self):
         """Test client cannot add findings."""
         self.client.login(username="client1", password="testpass123")
-        url = reverse("audits:nonconformity_add", kwargs={"audit_pk": self.audit.pk})
+        url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 302)  # Redirect
+        self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_regular_user_cannot_add_nc(self):
         """Test regular user cannot add findings."""
         self.client.login(username="regular1", password="testpass123")
-        url = reverse("audits:nonconformity_add", kwargs={"audit_pk": self.audit.pk})
+        url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 302)  # Redirect
+        self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_add_nc_post(self):
         """Test creating NC via POST."""
         self.client.login(username="auditor1", password="testpass123")
-        url = reverse("audits:nonconformity_add", kwargs={"audit_pk": self.audit.pk})
+        url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         data = {
             "standard": self.standard.id,
             "clause": "4.1",
@@ -178,7 +195,7 @@ class NonconformityViewTests(TestCase):
         )
 
         self.client.login(username="auditor1", password="testpass123")
-        url = reverse("audits:nonconformity_edit", kwargs={"pk": nc.pk})
+        url = reverse("audits:nonconformity_update", kwargs={"pk": nc.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -197,9 +214,9 @@ class NonconformityViewTests(TestCase):
         )
 
         self.client.login(username="auditor1", password="testpass123")
-        url = reverse("audits:nonconformity_edit", kwargs={"pk": nc.pk})
+        url = reverse("audits:nonconformity_update", kwargs={"pk": nc.pk})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 302)  # Redirect with error
+        self.assertEqual(response.status_code, 403)  # Forbidden - can't edit after client response
 
     def test_delete_nc_by_creator(self):
         """Test NC creator can delete."""
@@ -216,7 +233,7 @@ class NonconformityViewTests(TestCase):
         )
 
         self.client.login(username="auditor1", password="testpass123")
-        url = reverse("audits:finding_delete", kwargs={"finding_type": "nc", "pk": nc.pk})
+        url = reverse("audits:nonconformity_delete", kwargs={"pk": nc.pk})
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Nonconformity.objects.filter(pk=nc.pk).exists())
@@ -241,13 +258,17 @@ class ClientResponseTests(TestCase):
         self.auditor.groups.add(auditor_group)
 
         self.client_user = User.objects.create_user(username="client1", password="testpass123")
-        client_group = Group.objects.create(name="client")
+        client_group = Group.objects.create(name="client_user")
         self.client_user.groups.add(client_group)
+        # Get or create profile and set organization
+        profile, _ = Profile.objects.get_or_create(user=self.client_user)
+        profile.organization = self.org
+        profile.save()
 
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage1",
-            status="scheduled",
+            status="client_review",
             total_audit_date_from=date.today(),
             total_audit_date_to=date.today() + timedelta(days=7),
             created_by=self.auditor,
@@ -257,6 +278,14 @@ class ClientResponseTests(TestCase):
         self.standard = Standard.objects.create(
             code="ISO 9001:2015", title="Quality management systems - Requirements"
         )
+        # Create certification and link to audit
+        self.certification = Certification.objects.create(
+            organization=self.org,
+            standard=self.standard,
+            certification_scope="Quality Management",
+            certificate_status="active",
+        )
+        self.audit.certifications.add(self.certification)
 
         self.nc = Nonconformity.objects.create(
             audit=self.audit,
@@ -282,7 +311,7 @@ class ClientResponseTests(TestCase):
         self.client_http.login(username="auditor1", password="testpass123")
         url = reverse("audits:nonconformity_respond", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
-        self.assertEqual(response.status_code, 302)  # Redirect
+        self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_client_submit_response(self):
         """Test client can submit response."""
@@ -332,13 +361,17 @@ class AuditorVerificationTests(TestCase):
         self.auditor.groups.add(auditor_group)
 
         self.client_user = User.objects.create_user(username="client1", password="testpass123")
-        client_group = Group.objects.create(name="client")
+        client_group = Group.objects.create(name="client_user")
         self.client_user.groups.add(client_group)
+        # Get or create profile and set organization
+        profile, _ = Profile.objects.get_or_create(user=self.client_user)
+        profile.organization = self.org
+        profile.save()
 
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage1",
-            status="scheduled",
+            status="client_review",
             total_audit_date_from=date.today(),
             total_audit_date_to=date.today() + timedelta(days=7),
             created_by=self.auditor,
@@ -348,6 +381,14 @@ class AuditorVerificationTests(TestCase):
         self.standard = Standard.objects.create(
             code="ISO 9001:2015", title="Quality management systems - Requirements"
         )
+        # Create certification and link to audit
+        self.certification = Certification.objects.create(
+            organization=self.org,
+            standard=self.standard,
+            certification_scope="Quality Management",
+            certificate_status="active",
+        )
+        self.audit.certifications.add(self.certification)
 
         self.nc = Nonconformity.objects.create(
             audit=self.audit,
@@ -428,6 +469,14 @@ class ObservationViewTests(TestCase):
         self.standard = Standard.objects.create(
             code="ISO 9001:2015", title="Quality management systems - Requirements"
         )
+        # Create certification and link to audit
+        self.certification = Certification.objects.create(
+            organization=self.org,
+            standard=self.standard,
+            certification_scope="Quality Management",
+            certificate_status="active",
+        )
+        self.audit.certifications.add(self.certification)
 
     def test_add_observation(self):
         """Test creating observation."""
@@ -473,6 +522,14 @@ class WorkflowIntegrationTests(TestCase):
         self.standard = Standard.objects.create(
             code="ISO 9001:2015", title="Quality management systems - Requirements"
         )
+        # Create certification and link to audit
+        self.certification = Certification.objects.create(
+            organization=self.org,
+            standard=self.standard,
+            certification_scope="Quality Management",
+            certificate_status="active",
+        )
+        self.audit.certifications.add(self.certification)
 
     def test_cannot_submit_with_open_major_nc(self):
         """Test workflow blocks submission with open major NCs."""

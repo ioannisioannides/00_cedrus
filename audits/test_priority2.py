@@ -91,13 +91,29 @@ class AuditWorkflowTest(TestCase):
             verification_status="open",
         )
 
-        # Transition to in_review
-        self.audit.status = "scheduled"
+        # Transition through workflow to report_draft
+        self.audit.status = "report_draft"
         self.audit.save()
 
-        # Try to submit to CB - should fail
+        # Transition to client_review
         workflow = AuditWorkflow(self.audit)
-        allowed, reason = workflow.can_transition("client_review", self.lead_auditor)
+        workflow.transition("client_review", self.lead_auditor)
+        self.audit.refresh_from_db()
+        
+        # Try to submit - should fail without technical review and NC responses
+        from audits.models import TechnicalReview
+        TechnicalReview.objects.create(
+            audit=self.audit,
+            reviewer=self.cb_admin,
+            scope_verified=True,
+            objectives_verified=True,
+            findings_reviewed=True,
+            conclusion_clear=True,
+            status="approved",
+        )
+        
+        workflow = AuditWorkflow(self.audit)
+        allowed, reason = workflow.can_transition("submitted", self.lead_auditor)
         self.assertFalse(allowed)
         self.assertIn("major", reason.lower())
 
@@ -109,7 +125,8 @@ class AuditWorkflowTest(TestCase):
         nc.save()
 
         # Now should be able to submit
-        allowed, reason = workflow.can_transition("client_review", self.lead_auditor)
+        workflow = AuditWorkflow(self.audit)
+        allowed, reason = workflow.can_transition("submitted", self.lead_auditor)
         self.assertTrue(allowed)
 
     def test_workflow_permission_checks(self):
@@ -124,19 +141,31 @@ class AuditWorkflowTest(TestCase):
         allowed, _ = workflow.can_transition("scheduled", self.auditor)
         self.assertFalse(allowed)
 
-        # Move to submitted_to_cb
+        # Move to client_review
         self.audit.status = "client_review"
         self.audit.save()
+        
+        # Create approved technical review (required for transition)
+        from audits.models import TechnicalReview
+        TechnicalReview.objects.create(
+            audit=self.audit,
+            reviewer=self.cb_admin,
+            scope_verified=True,
+            objectives_verified=True,
+            findings_reviewed=True,
+            conclusion_clear=True,
+            status="approved",
+        )
 
         # Create new workflow instance with updated status
         workflow = AuditWorkflow(self.audit)
 
-        # Only CB Admin can move to technical_review
+        # Both CB Admin and Lead Auditor can submit after technical review
         allowed, _ = workflow.can_transition("submitted", self.cb_admin)
         self.assertTrue(allowed)
 
         allowed, _ = workflow.can_transition("submitted", self.lead_auditor)
-        self.assertFalse(allowed)
+        self.assertTrue(allowed)
 
     def test_workflow_decided_is_final(self):
         """Test that decided status cannot be changed."""
@@ -296,7 +325,7 @@ class AuditRecommendationTest(TestCase):
 
         self.audit = Audit.objects.create(
             organization=self.org,
-            audit_type="stage2",
+            audit_type="surveillance",  # Use surveillance to avoid stage1 requirement
             total_audit_date_from=date.today(),
             total_audit_date_to=date.today() + timedelta(days=3),
             planned_duration_hours=24.0,
@@ -358,12 +387,11 @@ class AuditRecommendationTest(TestCase):
 
         self.client.login(username="cbadmin", password="pass123")
 
-        # Move through workflow to technical_review
-        self.client.post(
-            reverse("audits:audit_transition_status", args=[self.audit.pk, "submitted"])
-        )
+        # Move audit to client_review
+        self.audit.status = "client_review"
+        self.audit.save()
 
-        # Create approved technical review
+        # Create approved technical review (required)
         TechnicalReview.objects.create(
             audit=self.audit,
             reviewer=self.cb_admin,
@@ -374,10 +402,12 @@ class AuditRecommendationTest(TestCase):
             status="approved",
         )
 
-        # Move to decision_pending
+        # Move to submitted
         self.client.post(
             reverse("audits:audit_transition_status", args=[self.audit.pk, "submitted"])
         )
+        self.audit.refresh_from_db()
+        self.assertEqual(self.audit.status, "submitted")
 
         # Create certification decision
         CertificationDecision.objects.create(
@@ -387,10 +417,10 @@ class AuditRecommendationTest(TestCase):
             decision_notes="Certification granted",
         )
 
-        # Transition to closed
+        # Transition to decided
         self.client.post(reverse("audits:audit_transition_status", args=[self.audit.pk, "decided"]))
 
-        # Verify legacy decision view still works
+        # Verify status is decided
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "decided")
 

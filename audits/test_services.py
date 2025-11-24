@@ -460,7 +460,7 @@ class FindingServiceTest(TestCase):
         )
 
         nc.refresh_from_db()
-        self.assertEqual(nc.verification_status, "decided")
+        self.assertEqual(nc.verification_status, "closed")
 
     def test_create_nonconformity_emits_event(self):
         """Test that NC creation emits FINDING_CREATED event."""
