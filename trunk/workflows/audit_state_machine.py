@@ -73,49 +73,63 @@ class AuditStateMachine:
         return dict(self.audit.STATUS_CHOICES).get(status_code, status_code)
 
     def _permission_checker(self, user, from_state: str, to_state: str) -> bool:
+        from trunk.permissions.policies import PBACPolicy
+        from trunk.permissions.predicates import PermissionPredicate
+
         # CB Admin can make any transition (with override capability)
-        if user.groups.filter(name="cb_admin").exists():
+        if PermissionPredicate.is_cb_admin(user):
             return True
 
         # draft → scheduled: Lead Auditor only
         if from_state == "draft" and to_state == "scheduled":
-            return user.groups.filter(name="lead_auditor").exists() and self.audit.lead_auditor == user
+            ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
+            return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
         # scheduled → in_progress: Lead Auditor only
         if from_state == "scheduled" and to_state == "in_progress":
-            return user.groups.filter(name="lead_auditor").exists() and self.audit.lead_auditor == user
+            ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
+            return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
         # in_progress → report_draft: Lead Auditor only
         if from_state == "in_progress" and to_state == "report_draft":
-            return user.groups.filter(name="lead_auditor").exists() and self.audit.lead_auditor == user
+            ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
+            return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
         # report_draft → client_review: Lead Auditor or CB Admin
         if from_state == "report_draft" and to_state == "client_review":
-            return user.groups.filter(name="cb_admin").exists() or (
-                user.groups.filter(name="lead_auditor").exists() and self.audit.lead_auditor == user
-            )
+            if PermissionPredicate.is_cb_admin(user):
+                return True
+            ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
+            return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
         # report_draft → in_progress: Lead Auditor (going back for more findings)
         if from_state == "report_draft" and to_state == "in_progress":
-            return user.groups.filter(name="lead_auditor").exists() and self.audit.lead_auditor == user
+            ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
+            return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
         # client_review → submitted: CB Admin or Lead Auditor (after client feedback)
         if from_state == "client_review" and to_state == "submitted":
-            return user.groups.filter(name="cb_admin").exists() or (
-                user.groups.filter(name="lead_auditor").exists() and self.audit.lead_auditor == user
-            )
+            if PermissionPredicate.is_cb_admin(user):
+                return True
+            ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
+            return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
         # client_review → report_draft: Lead Auditor (back for corrections)
         if from_state == "client_review" and to_state == "report_draft":
-            return user.groups.filter(name="lead_auditor").exists() and self.audit.lead_auditor == user
+            ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
+            return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
-        # submitted → decided: CB Decision Maker or CB Admin
+        # submitted → decided: CB Decision Maker or CB Admin, with independence check
         if from_state == "submitted" and to_state == "decided":
-            return user.groups.filter(name="decision_maker").exists() or user.groups.filter(name="cb_admin").exists()
+            if PermissionPredicate.is_decision_maker(user):
+                # Check independence per ISO 17021-1 Clause 9.6
+                ok, _ = PBACPolicy.is_independent_for_decision(user, self.audit)
+                return ok
+            return PermissionPredicate.is_cb_admin(user)
 
         # Any state → cancelled: CB Admin only (handled above)
         if to_state == "cancelled":
-            return user.groups.filter(name="cb_admin").exists()
+            return PermissionPredicate.is_cb_admin(user)
 
         return False
 
