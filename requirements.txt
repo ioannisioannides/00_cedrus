@@ -16,7 +16,7 @@ asgiref==3.11.0
     # via
     #   -r requirements.in
     #   django
-astroid==4.0.2
+astroid==3.3.8
     # via
     #   -r requirements.in
     #   pylint
@@ -98,7 +98,7 @@ idna==3.11
     #   anyio
     #   httpx
     #   requests
-isort==7.0.0
+isort==6.1.0
     # via
     #   -r requirements.in
     #   pylint
@@ -171,7 +171,7 @@ pygments==2.19.2
     # via
     #   -r requirements.in
     #   rich
-pylint==4.0.3
+pylint==3.3.7
     # via
     #   -r requirements.in
     #   pylint-django
@@ -215,7 +215,7 @@ ruamel-yaml-clib==0.2.15
     #   ruamel-yaml
 safety==3.7.0
     # via -r requirements.in
-safety-schemas==0.0.17
+safety-schemas==0.0.16
     # via
     #   -r requirements.in
     #   safety
