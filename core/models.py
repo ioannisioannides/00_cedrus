@@ -160,3 +160,95 @@ class Certification(models.Model):
 
     def __str__(self):
         return f"{self.organization.name} - {self.standard.code} ({self.certificate_status})"
+
+
+# ---------------------------------------------------------------------------
+# Phase 2A: Certificate Lifecycle Tracking (History & Surveillance Schedule)
+# ---------------------------------------------------------------------------
+
+class CertificateHistory(models.Model):
+    """Immutable record of certificate lifecycle actions (issue, renew, suspend, etc.)."""
+
+    ACTION_CHOICES = [
+        ("issued", "Certificate Issued"),
+        ("renewed", "Certificate Renewed"),
+        ("surveillance_passed", "Surveillance Audit Passed"),
+        ("suspended", "Certificate Suspended"),
+        ("suspension_lifted", "Suspension Lifted"),
+        ("withdrawn", "Certificate Withdrawn"),
+        ("expired", "Certificate Expired"),
+        ("scope_extended", "Scope Extended"),
+        ("scope_reduced", "Scope Reduced"),
+        ("transfer_in", "Transferred In"),
+        ("transfer_out", "Transferred Out"),
+    ]
+
+    certification = models.ForeignKey(
+        Certification, on_delete=models.CASCADE, related_name="history"
+    )
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    action_date = models.DateField()
+    related_audit = models.ForeignKey(
+        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="certificate_history_entries"
+    )
+    related_decision = models.ForeignKey(
+        "audits.CertificationDecision", on_delete=models.SET_NULL, null=True, blank=True, related_name="certificate_history_entries"
+    )
+    certificate_number_snapshot = models.CharField(max_length=100, blank=True)
+    certification_scope_snapshot = models.TextField(blank=True)
+    valid_from = models.DateField(null=True, blank=True)
+    valid_to = models.DateField(null=True, blank=True)
+    action_by = models.ForeignKey(
+        "auth.User", on_delete=models.SET_NULL, null=True, related_name="certificate_history_actions"
+    )
+    action_reason = models.TextField(blank=True)
+    internal_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Certificate History"
+        verbose_name_plural = "Certificate History Entries"
+        ordering = ["-action_date", "-created_at"]
+        indexes = [
+            models.Index(fields=["action"]),
+            models.Index(fields=["action_date"]),
+        ]
+
+    def __str__(self):
+        return f"{self.certification} {self.action} ({self.action_date})"
+
+
+class SurveillanceSchedule(models.Model):
+    """Track 3-year certification cycle surveillance and recertification milestones."""
+
+    certification = models.OneToOneField(
+        Certification, on_delete=models.CASCADE, related_name="surveillance_schedule"
+    )
+    cycle_start = models.DateField(help_text="Certification cycle start (Stage 2 decision date)")
+    cycle_end = models.DateField(help_text="Certification cycle end (3 years from start)")
+    surveillance_1_due_date = models.DateField()
+    surveillance_2_due_date = models.DateField()
+    recertification_due_date = models.DateField()
+    surveillance_1_audit = models.ForeignKey(
+        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_1_for"
+    )
+    surveillance_2_audit = models.ForeignKey(
+        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_2_for"
+    )
+    recertification_audit = models.ForeignKey(
+        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="recertification_for"
+    )
+    surveillance_1_completed = models.BooleanField(default=False)
+    surveillance_2_completed = models.BooleanField(default=False)
+    recertification_completed = models.BooleanField(default=False)
+    overdue_alert_sent = models.BooleanField(default=False)
+    expiry_warning_sent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Surveillance Schedule"
+        verbose_name_plural = "Surveillance Schedules"
+        ordering = ["-cycle_start"]
+
+    def __str__(self):
+        return f"Surveillance schedule for {self.certification}" 

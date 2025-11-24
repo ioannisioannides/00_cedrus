@@ -7,7 +7,6 @@ and validation guards. Concrete workflows should subclass or compose this engine
 
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
-
 GuardResult = Tuple[bool, str]
 PermissionChecker = Callable[[object, str, str], bool]
 GuardChecker = Callable[[str, str], GuardResult]

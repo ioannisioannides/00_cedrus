@@ -111,23 +111,65 @@ class AuditSequenceValidationTests(TestCase):
         self.auditor_group = Group.objects.get_or_create(name="lead_auditor")[0]
         self.user.groups.add(self.auditor_group)
 
-    def test_stage2_requires_completed_stage1(self):
-        """Stage 2 audit requires a completed Stage 1 audit."""
+    def test_stage2_cannot_proceed_to_technical_review_without_stage1(self):
+        """Stage 2 cannot proceed to closure without completed Stage 1."""
+        # Create CB Admin for transition check
+        cb_admin = User.objects.create_user(username="cbadmin_val", password="pass")
+        cb_admin.groups.add(Group.objects.get_or_create(name="cb_admin")[0])
+
         today = timezone.now().date()
 
-        audit = Audit(
+        # Create Stage 2 without Stage 1
+        stage2 = Audit.objects.create(
             organization=self.org,
             audit_type="stage2",
             total_audit_date_from=today,
             total_audit_date_to=today + timedelta(days=3),
             lead_auditor=self.user,
             created_by=self.user,
+            status="decision_pending",
         )
+        stage2.certifications.add(self.cert)
+        stage2.sites.add(self.site)
 
-        with self.assertRaises(ValidationError) as cm:
-            audit.full_clean()  # full_clean() includes clean()
+        workflow = AuditWorkflow(stage2)
+        can_transition, reason = workflow.can_transition("closed", cb_admin)
 
-        self.assertIn("Stage 2 audit requires a completed Stage 1", str(cm.exception))
+        self.assertFalse(can_transition)
+        self.assertIn("Stage 2 audit requires a completed Stage 1", reason)
+
+    def test_surveillance_cannot_proceed_without_active_certification(self):
+        """Surveillance cannot proceed to closure without active certification."""
+        # Create CB Admin for transition check
+        if not User.objects.filter(username="cbadmin_val").exists():
+            cb_admin = User.objects.create_user(username="cbadmin_val", password="pass")
+            cb_admin.groups.add(Group.objects.get_or_create(name="cb_admin")[0])
+        else:
+            cb_admin = User.objects.get(username="cbadmin_val")
+
+        today = timezone.now().date()
+
+        # Update existing certification to draft status instead of creating new one
+        self.cert.certificate_status = "draft"
+        self.cert.save()
+
+        surveillance = Audit.objects.create(
+            organization=self.org,
+            audit_type="surveillance",
+            total_audit_date_from=today,
+            total_audit_date_to=today + timedelta(days=2),
+            lead_auditor=self.user,
+            created_by=self.user,
+            status="decision_pending",
+        )
+        surveillance.certifications.add(self.cert)
+        surveillance.sites.add(self.site)
+
+        workflow = AuditWorkflow(surveillance)
+        can_transition, reason = workflow.can_transition("closed", cb_admin)
+
+        self.assertFalse(can_transition)
+        self.assertIn("requires active certifications", reason)
 
     def test_stage2_valid_after_stage1_closed(self):
         """Stage 2 is valid after Stage 1 is closed."""
@@ -448,8 +490,8 @@ class WorkflowAuditSequenceValidationTests(TestCase):
         self.cb_admin_group = Group.objects.get_or_create(name="cb_admin")[0]
         self.cb_admin.groups.add(self.cb_admin_group)
 
-    def test_stage2_cannot_proceed_to_technical_review_without_stage1(self):
-        """Stage 2 cannot proceed to technical review without completed Stage 1."""
+    def test_stage2_cannot_close_without_stage1(self):
+        """Stage 2 cannot close without completed Stage 1."""
         today = timezone.now().date()
 
         # Create Stage 2 without Stage 1
@@ -460,19 +502,19 @@ class WorkflowAuditSequenceValidationTests(TestCase):
             total_audit_date_to=today + timedelta(days=3),
             lead_auditor=self.cb_admin,
             created_by=self.cb_admin,
-            status="submitted",
+            status="decision_pending",
         )
         stage2.certifications.add(self.cert)
         stage2.sites.add(self.site)
 
         workflow = AuditWorkflow(stage2)
-        can_transition, reason = workflow.can_transition("decided", self.cb_admin)
+        can_transition, reason = workflow.can_transition("closed", self.cb_admin)
 
         self.assertFalse(can_transition)
         self.assertIn("Stage 2 audit requires a completed Stage 1", reason)
 
-    def test_surveillance_cannot_proceed_without_active_certification(self):
-        """Surveillance cannot proceed to technical review without active certification."""
+    def test_surveillance_cannot_close_without_active_certification(self):
+        """Surveillance cannot close without active certification."""
         today = timezone.now().date()
 
         # Update existing certification to draft status instead of creating new one
@@ -486,13 +528,13 @@ class WorkflowAuditSequenceValidationTests(TestCase):
             total_audit_date_to=today + timedelta(days=2),
             lead_auditor=self.cb_admin,
             created_by=self.cb_admin,
-            status="submitted",
+            status="decision_pending",
         )
         surveillance.certifications.add(self.cert)
         surveillance.sites.add(self.site)
 
         workflow = AuditWorkflow(surveillance)
-        can_transition, reason = workflow.can_transition("decided", self.cb_admin)
+        can_transition, reason = workflow.can_transition("closed", self.cb_admin)
 
         self.assertFalse(can_transition)
         self.assertIn("requires active certifications", reason)

@@ -82,6 +82,24 @@ def on_nc_verified(payload):
         logger.info(f"NC {nc.id} (Clause {nc.clause}) closed")
 
 
+def on_complaint_received(payload):
+    """Handler for complaint received events."""
+    complaint = payload.get("complaint")
+    logger.info(f"Complaint {complaint.complaint_number} received from {complaint.complainant_name}")
+
+
+def on_appeal_received(payload):
+    """Handler for appeal received events."""
+    appeal = payload.get("appeal")
+    logger.info(f"Appeal {appeal.appeal_number} received from {appeal.appellant_name}")
+
+
+def on_certificate_history_created(payload):
+    """Handler for certificate history creation."""
+    history = payload.get("history")
+    logger.info(f"Certificate history created: {history.action} for {history.certification.certificate_id}")
+
+
 def register_event_handlers():
     """
     Register all event handlers.
@@ -89,4 +107,7 @@ def register_event_handlers():
     Called from core.apps.CoreConfig.ready()
     """
     event_dispatcher.register(EventType.AUDIT_STATUS_CHANGED, on_audit_status_changed)
+    event_dispatcher.register(EventType.COMPLAINT_RECEIVED, on_complaint_received)
+    event_dispatcher.register(EventType.APPEAL_RECEIVED, on_appeal_received)
+    event_dispatcher.register(EventType.CERTIFICATE_HISTORY_CREATED, on_certificate_history_created)
     logger.info("Registered event handlers for audit lifecycle events")

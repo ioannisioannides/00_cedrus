@@ -222,6 +222,20 @@ class AuditWorkflowIntegrationTest(TestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.status, "submitted")
 
+        # Step 8.1: Move to technical_review
+        response = self.client.post(
+            reverse("audits:audit_transition_status", args=[audit.pk, "technical_review"])
+        )
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, "technical_review")
+
+        # Step 8.2: Move to decision_pending
+        response = self.client.post(
+            reverse("audits:audit_transition_status", args=[audit.pk, "decision_pending"])
+        )
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, "decision_pending")
+
         # Step 9: Create certification decision (audit is now in 'submitted' status)
         from audits.models import CertificationDecision
 
@@ -235,11 +249,11 @@ class AuditWorkflowIntegrationTest(TestCase):
 
         # Step 12: Transition to closed
         response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "decided"])
+            reverse("audits:audit_transition_status", args=[audit.pk, "closed"])
         )
 
         audit.refresh_from_db()
-        self.assertEqual(audit.status, "decided")
+        self.assertEqual(audit.status, "closed")
 
         # Verify the complete workflow
         self.assertEqual(Nonconformity.objects.filter(audit=audit).count(), 1)

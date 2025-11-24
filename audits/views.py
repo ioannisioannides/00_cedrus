@@ -24,6 +24,7 @@ from core.models import Certification, Organization, Site
 from trunk.permissions.mixins import AuditorRequiredMixin, CBAdminRequiredMixin, ClientRequiredMixin
 from trunk.permissions.predicates import PermissionPredicate
 from trunk.services.audit_service import AuditService
+from trunk.services.certificate_service import CertificateService
 from trunk.services.finding_service import FindingService
 
 from .documentation_forms import AuditChangesForm, AuditPlanReviewForm, AuditSummaryForm
@@ -807,7 +808,7 @@ class NonconformityCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVie
         """Check if user can create nonconformities for this audit."""
         audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
         # Check audit status allows findings
-        if audit.status == "decided":
+        if audit.status in ["decided", "closed"]:
             return False
         return can_add_finding(self.request.user, audit)
 
@@ -906,7 +907,7 @@ class NonconformityUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
         """Check if user can update this nonconformity."""
         nc = self.get_object()
         # Can't edit if audit is decided
-        if nc.audit.status == "decided":
+        if nc.audit.status in ["decided", "closed"]:
             return False
         # Can't edit if client has responded
         if nc.verification_status in ["client_responded", "accepted", "closed"]:
@@ -1018,7 +1019,7 @@ class ObservationCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView)
     def test_func(self):
         """Check if user has permission to access this view."""
         audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
-        if audit.status == "decided":
+        if audit.status in ["decided", "closed"]:
             return False
         return can_add_finding(self.request.user, audit)
 
@@ -1104,7 +1105,7 @@ class ObservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
     def test_func(self):
         """Check if user has permission to access this view."""
         obs = self.get_object()
-        if obs.audit.status == "decided":
+        if obs.audit.status in ["decided", "closed"]:
             return False
         return can_edit_finding(self.request.user, obs)
 
@@ -1142,7 +1143,7 @@ class OpportunityForImprovementCreateView(LoginRequiredMixin, UserPassesTestMixi
     def test_func(self):
         """Check if user has permission to access this view."""
         audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
-        if audit.status == "decided":
+        if audit.status in ["decided", "closed"]:
             return False
         return can_add_finding(self.request.user, audit)
 
@@ -1226,7 +1227,7 @@ class OpportunityForImprovementUpdateView(LoginRequiredMixin, UserPassesTestMixi
     def test_func(self):
         """Check if user has permission to access this view."""
         ofi = self.get_object()
-        if ofi.audit.status == "decided":
+        if ofi.audit.status in ["decided", "closed"]:
             return False
         return can_edit_finding(self.request.user, ofi)
 
@@ -1264,7 +1265,7 @@ class NonconformityDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteVie
     def test_func(self):
         """Check if user has permission to access this view."""
         nc = self.get_object()
-        if nc.audit.status == "decided":
+        if nc.audit.status in ["decided", "closed"]:
             return False
         return can_edit_finding(self.request.user, nc)
 
@@ -1286,7 +1287,7 @@ class ObservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
     def test_func(self):
         """Check if user has permission to access this view."""
         obs = self.get_object()
-        if obs.audit.status == "decided":
+        if obs.audit.status in ["decided", "closed"]:
             return False
         return can_edit_finding(self.request.user, obs)
 
@@ -1308,7 +1309,7 @@ class OpportunityForImprovementDeleteView(LoginRequiredMixin, UserPassesTestMixi
     def test_func(self):
         """Check if user has permission to access this view."""
         ofi = self.get_object()
-        if ofi.audit.status == "decided":
+        if ofi.audit.status in ["decided", "closed"]:
             return False
         return can_edit_finding(self.request.user, ofi)
 
@@ -1506,6 +1507,10 @@ class CertificationDecisionView(LoginRequiredMixin, UserPassesTestMixin, CreateV
                 self.request.user,
                 notes=f"Decision: {self.object.get_decision_display()} by {self.request.user.get_full_name()}",
             )
+            
+            # Record certificate history and schedule surveillance
+            CertificateService.record_decision(self.object)
+            
             messages.success(
                 self.request,
                 f"Certification decision made: {self.object.get_decision_display()}. Audit closed.",
@@ -1579,7 +1584,7 @@ def team_member_add(request, audit_pk):
     competence_warnings = []
 
     if request.method == "POST":
-        form = AuditTeamMemberForm(request.POST, audit=audit)
+        form = AuditTeamMemberForm(request.POST, audit=audit, user=request.user)
         if form.is_valid():
             team_member = form.save()
 
@@ -1602,7 +1607,7 @@ def team_member_add(request, audit_pk):
 
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
-        form = AuditTeamMemberForm(audit=audit)
+        form = AuditTeamMemberForm(audit=audit, user=request.user)
 
     context = {
         "audit": audit,
@@ -1636,13 +1641,13 @@ def team_member_edit(request, pk):
         return redirect("audits:audit_detail", pk=audit.pk)
 
     if request.method == "POST":
-        form = AuditTeamMemberForm(request.POST, instance=team_member, audit=audit)
+        form = AuditTeamMemberForm(request.POST, instance=team_member, audit=audit, user=request.user)
         if form.is_valid():
             team_member = form.save()
             messages.success(request, f"Team member {team_member.name} updated successfully.")
             return redirect("audits:audit_detail", pk=audit.pk)
     else:
-        form = AuditTeamMemberForm(instance=team_member, audit=audit)
+        form = AuditTeamMemberForm(instance=team_member, audit=audit, user=request.user)
 
     context = {
         "audit": audit,

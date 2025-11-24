@@ -192,6 +192,18 @@ class AuditWorkflowTest(TestCase):
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "submitted")
 
+        # submitted → technical_review
+        workflow = AuditWorkflow(self.audit)
+        workflow.transition("technical_review", self.cb_admin)
+        self.audit.refresh_from_db()
+        self.assertEqual(self.audit.status, "technical_review")
+
+        # technical_review → decision_pending
+        workflow = AuditWorkflow(self.audit)
+        workflow.transition("decision_pending", self.cb_admin)
+        self.audit.refresh_from_db()
+        self.assertEqual(self.audit.status, "decision_pending")
+
         # Create certification decision
         CertificationDecision.objects.create(
             audit=self.audit,
@@ -202,19 +214,21 @@ class AuditWorkflowTest(TestCase):
 
         # decision_pending → closed
         workflow = AuditWorkflow(self.audit)
-        workflow.transition("decided", self.cb_admin)
+        workflow.transition("closed", self.cb_admin)
         self.audit.refresh_from_db()
-        self.assertEqual(self.audit.status, "decided")
+        self.assertEqual(self.audit.status, "closed")
 
-    def test_no_transitions_from_decided(self):
-        """Test that decided status is final (no outgoing transitions)."""
+    def test_transitions_from_decided(self):
+        """Test transitions from decided status."""
         self.audit.status = "decided"
         self.audit.save()
 
         workflow = AuditWorkflow(self.audit)
         available = workflow.get_available_transitions(self.cb_admin)
 
-        self.assertEqual(len(available), 0)
+        # Should allow transition to closed
+        self.assertEqual(len(available), 1)
+        self.assertEqual(available[0][0], "closed")
 
 
 class AuditWorkflowValidationTest(TestCase):
@@ -438,12 +452,14 @@ class AuditWorkflowAvailableTransitionsTest(TestCase):
         self.assertIn("in_progress", status_codes)
         self.assertIn("cancelled", status_codes)
 
-    def test_no_available_transitions_in_decided(self):
-        """Test no available transitions when audit is decided."""
+    def test_available_transitions_in_decided(self):
+        """Test available transitions when audit is decided."""
         self.audit.status = "decided"
         self.audit.save()
 
         workflow = AuditWorkflow(self.audit)
         available = workflow.get_available_transitions(self.cb_admin)
 
-        self.assertEqual(len(available), 0)
+        # Should allow transition to closed
+        self.assertEqual(len(available), 1)
+        self.assertEqual(available[0][0], "closed")

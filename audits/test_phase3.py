@@ -169,7 +169,7 @@ class NonconformityCreationTests(TestCase):
 
     def test_cannot_create_nc_on_closed_audit(self):
         """Test that NCs cannot be created on closed audits."""
-        self.audit.status = "decided"
+        self.audit.status = "closed"
         self.audit.save()
 
         self.client.login(username="leadaud", password="test")
@@ -178,7 +178,7 @@ class NonconformityCreationTests(TestCase):
         )
 
         # Should be forbidden (403) - test_func blocks this
-        # Audits in "decided" status are closed and cannot have new findings added
+        # Audits in "closed" status are closed and cannot have new findings added
         self.assertEqual(response.status_code, 403)
 
 
@@ -743,7 +743,7 @@ class StatusWorkflowEnforcementTests(TestCase):
     def test_invalid_transition_draft_to_closed(self):
         """Test invalid transition: draft → closed (skip steps)."""
         workflow = AuditWorkflow(self.audit)
-        allowed, reason = workflow.can_transition("decided", self.lead_auditor)
+        allowed, reason = workflow.can_transition("closed", self.lead_auditor)
 
         self.assertFalse(allowed)
         self.assertIn("Invalid transition", reason)
@@ -782,11 +782,11 @@ class StatusWorkflowEnforcementTests(TestCase):
         """Test that technical review gate is mandatory (ISO 17021 Clause 9.5)."""
         from audits.models import TechnicalReview
 
-        # Move audit to client_review
-        self.audit.status = "client_review"
+        # Move audit to technical_review (via submitted)
+        self.audit.status = "technical_review"
         self.audit.save()
 
-        # Create and approve technical review (required before submission)
+        # Create and approve technical review (required before decision_pending)
         TechnicalReview.objects.create(
             audit=self.audit,
             reviewer=self.cb_admin,
@@ -800,23 +800,23 @@ class StatusWorkflowEnforcementTests(TestCase):
 
         workflow = AuditWorkflow(self.audit)
 
-        # CB Admin can now submit after technical review is approved
-        allowed, _ = workflow.can_transition("submitted", self.cb_admin)
+        # CB Admin can now move to decision_pending after technical review is approved
+        allowed, _ = workflow.can_transition("decision_pending", self.cb_admin)
         self.assertTrue(allowed)
 
-        workflow.transition("submitted", self.cb_admin)
+        workflow.transition("decision_pending", self.cb_admin)
         self.audit.refresh_from_db()
-        self.assertEqual(self.audit.status, "submitted")
+        self.assertEqual(self.audit.status, "decision_pending")
 
     def test_cannot_skip_technical_review(self):
-        """Test that decision cannot be made without technical review."""
-        self.audit.status = "client_review"
+        """Test that decision pending cannot be reached without approved technical review."""
+        self.audit.status = "technical_review"
         self.audit.save()
 
         workflow = AuditWorkflow(self.audit)
 
-        # Cannot go directly to decision_pending
-        allowed, _ = workflow.can_transition("submitted", self.cb_admin)
+        # Cannot go to decision_pending without approved technical review
+        allowed, _ = workflow.can_transition("decision_pending", self.cb_admin)
         self.assertFalse(allowed)
 
     def test_backward_transition_returned_for_correction(self):

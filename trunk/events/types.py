@@ -17,6 +17,16 @@ class EventType:
     AUDIT_SUBMITTED_TO_CB = "audit.submitted_to_cb"
     AUDIT_DECIDED = "audit.decided"
 
+    # Complaints & Appeals
+    COMPLAINT_RECEIVED = "complaint.received"
+    COMPLAINT_STATUS_CHANGED = "complaint.status_changed"
+    APPEAL_RECEIVED = "appeal.received"
+    APPEAL_DECIDED = "appeal.decided"
+
+    # Certificate lifecycle
+    CERTIFICATE_HISTORY_CREATED = "certificate.history_created"
+    SURVEILLANCE_SCHEDULE_CREATED = "surveillance.schedule_created"
+
     # Finding lifecycle events
     FINDING_CREATED = "finding.created"
     FINDING_UPDATED = "finding.updated"

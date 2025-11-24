@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Appeals</h2>
+        <a href="{% url 'audits:appeal_create' %}" class="btn btn-primary">Submit Appeal</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if appeals %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                                <th>Appellant</th>
+                                <th>Related Audit</th>
+                                <th>Status</th>
+                                <th>Received Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appeal in appeals %}
+                                <tr>
+                                    <td>{{ appeal.appeal_number }}</td>
+                                    <td>{{ appeal.appellant_name }}</td>
+                                    <td>{{ appeal.related_audit }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ appeal.status|yesno:'success,warning,secondary' }}">
+                                            {{ appeal.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ appeal.received_date }}</td>
+                                    <td>
+                                        <a href="{% url 'audits:appeal_detail' appeal.pk %}" class="btn btn-sm btn-info">View</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No appeals found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -31,8 +31,11 @@ class AuditWorkflow:
         "in_progress": ["report_draft", "cancelled"],
         "report_draft": ["client_review", "in_progress"],  # Can go back to in_progress
         "client_review": ["submitted", "report_draft"],  # Can go back for corrections
-        "submitted": ["decided"],
-        "decided": [],  # Terminal state
+        "submitted": ["technical_review"],
+        "technical_review": ["decision_pending", "report_draft"],
+        "decision_pending": ["closed", "technical_review"],
+        "decided": ["closed"],  # Legacy support
+        "closed": [],  # Terminal state
         "cancelled": [],  # Terminal state
     }
 
@@ -44,7 +47,10 @@ class AuditWorkflow:
         "report_draft": "Audit complete, report is being written",
         "client_review": "Report sent to client for review and feedback",
         "submitted": "Report submitted to CB for certification decision",
-        "decided": "Certification decision has been made",
+        "technical_review": "Audit is undergoing technical review",
+        "decision_pending": "Audit is awaiting certification decision",
+        "decided": "Certification decision has been made (Legacy)",
+        "closed": "Audit is closed",
         "cancelled": "Audit has been cancelled",
     }
 
@@ -96,6 +102,12 @@ class AuditWorkflow:
             self._validate_client_review()
         elif new_status == "submitted":
             self._validate_submitted()
+        elif new_status == "technical_review":
+            self._validate_technical_review()
+        elif new_status == "decision_pending":
+            self._validate_decision_pending()
+        elif new_status == "closed":
+            self._validate_closed()
         elif new_status == "decided":
             self._validate_decided()
 
@@ -141,6 +153,65 @@ class AuditWorkflow:
                     f"Cannot submit audit: Major NC (Clause {nc.clause}) "
                     "is missing client response. Client must respond to all major NCs."
                 )
+
+    def _validate_technical_review(self):
+        """Validate transition to technical_review status."""
+        # Ensure submitted requirements are met (redundant but safe)
+        self._validate_submitted()
+
+    def _validate_decision_pending(self):
+        """Validate transition to decision_pending status."""
+        # Technical review must exist and be approved
+        if not hasattr(self.audit, "technical_review"):
+            raise ValidationError("Cannot move to decision pending: Technical review is required")
+        
+        technical_review = self.audit.technical_review
+        if technical_review.status != "approved":
+            raise ValidationError(
+                f"Cannot move to decision pending: Technical review status is '{technical_review.get_status_display()}', must be 'Approved'"
+            )
+
+    def _validate_closed(self):
+        """Validate transition to closed status."""
+        # Stage 2 must have decided Stage 1
+        if self.audit.audit_type == "stage2":
+            previous_stage1 = (
+                self.audit.__class__.objects.filter(
+                    organization=self.audit.organization, audit_type="stage1", status="closed"
+                )
+                .exclude(pk=self.audit.pk)
+                .exists()
+            )
+            if not previous_stage1:
+                # Check for legacy "decided" status too
+                previous_stage1_legacy = (
+                    self.audit.__class__.objects.filter(
+                        organization=self.audit.organization, audit_type="stage1", status="decided"
+                    )
+                    .exclude(pk=self.audit.pk)
+                    .exists()
+                )
+                if not previous_stage1_legacy:
+                    raise ValidationError(
+                        "Stage 2 audit requires a completed Stage 1 audit before closing."
+                    )
+
+        # Surveillance requires active certifications
+        if self.audit.audit_type == "surveillance":
+            has_active_cert = self.audit.certifications.filter(certificate_status="active").exists()
+            if not has_active_cert:
+                raise ValidationError(
+                    "Surveillance audit requires active certifications. Cannot make decision."
+                )
+
+        # All major NCs must be verified (not open)
+        open_major_ncs = self.audit.nonconformity_set.filter(category="major", verification_status="open")
+        if open_major_ncs.exists():
+            nc_list = ", ".join([f"Clause {nc.clause}" for nc in open_major_ncs[:3]])
+            count = open_major_ncs.count()
+            raise ValidationError(
+                f"Cannot make decision: {count} major NC(s) still open ({nc_list}). All must be verified."
+            )
 
     def _validate_decided(self):
         """Validate transition to decided status."""

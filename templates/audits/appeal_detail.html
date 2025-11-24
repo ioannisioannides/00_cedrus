@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Appeal: {{ appeal.appeal_number }}</h3>
+            <span class="badge bg-secondary">{{ appeal.get_status_display }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Appellant Details</h5>
+                    <p><strong>Name:</strong> {{ appeal.appellant_name }}</p>
+                    <p><strong>Email:</strong> {{ appeal.appellant_email }}</p>
+                    <p><strong>Organization:</strong> {{ appeal.appellant_organization }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Appeal Info</h5>
+                    <p><strong>Received:</strong> {{ appeal.received_date }}</p>
+                    {% if appeal.related_audit %}
+                        <p><strong>Related Audit:</strong> <a href="{% url 'audits:audit_detail' appeal.related_audit.pk %}">{{ appeal.related_audit }}</a></p>
+                    {% endif %}
+                    {% if appeal.related_decision %}
+                        <p><strong>Related Decision:</strong> {{ appeal.related_decision }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <h5>Grounds for Appeal</h5>
+                <div class="p-3 bg-light border rounded">
+                    {{ appeal.grounds_for_appeal|linebreaks }}
+                </div>
+            </div>
+
+            {% if appeal.resolution_notes %}
+            <div class="mb-3">
+                <h5>Resolution Notes</h5>
+                <div class="p-3 bg-light border rounded">
+                    {{ appeal.resolution_notes|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{% url 'audits:appeal_list' %}" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

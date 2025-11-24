@@ -7,7 +7,8 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-from audits.models import Audit, AuditTeamMember
+from audits.models import Audit, AuditTeamMember, AuditorCompetenceWarning
+from trunk.services.competence_service import CompetenceService
 
 
 class AuditTeamMemberForm(forms.ModelForm):
@@ -71,6 +72,7 @@ class AuditTeamMemberForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.audit = kwargs.pop("audit", None)
+        self.request_user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
         # If editing existing member, populate name from instance
@@ -138,6 +140,23 @@ class AuditTeamMemberForm(forms.ModelForm):
                     {
                         "date_to": f"Team member end date cannot be after audit end date ({self.audit.total_audit_date_to})."
                     }
+                )
+
+        # Competence Validation (Sprint 8 / Phase 2A)
+        user = cleaned_data.get("user")
+        if user and self.audit and self.request_user:
+            try:
+                CompetenceService.ensure_auditor_has_active_qualification(user, self.audit)
+                CompetenceService.check_recent_competence_evaluation(user)
+            except ValidationError as e:
+                # Create warning record instead of blocking assignment
+                # This allows the assignment but flags it for review
+                AuditorCompetenceWarning.objects.create(
+                    audit=self.audit,
+                    auditor=user,
+                    warning_type="scope_mismatch", # Defaulting to scope mismatch or we could parse exception
+                    description=str(e.message) if hasattr(e, 'message') else str(e),
+                    issued_by=self.request_user
                 )
 
         return cleaned_data

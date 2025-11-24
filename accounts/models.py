@@ -86,6 +86,173 @@ class Profile(models.Model):
         return "No Role"
 
 
+# ---------------------------------------------------------------------------
+# Phase 2A: Auditor Competence & Impartiality (ISO 17021-1 Clause 7 & 5.2)
+# ---------------------------------------------------------------------------
+
+class AuditorQualification(models.Model):
+    """Formal auditor qualification / certification record."""
+
+    QUALIFICATION_TYPE_CHOICES = [
+        ("lead_auditor_cert", "Lead Auditor Certificate"),
+        ("auditor_cert", "Auditor Certificate"),
+        ("technical_expert_cert", "Technical Expert Certificate"),
+        ("sector_qualification", "Sector-Specific Qualification"),
+        ("language_cert", "Language Certification"),
+    ]
+
+    auditor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="qualifications")
+    qualification_type = models.CharField(max_length=40, choices=QUALIFICATION_TYPE_CHOICES)
+    issuing_body = models.CharField(max_length=255)
+    certificate_number = models.CharField(max_length=100)
+    issue_date = models.DateField()
+    expiry_date = models.DateField(null=True, blank=True)
+    standards = models.ManyToManyField("core.Standard", blank=True, related_name="auditor_qualifications")
+    nace_codes = models.CharField(
+        max_length=255, blank=True, help_text="Comma-separated NACE codes for sector competence"
+    )
+    ea_codes = models.CharField(
+        max_length=255, blank=True, help_text="Comma-separated EA codes for sector competence"
+    )
+    certificate_file = models.FileField(upload_to="auditor_qualifications/", blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[("active", "Active"), ("expired", "Expired"), ("suspended", "Suspended"), ("withdrawn", "Withdrawn")],
+        default="active",
+    )
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Auditor Qualification"
+        verbose_name_plural = "Auditor Qualifications"
+        ordering = ["auditor", "-issue_date"]
+        indexes = [models.Index(fields=["status"])]
+
+    def __str__(self):
+        return f"{self.auditor.username} - {self.get_qualification_type_display()}"
+
+
+class AuditorTrainingRecord(models.Model):
+    """Continuing professional development and training records."""
+
+    auditor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="training_records")
+    course_title = models.CharField(max_length=255)
+    training_provider = models.CharField(max_length=255)
+    course_date = models.DateField()
+    duration_hours = models.FloatField(null=True, blank=True)
+    standards_covered = models.ManyToManyField("core.Standard", blank=True, related_name="training_records")
+    cpd_points = models.FloatField(default=0.0, help_text="Continuing Professional Development points")
+    certificate_file = models.FileField(upload_to="training_certificates/", blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Auditor Training Record"
+        verbose_name_plural = "Auditor Training Records"
+        ordering = ["-course_date"]
+
+    def __str__(self):
+        return f"Training: {self.course_title} ({self.auditor.username})"
+
+
+class AuditorCompetenceEvaluation(models.Model):
+    """Annual competence evaluation (witness audits, scoring)."""
+
+    auditor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="competence_evaluations")
+    evaluation_date = models.DateField()
+    evaluator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="evaluations_conducted")
+    technical_knowledge_score = models.PositiveIntegerField()
+    audit_skills_score = models.PositiveIntegerField()
+    communication_skills_score = models.PositiveIntegerField()
+    report_writing_score = models.PositiveIntegerField()
+    witness_audit_date = models.DateField(null=True, blank=True)
+    witness_audit_observer = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="witness_audits_observed"
+    )
+    witness_audit_notes = models.TextField(blank=True)
+    overall_assessment = models.CharField(
+        max_length=30,
+        choices=[
+            ("exceeds", "Exceeds Requirements"),
+            ("meets", "Meets Requirements"),
+            ("development_needed", "Development Needed"),
+            ("unsatisfactory", "Unsatisfactory"),
+        ],
+    )
+    development_plan = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Auditor Competence Evaluation"
+        verbose_name_plural = "Auditor Competence Evaluations"
+        ordering = ["-evaluation_date"]
+
+    def __str__(self):
+        return f"Competence Eval {self.auditor.username} {self.evaluation_date}"
+
+
+class ConflictOfInterest(models.Model):
+    """Declared relationships that may pose impartiality risks."""
+
+    RELATIONSHIP_TYPE_CHOICES = [
+        ("former_employee", "Former Employee"),
+        ("consultant", "Consultant / Advisory"),
+        ("family_member", "Family Member Employed"),
+        ("financial_interest", "Financial Interest"),
+        ("competing_business", "Competing Business"),
+        ("other", "Other"),
+    ]
+
+    auditor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="conflicts_of_interest")
+    organization = models.ForeignKey(
+        "core.Organization", on_delete=models.CASCADE, related_name="conflicts_declared"
+    )
+    relationship_type = models.CharField(max_length=40, choices=RELATIONSHIP_TYPE_CHOICES)
+    description = models.TextField()
+    declared_date = models.DateField(auto_now_add=True)
+    relationship_start_date = models.DateField(null=True, blank=True)
+    relationship_end_date = models.DateField(null=True, blank=True)
+    impartiality_risk = models.CharField(
+        max_length=20,
+        choices=[("low", "Low"), ("medium", "Medium"), ("high", "High - Assignment Prohibited")],
+        default="low",
+    )
+    mitigation_measures = models.TextField(blank=True)
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="coi_approvals")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Conflict of Interest"
+        verbose_name_plural = "Conflicts of Interest"
+        ordering = ["-declared_date"]
+        indexes = [models.Index(fields=["impartiality_risk"])]
+
+    def __str__(self):
+        return f"COI {self.auditor.username} → {self.organization.name} ({self.get_impartiality_risk_display()})"
+
+
+class ImpartialityDeclaration(models.Model):
+    """Annual impartiality declaration by personnel (ISO 17021-1 Clause 5)."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="impartiality_declarations")
+    declaration_period_year = models.PositiveIntegerField()
+    declaration_date = models.DateField(auto_now_add=True)
+    no_conflicts_declared = models.BooleanField(default=False)
+    conflicts_detailed = models.TextField(blank=True)
+    declaration_accepted = models.BooleanField(default=False)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="impartiality_reviews")
+
+    class Meta:
+        verbose_name = "Impartiality Declaration"
+        verbose_name_plural = "Impartiality Declarations"
+        ordering = ["-declaration_date"]
+        unique_together = ["user", "declaration_period_year"]
+
+    def __str__(self):
+        return f"Impartiality {self.user.username} {self.declaration_period_year}"
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     """Automatically create a profile when a user is created."""

@@ -22,8 +22,11 @@ class AuditStateMachine:
         "in_progress": ["report_draft", "cancelled"],
         "report_draft": ["client_review", "in_progress"],
         "client_review": ["submitted", "report_draft"],
-        "submitted": ["decided"],
-        "decided": [],
+        "submitted": ["technical_review"],
+        "technical_review": ["decision_pending", "report_draft"],
+        "decision_pending": ["closed", "technical_review"],
+        "decided": ["closed"],
+        "closed": [],
         "cancelled": [],
     }
 
@@ -119,10 +122,17 @@ class AuditStateMachine:
             ok, _ = PBACPolicy.is_assigned_to_audit(user, self.audit)
             return PermissionPredicate.is_lead_auditor(user) and self.audit.lead_auditor == user and ok
 
-        # submitted → decided: CB Decision Maker or CB Admin, with independence check
-        if from_state == "submitted" and to_state == "decided":
+        # submitted → technical_review: CB Admin or Technical Reviewer
+        if from_state == "submitted" and to_state == "technical_review":
+            return PermissionPredicate.can_conduct_technical_review(user)
+
+        # technical_review → decision_pending: CB Admin or Technical Reviewer
+        if from_state == "technical_review" and to_state == "decision_pending":
+            return PermissionPredicate.can_conduct_technical_review(user)
+
+        # decision_pending → closed: CB Decision Maker or CB Admin
+        if from_state == "decision_pending" and to_state == "closed":
             if PermissionPredicate.is_decision_maker(user):
-                # Check independence per ISO 17021-1 Clause 9.6
                 ok, _ = PBACPolicy.is_independent_for_decision(user, self.audit)
                 return ok
             return PermissionPredicate.is_cb_admin(user)
@@ -155,19 +165,6 @@ class AuditStateMachine:
             return True, "Validation passed"
 
         def guard_client_review_to_submitted(_from: str, _to: str):
-            # Technical review must exist and be approved
-            if not hasattr(self.audit, "technical_review"):
-                return (
-                    False,
-                    "Cannot submit audit: Technical review is required before submission (ISO 17021-1 Clause 9.5)",
-                )
-            technical_review = self.audit.technical_review
-            if technical_review.status != "approved":
-                return (
-                    False,
-                    f"Cannot submit audit: Technical review status is '{technical_review.get_status_display()}', must be 'Approved'",
-                )
-
             # Major NCs must have client responses
             major_ncs = self.audit.nonconformity_set.filter(category="major")
             for nc in major_ncs:
@@ -178,12 +175,27 @@ class AuditStateMachine:
                     )
             return True, "Validation passed"
 
-        def guard_submitted_to_decided(_from: str, _to: str):
+        def guard_technical_review_to_decision_pending(_from: str, _to: str):
+            # Technical review must exist and be approved
+            if not hasattr(self.audit, "technical_review"):
+                return (
+                    False,
+                    "Cannot move to decision pending: Technical review is required",
+                )
+            technical_review = self.audit.technical_review
+            if technical_review.status != "approved":
+                return (
+                    False,
+                    f"Cannot move to decision pending: Technical review status is '{technical_review.get_status_display()}', must be 'Approved'",
+                )
+            return True, "Validation passed"
+
+        def guard_decision_pending_to_closed(_from: str, _to: str):
             # Stage 2 must have decided Stage 1
             if self.audit.audit_type == "stage2":
                 previous_stage1 = (
                     self.audit.__class__.objects.filter(
-                        organization=self.audit.organization, audit_type="stage1", status="decided"
+                        organization=self.audit.organization, audit_type="stage1", status="closed"
                     )
                     .exclude(pk=self.audit.pk)
                     .exists()
@@ -191,7 +203,7 @@ class AuditStateMachine:
                 if not previous_stage1:
                     return (
                         False,
-                        "Stage 2 audit requires a completed Stage 1 audit. Cannot make decision.",
+                        "Stage 2 audit requires a completed Stage 1 audit before closing.",
                     )
 
             # Surveillance requires active certifications
@@ -218,5 +230,6 @@ class AuditStateMachine:
             ("draft", "scheduled"): [guard_draft_to_scheduled],
             ("in_progress", "report_draft"): [guard_in_progress_to_report_draft],
             ("client_review", "submitted"): [guard_client_review_to_submitted],
-            ("submitted", "decided"): [guard_submitted_to_decided],
+            ("technical_review", "decision_pending"): [guard_technical_review_to_decision_pending],
+            ("decision_pending", "closed"): [guard_decision_pending_to_closed],
         }

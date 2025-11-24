@@ -40,7 +40,10 @@ class Audit(models.Model):
         ("report_draft", "Report Draft"),
         ("client_review", "Client Review"),
         ("submitted", "Submitted"),
+        ("technical_review", "Technical Review"),
+        ("decision_pending", "Decision Pending"),
         ("decided", "Decided"),
+        ("closed", "Closed"),
         ("cancelled", "Cancelled"),
     ]
 
@@ -606,6 +609,110 @@ class AuditStatusLog(models.Model):
         return f"{self.audit} - {self.from_status} → {self.to_status} ({self.changed_at})"
 
 
+# ---------------------------------------------------------------------------
+# Phase 2A: Complaints & Appeals (ISO 17021-1 Clause 9.8)
+# ---------------------------------------------------------------------------
+
+class Complaint(models.Model):
+    """Formal complaint management record (ISO 17021-1 Clause 9.8)."""
+
+    COMPLAINT_TYPE_CHOICES = [
+        ("audit_conduct", "Audit Conduct"),
+        ("auditor_behavior", "Auditor Behavior"),
+        ("certification_decision", "Certification Decision"),
+        ("certificate_misuse", "Certificate Misuse"),
+        ("other", "Other"),
+    ]
+
+    STATUS_CHOICES = [
+        ("received", "Received"),
+        ("under_investigation", "Under Investigation"),
+        ("resolved", "Resolved"),
+        ("closed", "Closed"),
+        ("escalated", "Escalated to Appeal"),
+    ]
+
+    complaint_number = models.CharField(max_length=50, unique=True)
+    organization = models.ForeignKey(
+        "core.Organization", on_delete=models.SET_NULL, null=True, blank=True, related_name="complaints"
+    )
+    related_audit = models.ForeignKey(
+        Audit, on_delete=models.SET_NULL, null=True, blank=True, related_name="complaints"
+    )
+    complainant_name = models.CharField(max_length=255)
+    complainant_email = models.EmailField(blank=True)
+    complaint_type = models.CharField(max_length=40, choices=COMPLAINT_TYPE_CHOICES)
+    description = models.TextField(help_text="Detailed description of the complaint")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="complaints_submitted")
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="received")
+    assigned_investigator = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="complaints_investigating"
+    )
+    investigation_started_at = models.DateTimeField(null=True, blank=True)
+    investigation_notes = models.TextField(blank=True)
+    investigation_completed_at = models.DateTimeField(null=True, blank=True)
+    resolution_details = models.TextField(blank=True)
+    corrective_actions = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Complaint"
+        verbose_name_plural = "Complaints"
+        ordering = ["-submitted_at"]
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["complaint_number"]),
+        ]
+
+    def __str__(self):
+        return f"Complaint {self.complaint_number} ({self.get_status_display()})"
+
+
+class Appeal(models.Model):
+    """Appeal against a certification decision or complaint resolution."""
+
+    APPEAL_STATUS_CHOICES = [
+        ("received", "Received"),
+        ("panel_review", "Panel Review"),
+        ("decided", "Decided"),
+        ("closed", "Closed"),
+    ]
+
+    appeal_number = models.CharField(max_length=50, unique=True)
+    related_complaint = models.ForeignKey(
+        Complaint, on_delete=models.SET_NULL, null=True, blank=True, related_name="appeals"
+    )
+    related_decision = models.ForeignKey(
+        "CertificationDecision", on_delete=models.SET_NULL, null=True, blank=True, related_name="appeals"
+    )
+    appellant_name = models.CharField(max_length=255)
+    appellant_email = models.EmailField(blank=True)
+    grounds = models.TextField(help_text="Grounds for appeal")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="appeals_submitted")
+    status = models.CharField(max_length=30, choices=APPEAL_STATUS_CHOICES, default="received")
+    panel_members = models.ManyToManyField(User, related_name="appeal_panels", blank=True)
+    panel_decision = models.CharField(
+        max_length=30,
+        choices=[("upheld", "Upheld"), ("rejected", "Rejected"), ("partially_upheld", "Partially Upheld")],
+        blank=True,
+    )
+    panel_decision_date = models.DateTimeField(null=True, blank=True)
+    panel_justification = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Appeal"
+        verbose_name_plural = "Appeals"
+        ordering = ["-submitted_at"]
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["appeal_number"]),
+        ]
+
+    def __str__(self):
+        return f"Appeal {self.appeal_number} ({self.get_status_display()})"
+
+
 class TechnicalReview(models.Model):
     """
     Technical review before certification decision (ISO 17021-1 Clause 9.5).
@@ -701,6 +808,114 @@ class CertificationDecision(models.Model):
     def __str__(self):
         """Return string representation of the model instance."""
         return f"Decision for {self.audit} - {self.get_decision_display()}"
+
+
+# ---------------------------------------------------------------------------
+# Phase 2B: Remote Audit & Transfer Certification & Pre-Audit Docs
+# ---------------------------------------------------------------------------
+
+class RemoteAuditLog(models.Model):
+    """IAF MD4: Track remote audit ICT-enabled activities."""
+
+    ACTIVITY_TYPE_CHOICES = [
+        ("video_conference", "Video Conference"),
+        ("document_review_remote", "Remote Document Review"),
+        ("screen_sharing", "Screen Sharing"),
+        ("remote_access", "Remote System Access"),
+        ("electronic_signature", "Electronic Signature"),
+    ]
+
+    audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name="remote_logs")
+    activity_type = models.CharField(max_length=40, choices=ACTIVITY_TYPE_CHOICES)
+    auditor = models.ForeignKey(User, on_delete=models.PROTECT, related_name="remote_audit_activities")
+    client_participants = models.TextField(blank=True, help_text="Names/roles of client participants")
+    platform_used = models.CharField(max_length=100, help_text="Technology platform (Zoom/Teams/WebEx/etc.)")
+    session_start = models.DateTimeField()
+    session_end = models.DateTimeField()
+    technology_validated = models.BooleanField(default=False)
+    security_controls_verified = models.BooleanField(default=False)
+    data_protection_confirmed = models.BooleanField(default=False)
+    session_notes = models.TextField(blank=True)
+    technical_issues = models.TextField(blank=True)
+    recording_file = models.FileField(upload_to="remote_audit_recordings/", blank=True)
+    site_visit_complement = models.BooleanField(
+        default=False, help_text="Was an on-site component also performed as complement?"
+    )
+
+    class Meta:
+        verbose_name = "Remote Audit Log"
+        verbose_name_plural = "Remote Audit Logs"
+        ordering = ["-session_start"]
+        indexes = [
+            models.Index(fields=["audit", "session_start"]),
+        ]
+
+    def __str__(self):
+        return f"Remote session {self.session_start} ({self.audit})"
+
+
+class TransferCertification(models.Model):
+    """IAF MD17: Transfer certification from previous CB."""
+
+    transfer_audit = models.OneToOneField(
+        Audit, on_delete=models.CASCADE, related_name="transfer_certification", limit_choices_to={"audit_type": "transfer"}
+    )
+    previous_cb_name = models.CharField(max_length=255)
+    previous_cb_accreditation_body = models.CharField(max_length=255, blank=True)
+    previous_certificate_number = models.CharField(max_length=100, blank=True)
+    previous_certificate_issue_date = models.DateField(null=True, blank=True)
+    previous_certificate_expiry_date = models.DateField(null=True, blank=True)
+    reason_for_transfer = models.TextField(blank=True)
+    previous_audit_reports_received = models.BooleanField(default=False)
+    previous_nc_records_received = models.BooleanField(default=False)
+    previous_surveillance_history_received = models.BooleanField(default=False)
+    previous_certificate_file = models.FileField(upload_to="transfer_certificates/", blank=True)
+    previous_audit_reports = models.FileField(upload_to="transfer_previous_reports/", blank=True)
+    transfer_date_before_expiry = models.BooleanField(default=False)
+    no_expiry_extension_applied = models.BooleanField(default=False)
+    transfer_approved = models.BooleanField(null=True)
+    transfer_approval_notes = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Transfer Certification"
+        verbose_name_plural = "Transfer Certifications"
+        ordering = ["-previous_certificate_expiry_date"]
+
+    def __str__(self):
+        return f"Transfer for audit {self.transfer_audit_id} from {self.previous_cb_name}"
+
+
+class PreAuditDocumentSubmission(models.Model):
+    """Client provided documents prior to audit execution."""
+
+    DOCUMENT_TYPE_CHOICES = [
+        ("quality_manual", "Quality Manual"),
+        ("procedure", "Procedure"),
+        ("work_instruction", "Work Instruction"),
+        ("record", "Record/Form"),
+        ("org_chart", "Organization Chart"),
+        ("scope_statement", "Scope Statement"),
+        ("other", "Other"),
+    ]
+
+    audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name="pre_audit_documents")
+    document_type = models.CharField(max_length=40, choices=DOCUMENT_TYPE_CHOICES)
+    document_file = models.FileField(upload_to="pre_audit_docs/")
+    uploaded_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="pre_audit_docs_uploaded")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by_auditor = models.BooleanField(default=False)
+    reviewer_notes = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Pre-Audit Document Submission"
+        verbose_name_plural = "Pre-Audit Document Submissions"
+        ordering = ["-uploaded_at"]
+        indexes = [
+            models.Index(fields=["audit", "uploaded_at"]),
+        ]
+
+    def __str__(self):
+        return f"Pre-audit doc {self.get_document_type_display()} ({self.audit})"
 
 
 class EvidenceFile(models.Model):

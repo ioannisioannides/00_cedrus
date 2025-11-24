@@ -80,7 +80,7 @@ class TestAuditWorkflowTransitions:
         """Test invalid transition is rejected."""
         workflow = AuditWorkflow(audit_draft)
         with pytest.raises(ValidationError, match="Cannot transition"):
-            workflow.transition_to("decided")
+            workflow.transition_to("closed")
 
     def test_report_draft_requires_findings(self, audit_draft):
         """Test cannot move to report_draft without findings."""
@@ -124,8 +124,8 @@ class TestAuditWorkflowTransitions:
         with pytest.raises(ValidationError, match="missing client response"):
             workflow.transition_to("submitted", user=auditor)
 
-    def test_decided_requires_verified_ncs(self, audit_draft, standard):
-        """Test cannot decide with open NCs."""
+    def test_closed_requires_verified_ncs(self, audit_draft, standard):
+        """Test cannot close with open NCs."""
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
@@ -144,12 +144,12 @@ class TestAuditWorkflowTransitions:
             verification_status="open",
         )
 
-        audit_draft.status = "submitted"
+        audit_draft.status = "decision_pending"
         audit_draft.save()
 
         workflow = AuditWorkflow(audit_draft)
         with pytest.raises(ValidationError, match="still open"):
-            workflow.transition_to("decided", user=auditor)
+            workflow.transition_to("closed", user=auditor)
 
     def test_get_available_transitions(self, audit_draft):
         """Test getting available transitions."""
@@ -166,5 +166,5 @@ class TestAuditWorkflowTransitions:
 
         assert workflow.can_transition_to("scheduled") is True
         assert workflow.can_transition_to("cancelled") is True
-        assert workflow.can_transition_to("decided") is False
+        assert workflow.can_transition_to("closed") is False
         assert workflow.can_transition_to("in_progress") is False

@@ -5,6 +5,7 @@ URL configuration for audits app.
 from django.urls import path
 
 from . import views
+from . import views_complaints
 
 app_name = "audits"
 
@@ -126,4 +127,11 @@ urlpatterns = [
         views.CertificationDecisionUpdateView.as_view(),
         name="certification_decision_update",
     ),
+    # Complaints & Appeals (Phase 2A)
+    path("complaints/", views_complaints.ComplaintListView.as_view(), name="complaint_list"),
+    path("complaints/create/", views_complaints.ComplaintCreateView.as_view(), name="complaint_create"),
+    path("complaints/<int:pk>/", views_complaints.ComplaintDetailView.as_view(), name="complaint_detail"),
+    path("appeals/", views_complaints.AppealListView.as_view(), name="appeal_list"),
+    path("appeals/create/", views_complaints.AppealCreateView.as_view(), name="appeal_create"),
+    path("appeals/<int:pk>/", views_complaints.AppealDetailView.as_view(), name="appeal_detail"),
 ]
