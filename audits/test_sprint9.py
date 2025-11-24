@@ -339,7 +339,7 @@ class ClientResponseTests(TestCase):
         self.client_http.login(username="client1", password="testpass123")
         url = reverse("audits:nonconformity_respond", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
-        self.assertEqual(response.status_code, 302)  # Redirect with error
+        self.assertEqual(response.status_code, 403)  # Forbidden - already responded
 
 
 class AuditorVerificationTests(TestCase):
@@ -481,7 +481,7 @@ class ObservationViewTests(TestCase):
     def test_add_observation(self):
         """Test creating observation."""
         self.client_http.login(username="auditor1", password="testpass123")
-        url = reverse("audits:observation_add", kwargs={"audit_pk": self.audit.pk})
+        url = reverse("audits:observation_create", kwargs={"audit_pk": self.audit.pk})
         data = {
             "standard": self.standard.id,
             "clause": "4.2",
@@ -533,6 +533,10 @@ class WorkflowIntegrationTests(TestCase):
 
     def test_cannot_submit_with_open_major_nc(self):
         """Test workflow blocks submission with open major NCs."""
+        # Move audit to report_draft status first
+        self.audit.status = "report_draft"
+        self.audit.save()
+        
         # Create open major NC
         Nonconformity.objects.create(
             audit=self.audit,
@@ -554,6 +558,10 @@ class WorkflowIntegrationTests(TestCase):
 
     def test_can_submit_with_responded_major_nc(self):
         """Test workflow allows submission when major NCs have responses."""
+        # Move audit to report_draft status first
+        self.audit.status = "report_draft"
+        self.audit.save()
+        
         # Create major NC with client response
         Nonconformity.objects.create(
             audit=self.audit,
@@ -578,6 +586,10 @@ class WorkflowIntegrationTests(TestCase):
 
     def test_can_submit_with_minor_ncs_only(self):
         """Test workflow allows submission with only minor NCs."""
+        # Move audit to report_draft status first
+        self.audit.status = "report_draft"
+        self.audit.save()
+        
         # Create minor NC (open is OK)
         Nonconformity.objects.create(
             audit=self.audit,

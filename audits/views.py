@@ -114,8 +114,8 @@ def can_respond_to_nc(user, nonconformity):
     if audit.status != "client_review":
         return False
 
-    # NC must be open or client_responded (can update response)
-    if nonconformity.verification_status not in ["open", "client_responded"]:
+    # NC must be open (not yet responded to)
+    if nonconformity.verification_status != "open":
         return False
 
     return True
