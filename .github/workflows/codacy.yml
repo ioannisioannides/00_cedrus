@@ -13,14 +13,17 @@
 
 name: Codacy Security Scan
 
+# Disabled: Codacy generates SARIF with multiple runs in same category
+# which is no longer supported by CodeQL Action as of July 2025.
+# We use Bandit for Python security scanning instead.
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "main" ]
-  schedule:
-    - cron: '33 4 * * 0'
+  workflow_dispatch:  # Manual trigger only
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+  # schedule:
+  #   - cron: '33 4 * * 0'
 
 permissions:
   contents: read

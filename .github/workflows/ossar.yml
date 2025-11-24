@@ -8,14 +8,16 @@
 # https://github.com/github/ossar-action
 name: OSSAR
 
+# Disabled: OSSAR is primarily for .NET/C# projects, not Python
+# We use Bandit for Python-specific security scanning
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "main" ]
-  schedule:
-    - cron: '18 17 * * 6'
+  workflow_dispatch:  # Manual trigger only
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+  # schedule:
+  #   - cron: '18 17 * * 6'
 
 permissions:
   contents: read
