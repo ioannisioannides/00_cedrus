@@ -152,7 +152,7 @@ platformdirs==4.5.0
     #   -r requirements.in
     #   black
     #   pylint
-psutil==6.0.0
+psutil==7.1.3
     # via safety
 pycparser==2.23
     # via
