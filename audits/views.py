@@ -977,26 +977,18 @@ class NonconformityVerifyView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
 
     def form_valid(self, form):
         """Process valid form submission."""
-        try:
-            # Use FindingService to verify
-            FindingService.verify_nonconformity(
-                nc=self.object,
-                user=self.request.user,
-                action=form.cleaned_data["verification_action"],
-                notes=form.cleaned_data.get("verification_notes"),
-            )
+        # Set verification metadata
+        nc = form.save(commit=False)
+        nc.verified_by = self.request.user
+        from django.utils import timezone
+        nc.verified_at = timezone.now()
+        nc.save()
 
-            action = form.cleaned_data["verification_action"]
-            if action == "accept":
-                messages.success(self.request, "Response accepted.")
-            elif action == "request_changes":
-                messages.info(self.request, "Changes requested. Client can update their response.")
-            elif action == "close":
-                messages.success(self.request, "Nonconformity closed.")
-
-        except ValidationError as e:
-            messages.error(self.request, str(e))
-            return self.form_invalid(form)
+        status = form.cleaned_data["verification_status"]
+        if status == "accepted":
+            messages.success(self.request, "Response accepted.")
+        elif status == "closed":
+            messages.success(self.request, "Nonconformity closed and verified effective.")
 
         return redirect(self.get_success_url())
 

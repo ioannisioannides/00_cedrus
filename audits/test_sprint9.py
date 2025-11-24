@@ -20,6 +20,7 @@ from django.contrib.auth.models import Group
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from accounts.models import Profile
 from audits.finding_forms import (
     NonconformityForm,
     NonconformityResponseForm,
@@ -27,7 +28,6 @@ from audits.finding_forms import (
     ObservationForm,
     OpportunityForImprovementForm,
 )
-from accounts.models import Profile
 from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard
@@ -418,7 +418,7 @@ class AuditorVerificationTests(TestCase):
         self.client_http.login(username="client1", password="testpass123")
         url = reverse("audits:nonconformity_verify", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
-        self.assertEqual(response.status_code, 302)  # Redirect
+        self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_auditor_accept_response(self):
         """Test auditor can accept response."""
