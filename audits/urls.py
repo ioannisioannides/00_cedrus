@@ -4,8 +4,7 @@ URL configuration for audits app.
 
 from django.urls import path
 
-from . import views
-from . import views_complaints
+from . import views, views_complaints
 
 app_name = "audits"
 

@@ -2,7 +2,9 @@
 Forms for Complaints and Appeals (Phase 2A).
 """
 from django import forms
-from audits.models import Complaint, Appeal
+
+from audits.models import Appeal, Complaint
+
 
 class ComplaintForm(forms.ModelForm):
     """Form for submitting a complaint."""

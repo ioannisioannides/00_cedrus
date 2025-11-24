@@ -2,8 +2,10 @@
 Service for handling Complaints and Appeals.
 """
 from django.core.exceptions import ValidationError
-from audits.models import Complaint, Appeal
+
+from audits.models import Appeal, Complaint
 from trunk.events import EventType, event_dispatcher
+
 
 class ComplaintService:
     """Business logic for complaints and appeals."""

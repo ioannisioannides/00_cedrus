@@ -1,15 +1,16 @@
 """
 Views for Complaints and Appeals.
 """
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView, ListView, DetailView
-from django.urls import reverse_lazy
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, DetailView, ListView
 
-from audits.models import Complaint, Appeal
-from audits.complaint_forms import ComplaintForm, AppealForm
+from audits.complaint_forms import AppealForm, ComplaintForm
+from audits.models import Appeal, Complaint
 from trunk.services.complaint_service import ComplaintService
+
 
 class ComplaintListView(LoginRequiredMixin, ListView):
     model = Complaint

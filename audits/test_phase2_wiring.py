@@ -1,10 +1,14 @@
-import pytest
-from django.urls import reverse
-from django.contrib.auth.models import User, Group
-from audits.models import Audit, Complaint, Appeal, CertificationDecision, AuditTeamMember, AuditorCompetenceWarning
-from core.models import Organization, Certification, Standard, CertificateHistory, SurveillanceSchedule
-from accounts.models import Profile, AuditorQualification
 from datetime import date, timedelta
+
+from django.contrib.auth.models import Group, User
+from django.urls import reverse
+
+import pytest
+
+from accounts.models import AuditorQualification, Profile
+from audits.models import Appeal, Audit, AuditorCompetenceWarning, AuditTeamMember, CertificationDecision, Complaint
+from core.models import CertificateHistory, Certification, Organization, Standard, SurveillanceSchedule
+
 
 @pytest.mark.django_db
 class TestPhase2Wiring:

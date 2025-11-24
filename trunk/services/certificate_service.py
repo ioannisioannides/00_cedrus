@@ -5,10 +5,11 @@ automation following certification decisions (ISO 17021-1 Clause 9.6).
 """
 
 from datetime import timedelta
+
 from django.utils import timezone
 
-from core.models import CertificateHistory, SurveillanceSchedule, Certification
 from audits.models import CertificationDecision
+from core.models import CertificateHistory, Certification, SurveillanceSchedule
 from trunk.events import EventType, event_dispatcher
 
 

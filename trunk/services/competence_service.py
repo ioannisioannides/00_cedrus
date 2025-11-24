@@ -9,7 +9,7 @@ from typing import List
 
 from django.core.exceptions import ValidationError
 
-from accounts.models import AuditorQualification, AuditorCompetenceEvaluation
+from accounts.models import AuditorCompetenceEvaluation, AuditorQualification
 from audits.models import Audit
 
 
