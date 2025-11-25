@@ -1,0 +1,121 @@
+{% extends "reporting/base_pdf.html" %}
+
+{% block title %}Certificate - {{ audit.organization.name }}{% endblock %}
+
+{% block extra_css %}
+    @page {
+        margin: 2cm;
+        @top-center { content: none; }
+        @bottom-center { content: none; }
+    }
+    body {
+        border: 5px double #1a5f7a;
+        padding: 40px;
+        height: 90%;
+        text-align: center;
+    }
+    .cert-header {
+        margin-bottom: 40px;
+    }
+    .cert-title {
+        font-size: 36pt;
+        color: #1a5f7a;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+    }
+    .cert-subtitle {
+        font-size: 18pt;
+        color: #666;
+        margin-bottom: 40px;
+    }
+    .cert-body {
+        font-size: 14pt;
+        line-height: 1.6;
+        margin-bottom: 40px;
+    }
+    .org-name {
+        font-size: 24pt;
+        font-weight: bold;
+        margin: 20px 0;
+        color: #000;
+    }
+    .standard-name {
+        font-size: 20pt;
+        font-weight: bold;
+        color: #1a5f7a;
+        margin: 20px 0;
+    }
+    .scope-box {
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin: 20px auto;
+        width: 80%;
+        font-style: italic;
+    }
+    .cert-footer {
+        margin-top: 60px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+    .signature-line {
+        border-top: 1px solid #000;
+        width: 200px;
+        margin: 0 auto;
+        padding-top: 10px;
+        font-size: 10pt;
+    }
+    .qr-code {
+        margin-top: 20px;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="cert-header">
+        <div class="cert-title">Certificate</div>
+        <div class="cert-subtitle">of Registration</div>
+    </div>
+
+    <div class="cert-body">
+        <p>This is to certify that the Management System of:</p>
+        
+        <div class="org-name">{{ audit.organization.name }}</div>
+        
+        <p>has been assessed and found to be in accordance with the requirements of:</p>
+        
+        {% for cert in audit.certifications.all %}
+            <div class="standard-name">{{ cert.standard.title }} ({{ cert.standard.code }})</div>
+        {% endfor %}
+        
+        <p>for the following scope:</p>
+        
+        <div class="scope-box">
+            {% for cert in audit.certifications.all %}
+                {{ cert.certification_scope }}<br>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="cert-footer">
+        <div>
+            <p><strong>Certificate Number:</strong> {{ certificate_number }}</p>
+            <p><strong>Issue Date:</strong> {% now "F j, Y" %}</p>
+            <p><strong>Expiry Date:</strong> {{ expiry_date|date:"F j, Y" }}</p>
+        </div>
+        
+        <div>
+            {% if qr_code %}
+                <div class="qr-code">
+                    <img src="data:image/png;base64,{{ qr_code }}" alt="Verification QR Code" width="100">
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="signature-line">
+                Authorized Signatory
+            </div>
+        </div>
+    </div>
+{% endblock %}
