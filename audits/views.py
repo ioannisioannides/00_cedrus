@@ -326,8 +326,7 @@ class AuditDetailView(LoginRequiredMixin, DetailView):
         context["can_add_findings"] = can_add_finding(user, audit) and audit.status != "decided"
 
         # Get available status transitions
-        workflow = AuditWorkflow(audit)
-        context["available_transitions"] = workflow.get_available_transitions(user)
+        context["available_transitions"] = AuditService.get_available_transitions(audit, user)
 
         # Check if user can submit to client
         context["can_submit_to_client"] = (
