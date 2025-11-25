@@ -40,6 +40,7 @@
 **Priority:** P0 (BLOCKING)
 
 **Scope:**
+
 - ✅ Models already exist (Nonconformity, Observation, OpportunityForImprovement)
 - ✅ Forms already exist (finding_forms.py)
 - 🔴 Complete view layer implementation
@@ -47,6 +48,7 @@
 - 🔴 Integrate with FindingService
 
 **Deliverables:**
+
 1. Nonconformity CRUD views (create, detail, update, delete)
 2. Observation CRUD views
 3. OpportunityForImprovement CRUD views
@@ -55,6 +57,7 @@
 6. Integration tests for all CRUD operations
 
 **Acceptance Criteria:**
+
 - Lead auditors can create/edit/delete findings on assigned audits
 - Auditors can create/edit findings on assigned audits
 - Clients cannot create findings
@@ -71,6 +74,7 @@
 **Priority:** P0 (BLOCKING)
 
 **Scope:**
+
 - ✅ NonconformityResponseForm exists
 - 🔴 Implement client response view
 - 🔴 Add response_date tracking
@@ -78,6 +82,7 @@
 - 🔴 Response history tracking
 
 **Deliverables:**
+
 1. NonconformityResponseView (client-only access)
 2. Response form with root_cause_analysis, corrective_action, preventive_action
 3. Permission check (can_respond_to_nc)
@@ -86,6 +91,7 @@
 6. Integration tests for response workflow
 
 **Acceptance Criteria:**
+
 - Client admins/users can respond to NCs for their organization's audits
 - Response form shows current NC details
 - Response includes root cause, corrective action, preventive action, evidence
@@ -102,6 +108,7 @@
 **Priority:** P0 (BLOCKING)
 
 **Scope:**
+
 - ✅ NonconformityVerificationForm exists
 - 🔴 Implement auditor verification view
 - 🔴 Add verification actions (accept/reject)
@@ -109,6 +116,7 @@
 - 🔴 Update verification_status
 
 **Deliverables:**
+
 1. NonconformityVerifyView (auditor-only access)
 2. Verification form with action (accept/reject) and notes
 3. Permission check (can_verify_nc)
@@ -117,6 +125,7 @@
 6. Integration tests for verification workflow
 
 **Acceptance Criteria:**
+
 - Lead auditors can verify NCs on assigned audits
 - Verification actions: 'accept' (closes NC) or 'reject' (remains open)
 - Verification notes required for reject action
@@ -133,6 +142,7 @@
 **Priority:** P0 (BLOCKING)
 
 **Scope:**
+
 - 🔴 Implement AuditWorkflow class with state machine
 - 🔴 Enforce valid status transitions
 - 🔴 Add pre-transition validation rules
@@ -140,6 +150,7 @@
 - 🔴 Update audit_transition_status view
 
 **Deliverables:**
+
 1. `trunk/workflows/audit_workflow.py` - Workflow state machine
 2. Valid transition matrix (draft → in_review → submitted_to_cb, etc.)
 3. Pre-transition validation (e.g., can't submit without findings)
@@ -148,6 +159,7 @@
 6. Unit tests for all transitions and validation rules
 
 **Acceptance Criteria:**
+
 - Only valid transitions allowed (e.g., draft → in_review, not draft → closed)
 - Pre-transition checks:
   - Can't submit to CB without at least 1 finding
@@ -158,6 +170,7 @@
 - Permission checks: only lead auditor or CB admin can transition
 
 **Valid Transitions:**
+
 ```
 draft → in_review
 in_review → submitted_to_cb
@@ -179,6 +192,7 @@ returned_for_correction → in_review
 **Priority:** P1 (HIGH)
 
 **Scope:**
+
 - ✅ Models exist (AuditChanges, AuditPlanReview, AuditSummary)
 - ✅ Forms exist (documentation_forms.py)
 - ✅ Views exist (audit_changes_edit, audit_plan_review_edit, audit_summary_edit)
@@ -187,6 +201,7 @@ returned_for_correction → in_review
 - 🔴 Integration tests
 
 **Deliverables:**
+
 1. Templates for all 3 documentation forms
 2. Navigation links in audit detail page
 3. Permission checks (lead auditor only)
@@ -194,6 +209,7 @@ returned_for_correction → in_review
 5. Integration tests for all 3 forms
 
 **Acceptance Criteria:**
+
 - Lead auditors can edit organization changes, plan review, summary
 - Forms pre-populated if data exists
 - Forms accessible from audit detail page
@@ -210,11 +226,13 @@ returned_for_correction → in_review
 **Goal:** Achieve 90%+ test coverage
 
 **Scope:**
+
 - Current: 76% coverage (347 tests)
 - Target: 90%+ coverage
 - Focus: Integration tests, edge cases, error handling
 
 **Deliverables:**
+
 1. Integration tests for findings workflow (create → respond → verify)
 2. Integration tests for status transitions
 3. Edge case tests:
@@ -227,6 +245,7 @@ returned_for_correction → in_review
 6. Coverage report showing 90%+ coverage
 
 **Test Areas:**
+
 - `audits/views.py` - Increase from 60% to 90%
 - `trunk/workflows/` - New code, need 95%+ coverage
 - `trunk/services/finding_service.py` - Increase to 95%
@@ -240,6 +259,7 @@ returned_for_correction → in_review
 **Goal:** Implement optimizations from PERFORMANCE_AUDIT_REPORT.md
 
 **Scope:**
+
 - Optimize query-heavy views
 - Add database indexes
 - Implement caching strategy
@@ -270,6 +290,7 @@ returned_for_correction → in_review
    - Test with 100 concurrent users
 
 **Success Metrics:**
+
 - 40% query reduction on key views
 - 25% faster page load times
 - <200ms average response time under load
@@ -282,12 +303,14 @@ returned_for_correction → in_review
 ### Week 1: Core Features (26 SP)
 
 **Days 1-3:** Tasks 8.1, 8.2, 8.3 (Findings & Client Workflow)
+
 - Findings CRUD implementation
 - Client response workflow
 - Auditor verification workflow
 - Integration testing
 
 **Days 4-5:** Task 8.4 (Status Workflow)
+
 - Workflow state machine
 - Transition validation
 - History tracking
@@ -296,16 +319,19 @@ returned_for_correction → in_review
 ### Week 2: Enhancement & Quality (24 SP)
 
 **Days 6-7:** Task 8.5 (Documentation Forms)
+
 - Template creation
 - Integration with audit detail
 - Testing
 
 **Days 8-9:** Task 8.6 (Test Coverage)
+
 - Integration tests
 - Edge case tests
 - Coverage reporting
 
 **Days 10:** Task 8.7 (Performance Optimization)
+
 - Query optimization
 - Indexing
 - Load testing
@@ -315,12 +341,14 @@ returned_for_correction → in_review
 ## Definition of Done
 
 ### Feature Completion
+
 - [ ] All user stories implemented and tested
 - [ ] All acceptance criteria met
 - [ ] Code reviewed and approved
 - [ ] Documentation updated
 
 ### Quality Gates
+
 - [ ] Test coverage ≥ 90%
 - [ ] All tests passing (0 failures)
 - [ ] No high-severity lint errors
@@ -328,6 +356,7 @@ returned_for_correction → in_review
 - [ ] Performance targets met (<200ms response time)
 
 ### Documentation
+
 - [ ] CODE_STANDARDS.md followed (docstrings, formatting)
 - [ ] API documentation updated
 - [ ] User guide updated (if needed)
@@ -338,16 +367,19 @@ returned_for_correction → in_review
 ## Risks & Mitigation
 
 ### Risk 1: Workflow Complexity
+
 **Impact:** HIGH  
 **Probability:** MEDIUM  
 **Mitigation:** Start with simple state machine, iterate. Use existing workflow patterns from codebase.
 
 ### Risk 2: Test Coverage Time
+
 **Impact:** MEDIUM  
 **Probability:** MEDIUM  
 **Mitigation:** Prioritize integration tests for critical paths. Use test generators where possible.
 
 ### Risk 3: Performance Regression
+
 **Impact:** LOW  
 **Probability:** LOW  
 **Mitigation:** Django Debug Toolbar already installed. Monitor queries continuously.
@@ -357,12 +389,14 @@ returned_for_correction → in_review
 ## Dependencies
 
 ### Internal Dependencies
+
 - Sprint 7 completion (DONE ✅)
 - CODE_STANDARDS.md in place (DONE ✅)
 - Test infrastructure ready (DONE ✅)
 - Django Debug Toolbar configured (DONE ✅)
 
 ### External Dependencies
+
 - None
 
 ---
@@ -370,7 +404,9 @@ returned_for_correction → in_review
 ## Sprint Outcome
 
 ### MVP Status After Sprint 8
+
 ✅ **FEATURE-COMPLETE MVP**
+
 - Full audit lifecycle workflow
 - Client-auditor collaboration
 - Findings management (NC, Obs, OFI)
@@ -382,7 +418,9 @@ returned_for_correction → in_review
 - Optimized performance
 
 ### Ready for Sprint 9: Production Deployment
+
 After Sprint 8, the system will be ready for:
+
 - Production environment setup
 - CI/CD pipeline
 - User acceptance testing

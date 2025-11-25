@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Certification Detail</h1>
+  <p>{{ certification.certification_scope }}</p>
+  
+  <h2>History</h2>
+  <ul>
+    {% for history in history %}
+      <li>{{ history.description }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Surveillance Schedule</h2>
+  {% if surveillance_schedule %}
+    <p>Year 1: {{ surveillance_schedule.year1_due_date }}</p>
+  {% endif %}
+{% endblock %}

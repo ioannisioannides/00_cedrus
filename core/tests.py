@@ -10,7 +10,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from core.models import Certification, Organization, Site, Standard
+from core.models import CertificateHistory, Certification, Organization, Site, Standard, SurveillanceSchedule
 
 # ==============================================================================
 # HEALTH CHECK TESTS
@@ -527,6 +527,72 @@ class SiteViewPermissionTest(TestCase):
         self.assertContains(response, "Test Site")
         self.assertNotContains(response, "Site 2")
 
+    def test_site_update_cb_admin(self):
+        """Test CB Admin can update site."""
+        self.client.login(username="cbadmin", password="pass123")
+        response = self.client.post(
+            reverse("core:site_update", args=[self.site.pk]),
+            {
+                "organization": self.org.pk,
+                "site_name": "Updated Site",
+                "site_address": "789 St",
+                "site_employee_count": 15,
+                "active": True,
+            },
+        )
+        self.assertRedirects(response, reverse("core:site_list"))
+        self.site.refresh_from_db()
+        self.assertEqual(self.site.site_name, "Updated Site")
+
+
+class StandardViewPermissionTest(TestCase):
+    """Test standard view permissions."""
+
+    def setUp(self):
+        self.client = Client()
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")
+        cb_group = Group.objects.create(name="cb_admin")
+        self.cb_admin.groups.add(cb_group)
+
+        self.std = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
+
+    def test_standard_list_cb_admin(self):
+        """Test CB Admin can access standard list."""
+        self.client.login(username="cbadmin", password="pass123")
+        response = self.client.get(reverse("core:standard_list"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_standard_create_cb_admin(self):
+        """Test CB Admin can create standard."""
+        self.client.login(username="cbadmin", password="pass123")
+        response = self.client.post(
+            reverse("core:standard_create"),
+            {
+                "code": "ISO 14001:2015",
+                "title": "Environmental Management",
+                "nace_code": "",
+                "ea_code": "",
+            },
+        )
+        self.assertRedirects(response, reverse("core:standard_list"))
+        self.assertTrue(Standard.objects.filter(code="ISO 14001:2015").exists())
+
+    def test_standard_update_cb_admin(self):
+        """Test CB Admin can update standard."""
+        self.client.login(username="cbadmin", password="pass123")
+        response = self.client.post(
+            reverse("core:standard_update", args=[self.std.pk]),
+            {
+                "code": "ISO 9001:2015",
+                "title": "Updated Title",
+                "nace_code": "",
+                "ea_code": "",
+            },
+        )
+        self.assertRedirects(response, reverse("core:standard_list"))
+        self.std.refresh_from_db()
+        self.assertEqual(self.std.title, "Updated Title")
+
 
 class CertificationViewPermissionTest(TestCase):
     """Test certification view permissions."""
@@ -592,3 +658,97 @@ class CertificationViewPermissionTest(TestCase):
                 organization=self.org, standard=self.std, certification_scope="Scope 2"
             ).exists()
         )
+
+    def test_certification_update_cb_admin(self):
+        """Test CB Admin can update certification."""
+        cert = Certification.objects.create(
+            organization=self.org,
+            standard=self.std,
+            certification_scope="Original Scope",
+            certificate_status="active",
+        )
+        self.client.login(username="cbadmin", password="pass123")
+        response = self.client.post(
+            reverse("core:certification_update", args=[cert.pk]),
+            {
+                "organization": self.org.pk,
+                "standard": self.std.pk,
+                "certification_scope": "Updated Scope",
+                "certificate_status": "active",
+                "issue_date": date.today(),
+                "expiry_date": date.today() + timedelta(days=365),
+            },
+        )
+        self.assertRedirects(response, reverse("core:certification_list"))
+        cert.refresh_from_db()
+        self.assertEqual(cert.certification_scope, "Updated Scope")
+
+    def test_certification_detail_cb_admin(self):
+        """Test CB Admin can view certification detail."""
+        cert = Certification.objects.create(
+            organization=self.org,
+            standard=self.std,
+            certification_scope="Scope",
+            certificate_status="active",
+        )
+        self.client.login(username="cbadmin", password="pass123")
+        response = self.client.get(reverse("core:certification_detail", args=[cert.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Scope")
+
+    def test_certificate_history_create(self):
+        """Test creating certificate history."""
+        cert = Certification.objects.create(
+            organization=self.org,
+            standard=self.std,
+            certification_scope="Scope",
+            certificate_status="active",
+        )
+        self.client.login(username="cbadmin", password="pass123")
+        response = self.client.post(
+            reverse("core:certificate_history_create", kwargs={"certification_pk": cert.pk}),
+            {
+                "certification": cert.pk,
+                "action_date": date.today(),
+                "action": "issued",
+                "action_reason": "Initial certification",
+                "internal_notes": "Notes",
+            },
+        )
+        self.assertRedirects(response, reverse("core:certification_detail", args=[cert.pk]))
+        self.assertTrue(CertificateHistory.objects.filter(certification=cert).exists())
+
+    def test_surveillance_schedule_update(self):
+        """Test updating surveillance schedule."""
+        cert = Certification.objects.create(
+            organization=self.org,
+            standard=self.std,
+            certification_scope="Scope",
+            certificate_status="active",
+        )
+        # Schedule is created automatically via signal or we create it manually if not
+        defaults = {
+            "cycle_start": date.today(),
+            "cycle_end": date.today() + timedelta(days=1095),
+            "surveillance_1_due_date": date.today() + timedelta(days=365),
+            "surveillance_2_due_date": date.today() + timedelta(days=730),
+            "recertification_due_date": date.today() + timedelta(days=1095),
+        }
+        schedule, _ = SurveillanceSchedule.objects.get_or_create(certification=cert, defaults=defaults)
+
+        self.client.login(username="cbadmin", password="pass123")
+        new_s1_date = date.today() + timedelta(days=366)
+        response = self.client.post(
+            reverse("core:surveillance_schedule_update", args=[schedule.pk]),
+            {
+                "surveillance_1_due_date": new_s1_date,
+                "surveillance_2_due_date": defaults["surveillance_2_due_date"],
+                "recertification_due_date": defaults["recertification_due_date"],
+                "surveillance_1_completed": False,
+                "surveillance_2_completed": False,
+                "recertification_completed": False,
+            },
+        )
+        self.assertRedirects(response, reverse("core:certification_detail", args=[cert.pk]))
+        schedule.refresh_from_db()
+        self.assertEqual(schedule.surveillance_1_due_date, new_s1_date)

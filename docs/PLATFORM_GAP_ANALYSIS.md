@@ -1,4 +1,5 @@
 # Cedrus Platform Gap Analysis
+
 **Multi-Stakeholder Review: All Agents + Accreditation Bodies + Standards Experts**  
 **Date:** 24 November 2025  
 **Test Baseline:** 275/275 tests passing  
@@ -9,7 +10,9 @@
 ## Executive Summary
 
 ### Current Platform Status
+
 ✅ **Strengths:**
+
 - Best-in-class workflow state machine with guard validation
 - Excellent PBAC implementation for independence (ISO 17021-1 Clause 9.6)
 - Strong IAF MD1/MD5 algorithmic compliance
@@ -17,6 +20,7 @@
 - Modern Django/Python architecture
 
 ⚠️ **Critical Gaps:**
+
 - No complaints/appeals module (ISO 17021-1 Clause 9.8) - **BLOCKS ACCREDITATION**
 - Incomplete auditor competence tracking (ISO 17021-1 Clause 7)
 - Basic certificate lifecycle (no history, no auto-scheduling)
@@ -24,6 +28,7 @@
 - No document/template management system
 
 ### Comparison with Industry Leaders
+
 | Platform | ISO Compliance | Client Portal | Analytics | AB Interface |
 |----------|---------------|---------------|-----------|--------------|
 | **Cedrus** | ✅ 85% | ⚠️ Basic | ❌ Missing | ❌ Missing |
@@ -35,10 +40,12 @@
 ---
 
 ## Phase 2A: Critical Compliance (3 weeks)
+
 **Priority:** MUST HAVE for accreditation  
 **Effort:** 23 days
 
 ### 1. Complaints & Appeals Module (5 days)
+
 **ISO 17021-1 Clause 9.8**
 
 ```python
@@ -49,6 +56,7 @@
 ```
 
 **Features:**
+
 - Complaint registration (internal/external)
 - Investigation workflow with assignment
 - Resolution tracking with corrective actions
@@ -57,6 +65,7 @@
 - Full audit trail
 
 **Deliverables:**
+
 - `audits/models.py`: Add Complaint, Appeal models
 - `audits/views.py`: Complaint CRUD, investigation workflow
 - `audits/forms.py`: Complaint forms with validation
@@ -66,6 +75,7 @@
 ---
 
 ### 2. Auditor Competence Management (8 days)
+
 **ISO 17021-1 Clause 7.1, 7.2**
 
 ```python
@@ -77,6 +87,7 @@
 ```
 
 **Features:**
+
 - Qualification tracking (IRCA, Exemplar Global certs)
 - Sector/standard competence matrix (NACE codes, EA codes)
 - CPD point tracking
@@ -85,11 +96,13 @@
 - Assignment validation (prevent unqualified assignments)
 
 **Integration Points:**
+
 - Audit assignment guard: Validate auditor qualifications
 - Dashboard: Qualification expiry alerts
 - Reports: Competence records for AB assessment
 
 **Deliverables:**
+
 - `accounts/models.py`: Add competence-related models
 - `trunk/services/competence_service.py`: Assignment validation
 - `trunk/workflows/audit_state_machine.py`: Competence guards
@@ -99,6 +112,7 @@
 ---
 
 ### 3. Certificate Lifecycle Enhancement (6 days)
+
 **ISO 17021-1 Clause 9.6**
 
 ```python
@@ -108,6 +122,7 @@
 ```
 
 **Features:**
+
 - Certificate history tracking (issued, renewed, suspended, withdrawn)
 - Automatic surveillance scheduling (12-month intervals)
 - 3-year certification cycle management
@@ -116,11 +131,13 @@
 - Link to triggering audit/decision
 
 **Automation:**
+
 - Post-decision signal: Auto-create certificate history entry
 - Auto-schedule surveillance audits at 12 and 24 months
 - Email notifications for expiring certificates
 
 **Deliverables:**
+
 - `core/models.py`: Add CertificateHistory, SurveillanceSchedule
 - `trunk/services/certificate_service.py`: Lifecycle automation
 - `trunk/events/handlers.py`: Certificate event handlers
@@ -130,6 +147,7 @@
 ---
 
 ### 4. Impartiality & Conflict of Interest (4 days)
+
 **ISO 17021-1 Clause 5.2**
 
 ```python
@@ -139,6 +157,7 @@
 ```
 
 **Features:**
+
 - COI declaration by auditors (former employee, consultant, etc.)
 - Risk assessment (low/medium/high)
 - Assignment blocking for high-risk conflicts
@@ -146,11 +165,13 @@
 - Management review of declarations
 
 **Integration:**
+
 - Audit assignment validation: Block high-risk COI assignments
 - Dashboard: Pending declaration alerts
 - Reports: Impartiality records for AB
 
 **Deliverables:**
+
 - `accounts/models.py`: Add COI, ImpartialityDeclaration
 - `trunk/permissions/policies.py`: COI assignment guard
 - `accounts/views.py`: Declaration workflow
@@ -159,10 +180,12 @@
 ---
 
 ## Phase 2B: High-Priority Enhancements (4 weeks)
+
 **Priority:** Market competitiveness  
 **Effort:** 27 days
 
 ### 5. Remote Audit Support (3 days)
+
 **IAF MD4**
 
 ```python
@@ -171,6 +194,7 @@
 ```
 
 **Features:**
+
 - Video conference session logging
 - Technology validation (Zoom, Teams security)
 - Remote access tracking
@@ -180,6 +204,7 @@
 ---
 
 ### 6. Transfer Certification (4 days)
+
 **IAF MD17**
 
 ```python
@@ -188,6 +213,7 @@
 ```
 
 **Features:**
+
 - Previous CB documentation tracking
 - Transfer validation (expiry date check)
 - Previous audit report storage
@@ -198,6 +224,7 @@
 ### 7. Client Portal Dashboard (10 days)
 
 **Features:**
+
 - Client dashboard (certifications, audits, NCs)
 - Pre-audit document submission portal
 - Audit report download (PDF generation)
@@ -209,6 +236,7 @@
 ### 8. Reporting & Analytics Dashboard (8 days)
 
 **CB Admin Features:**
+
 - KPI widgets (audits/month, NC rates, certificate expiry)
 - Auditor workload charts
 - NC trending analysis
@@ -220,6 +248,7 @@
 ### 9. Certificate Auto-Issuance (2 days)
 
 **Process Improvement:**
+
 - Automatic certificate record creation on decision
 - Auto-population of certificate fields
 - PDF certificate generation
@@ -228,34 +257,40 @@
 ---
 
 ## Phase 3: Competitive Differentiation (6 weeks)
+
 **Priority:** Industry leadership  
 **Effort:** 55 days
 
 ### 10. Document Management System (7 days)
+
 - Template library (audit plans, reports, checklists)
 - Version control for procedures
 - Approval workflow
 - Controlled document numbering
 
 ### 11. Accreditation Body Interface (6 days)
+
 - Witness audit scheduling
 - AB oversight record tracking
 - AB reporting automation
 - AB assessor portal access
 
 ### 12. Workflow Automation (5 days)
+
 - Email notifications (status changes, deadlines)
 - Celery task scheduling
 - Escalation alerts (overdue NCs)
 - Auto-reminders (audit dates, certificate expiry)
 
 ### 13. Multi-Language Support (10 days)
+
 - Django i18n implementation
 - UI translation (EN, FR, DE, ES, AR)
 - Multi-language report generation
 - Auditor language competence tracking
 
 ### 14. API Integrations (15 days)
+
 - REST API (Django REST Framework)
 - OAuth2 authentication
 - Webhook triggers
@@ -264,6 +299,7 @@
 - Payment gateway (Stripe)
 
 ### 15. Advanced Analytics (12 days)
+
 - NC benchmarking (industry averages)
 - Auditor performance scoring
 - Predictive analytics (certificate forecasting)
@@ -298,6 +334,7 @@ Phase 3 (Differentiation): 6 weeks
 ## Data Model Additions Summary
 
 ### Critical (Phase 2A)
+
 | Model | App | ISO/IAF Reference | Effort |
 |-------|-----|-------------------|--------|
 | `Complaint` | audits | ISO 17021-1 Cl. 9.8 | 3 days |
@@ -311,6 +348,7 @@ Phase 3 (Differentiation): 6 weeks
 | `ImpartialityDeclaration` | accounts | ISO 17021-1 Cl. 5.2.7 | 2 days |
 
 ### High Priority (Phase 2B)
+
 | Model | App | IAF Reference | Effort |
 |-------|-----|---------------|--------|
 | `RemoteAuditLog` | audits | IAF MD4 | 2 days |
@@ -318,6 +356,7 @@ Phase 3 (Differentiation): 6 weeks
 | `PreAuditDocumentSubmission` | audits | Client Portal | 2 days |
 
 ### Medium Priority (Phase 3)
+
 | Model | App | Purpose | Effort |
 |-------|-----|---------|--------|
 | `DocumentTemplate` | core | ISO 17021-1 Cl. 8.4 | 3 days |
@@ -332,6 +371,7 @@ Phase 3 (Differentiation): 6 weeks
 ## ISO 17021-1 Compliance Checklist
 
 ### ✅ Currently Compliant
+
 - [x] Clause 9.1: General audit requirements
 - [x] Clause 9.2: Audit planning and preparation
 - [x] Clause 9.3: Conducting audit activities
@@ -340,14 +380,17 @@ Phase 3 (Differentiation): 6 weeks
 - [x] Clause 9.6: Certification decision (independence enforced)
 
 ### ⚠️ Partially Compliant
+
 - [~] Clause 5.2: Impartiality (PBAC exists, but no COI recording)
 - [~] Clause 7.1: Competence (basic tracking, missing formal records)
 - [~] Clause 7.2: Management of competence (partial implementation)
 
 ### ❌ Non-Compliant (Phase 2A will fix)
+
 - [ ] Clause 9.8: Complaints and appeals (missing module)
 
 ### ⚠️ Operational Gaps
+
 - [ ] Clause 8.4: Document control (no template management)
 - [ ] Clause 9.9: CB management review (no internal review process)
 
@@ -356,14 +399,17 @@ Phase 3 (Differentiation): 6 weeks
 ## IAF Mandatory Document Coverage
 
 ### ✅ Implemented
+
 - [x] IAF MD1: Multi-site sampling (calculate_sample_size service)
 - [x] IAF MD5: Duration determination (duration_validator service)
 
 ### ❌ Not Implemented (Phase 2B)
+
 - [ ] IAF MD4: Remote audit (no ICT tracking)
 - [ ] IAF MD17: Transfer certification (partial, needs enhancement)
 
 ### ⚠️ Partially Implemented
+
 - [~] IAF MD9: Auditor competence (basic tracking, needs enhancement)
 
 ---
@@ -371,7 +417,9 @@ Phase 3 (Differentiation): 6 weeks
 ## Risk Assessment
 
 ### Accreditation Risks (Without Phase 2A)
+
 **CRITICAL:** Accreditation bodies (UKAS, ANAB, DAkkS) will issue non-conformities for:
+
 1. Missing complaints/appeals process (ISO 17021-1 Clause 9.8)
 2. Incomplete auditor competence records (ISO 17021-1 Clause 7)
 3. Insufficient impartiality documentation (ISO 17021-1 Clause 5.2)
@@ -380,7 +428,9 @@ Phase 3 (Differentiation): 6 weeks
 **Mitigation:** Implement Phase 2A (3 weeks) before AB assessment
 
 ### Market Risks (Without Phase 2B)
+
 **HIGH:** Client expectations not met:
+
 1. No self-service portal (clients expect CertIQ-level features)
 2. No certificate expiry tracking (clients rely on automated alerts)
 3. No transfer certification workflow (lose transfer business)
@@ -393,21 +443,27 @@ Phase 3 (Differentiation): 6 weeks
 ## Agent Consensus Summary
 
 ### Standards Agents (ISO 17021, IAF)
+
 **Verdict:** "Cedrus workflow engine is exceptional. However, complaints/appeals and competence tracking are mandatory for accreditation. Priority: CRITICAL."
 
 ### Accreditation Body Agents (UKAS, ANAB, DAkkS)
+
 **Verdict:** "Technical review and decision independence implementation are best-in-class. Missing complaints module will block accreditation. COI tracking must be formalized."
 
 ### Business Analyst & Product Owner
+
 **Verdict:** "Client portal and analytics dashboard are table stakes in 2025. CertIQ sets the standard. We need Phase 2B for competitive positioning."
 
 ### Architecture Agent
+
 **Verdict:** "State machine foundation is excellent. Phase 2A models integrate cleanly with existing architecture. Effort estimates are realistic."
 
 ### Compliance Agent
+
 **Verdict:** "ISO 17021-1 Clause 9 compliance is strong. Clause 5 (impartiality) and Clause 7 (competence) need enhancement. Clause 9.8 (complaints) is a blocker."
 
 ### QA Agent
+
 **Verdict:** "275 passing tests provide solid foundation. Estimate +150 tests for Phase 2A, +200 tests for Phase 2B. TDD approach recommended."
 
 ---
@@ -417,11 +473,13 @@ Phase 3 (Differentiation): 6 weeks
 **PROCEED WITH PHASE 2A IMMEDIATELY**
 
 The platform has a strong foundation but lacks critical compliance features required for accreditation. Without Phase 2A:
+
 - Cannot demonstrate ISO 17021-1 full compliance
 - Cannot pass UKAS/ANAB/DAkkS assessment
 - Risk of non-conformity citations
 
 **Estimated ROI:**
+
 - Phase 2A (3 weeks): Enables accreditation → Unlocks market entry
 - Phase 2B (4 weeks): Matches competitors → Enables client acquisition
 - Phase 3 (6 weeks): Industry leadership → Premium pricing potential

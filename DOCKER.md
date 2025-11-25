@@ -1,4 +1,5 @@
 # 🐳 CEDRUS DOCKER DEPLOYMENT GUIDE
+
 ## Self-Hosted Container Architecture - Zero Cloud Costs
 
 **Documentation by:** Dr. Thomas Berg (Caltech PhD, DevOps, 23 years) + Dr. Alex Müller (MIT PhD, Performance, 21 years)  
@@ -103,6 +104,7 @@ Cedrus is containerized using **Docker** and **Docker Compose** for maximum port
 ```
 
 **Security Notes:**
+
 - Backend network is `internal: true` (not exposed to internet)
 - PostgreSQL and Redis only accessible from Django container
 - Nginx is the only public-facing service
@@ -128,11 +130,13 @@ git --version
 ### System Requirements
 
 **Development:**
+
 - CPU: 2 cores
 - RAM: 4 GB
 - Disk: 10 GB
 
 **Production:**
+
 - CPU: 4 cores (recommended)
 - RAM: 8 GB (minimum), 16 GB (recommended)
 - Disk: 50 GB (database + media files)
@@ -203,6 +207,7 @@ docker compose logs -f web
 ```
 
 **Expected Output:**
+
 ```
 ✅ PostgreSQL ready!
 🔄 Running migrations...
@@ -222,8 +227,8 @@ Quit the server with CONTROL-C.
 
 ### 4. Access Application
 
-- **Django Application:** http://localhost:8000
-- **Adminer (Database UI):** http://localhost:8080
+- **Django Application:** <http://localhost:8000>
+- **Adminer (Database UI):** <http://localhost:8080>
   - Server: `postgres`
   - Username: `cedrus`
   - Password: `cedrus_dev_password_change_in_production`
@@ -307,6 +312,7 @@ BACKUP_RETENTION_DAYS=30
 ```
 
 **Generate Secrets:**
+
 ```bash
 # Django SECRET_KEY (50+ characters)
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
@@ -399,6 +405,7 @@ docker compose -f docker-compose.production.yml ps
 ```
 
 **Expected Output:**
+
 ```
 NAME                    STATUS          PORTS
 cedrus-nginx-prod       Up 10 seconds   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp
@@ -761,10 +768,10 @@ http {
 
 ## 📚 ADDITIONAL RESOURCES
 
-- **Django Documentation:** https://docs.djangoproject.com/
-- **Docker Documentation:** https://docs.docker.com/
-- **PostgreSQL Documentation:** https://www.postgresql.org/docs/
-- **Nginx Documentation:** https://nginx.org/en/docs/
+- **Django Documentation:** <https://docs.djangoproject.com/>
+- **Docker Documentation:** <https://docs.docker.com/>
+- **PostgreSQL Documentation:** <https://www.postgresql.org/docs/>
+- **Nginx Documentation:** <https://nginx.org/en/docs/>
 
 ---
 

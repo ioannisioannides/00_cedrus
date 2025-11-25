@@ -20,6 +20,7 @@ Implemented complete CRUD functionality for all finding types (Nonconformities, 
 **File**: `audits/urls.py`
 
 #### Removed Legacy URLs
+
 - `nonconformity_add` (function-based)
 - `nonconformity_edit` (function-based)
 - `observation_add` (function-based)
@@ -31,6 +32,7 @@ Implemented complete CRUD functionality for all finding types (Nonconformities, 
 #### Standardized URL Patterns
 
 **Nonconformity URLs:**
+
 ```python
 path("audit/<int:audit_pk>/nc/create/", NonconformityCreateView.as_view(), name="nonconformity_create")
 path("nc/<int:pk>/", NonconformityDetailView.as_view(), name="nonconformity_detail")
@@ -39,6 +41,7 @@ path("nc/<int:pk>/delete/", NonconformityDeleteView.as_view(), name="nonconformi
 ```
 
 **Observation URLs (added missing):**
+
 ```python
 path("audit/<int:audit_pk>/observation/create/", ObservationCreateView.as_view(), name="observation_create")
 path("observation/<int:pk>/", ObservationDetailView.as_view(), name="observation_detail")  # NEW
@@ -47,6 +50,7 @@ path("observation/<int:pk>/delete/", ObservationDeleteView.as_view(), name="obse
 ```
 
 **OFI URLs (added missing):**
+
 ```python
 path("audit/<int:audit_pk>/ofi/create/", OpportunityForImprovementCreateView.as_view(), name="ofi_create")
 path("ofi/<int:pk>/", OpportunityForImprovementDetailView.as_view(), name="ofi_detail")  # NEW
@@ -55,6 +59,7 @@ path("ofi/<int:pk>/delete/", OpportunityForImprovementDeleteView.as_view(), name
 ```
 
 ### Result
+
 - ✅ Consistent URL patterns across all finding types
 - ✅ All finding types have complete CRUD URLs
 - ✅ Removed duplicates and legacy patterns
@@ -71,6 +76,7 @@ path("ofi/<int:pk>/delete/", OpportunityForImprovementDeleteView.as_view(), name
 **File**: `audits/views.py`
 
 #### Created ObservationDetailView (lines 984-1020)
+
 ```python
 class ObservationDetailView(LoginRequiredMixin, DetailView):
     """View observation details."""
@@ -80,11 +86,13 @@ class ObservationDetailView(LoginRequiredMixin, DetailView):
 ```
 
 **Features**:
+
 - Role-based queryset filtering (CB Admin, Auditor, Client)
 - Permission context (`can_edit`)
 - Follows NonconformityDetailView pattern
 
 #### Created OpportunityForImprovementDetailView (lines 1095-1131)
+
 ```python
 class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
     """View opportunity for improvement details."""
@@ -94,6 +102,7 @@ class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
 ```
 
 **Features**:
+
 - Same pattern as Observation detail view
 - Role-based access control
 - Permission flags for template
@@ -101,6 +110,7 @@ class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
 #### Created Templates
 
 **File**: `templates/audits/observation_detail.html`
+
 - Displays clause, standard, objective evidence
 - Shows auditor notes
 - Edit button (if permitted)
@@ -108,6 +118,7 @@ class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
 - Informational alert about observations
 
 **File**: `templates/audits/ofi_detail.html`
+
 - Displays clause, standard, objective evidence
 - Shows improvement suggestion
 - Edit button (if permitted)
@@ -115,6 +126,7 @@ class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
 - Best practice alert
 
 ### Result
+
 - ✅ All 3 finding types have detail views
 - ✅ Consistent permission structure
 - ✅ Role-based access control implemented
@@ -132,7 +144,9 @@ class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
 **File**: `templates/audits/audit_detail.html`
 
 #### Updated URL References
+
 Fixed all finding URLs to use new standardized names:
+
 - `nonconformity_add` → `nonconformity_create`
 - `nonconformity_edit` → `nonconformity_update`
 - `observation_add` → `observation_create`
@@ -141,19 +155,24 @@ Fixed all finding URLs to use new standardized names:
 - `ofi_edit` → `ofi_update`
 
 #### Added Detail Page Links
+
 **Nonconformities Table:**
+
 - Clause numbers now link to `nonconformity_detail`
 - Clicking clause opens detail view
 
 **Observations List:**
+
 - Clause numbers link to `observation_detail`
 - Fixed field reference (`statement` → `objective_evidence`)
 
 **OFI List:**
+
 - Clause numbers link to `ofi_detail`
 - Fixed field reference (`description` → `objective_evidence`)
 
 #### Existing Features Verified
+
 - ✅ Findings summary badges (counts)
 - ✅ "Add Finding" buttons (role-based)
 - ✅ Edit/Delete buttons (permission-based)
@@ -161,6 +180,7 @@ Fixed all finding URLs to use new standardized names:
 - ✅ Client response section
 
 ### Result
+
 - ✅ All findings clickable to detail pages
 - ✅ URLs updated to new naming convention
 - ✅ Field references corrected
@@ -176,30 +196,38 @@ Fixed all finding URLs to use new standardized names:
 ### Verified Implementations
 
 #### View-Level Validation
+
 All create views check `status == "decided"`:
+
 - ✅ `NonconformityCreateView.test_func()` (line 759)
 - ✅ `ObservationCreateView.test_func()` (line 950)
 - ✅ `OpportunityForImprovementCreateView.test_func()` (line 1069)
 
 All update views check `status == "decided"`:
+
 - ✅ `NonconformityUpdateView.test_func()` (line 846)
 - ✅ `ObservationUpdateView.test_func()` (line 1031)
 - ✅ `OpportunityForImprovementUpdateView.test_func()` (line 1150)
 
 All delete views check `status == "decided"`:
+
 - ✅ `NonconformityDeleteView.test_func()` (line 1188)
 - ✅ `ObservationDeleteView.test_func()` (line 1210)
 - ✅ `OpportunityForImprovementDeleteView.test_func()` (line 1232)
 
 #### Template-Level Validation
+
 - ✅ `AuditDetailView.get_context_data()` includes:
+
   ```python
   context["can_add_findings"] = can_add_finding(user, audit) and audit.status != "decided"
   ```
+
 - ✅ Template hides "Add Finding" buttons when `can_add_findings` is False
 - ✅ Edit/Delete buttons respect `can_edit` flag
 
 ### Result
+
 - ✅ Cannot add findings to decided audits
 - ✅ Cannot edit findings in decided audits
 - ✅ Cannot delete findings from decided audits
@@ -217,6 +245,7 @@ All delete views check `status == "decided"`:
 **File**: `audits/test_findings_crud.py` (18 test cases)
 
 #### Test Coverage
+
 - **Nonconformity CRUD** (6 tests):
   - Create as auditor
   - Cannot create when decided
@@ -244,17 +273,20 @@ All delete views check `status == "decided"`:
   - Add buttons hidden when decided
 
 #### Test Framework
+
 - ✅ pytest and pytest-django installed
 - ✅ pytest.ini configuration created
 - ⚠️ Fixtures need adjustment for Profile/Organization models
 
 ### Next Steps (If Needed)
+
 1. Simplify fixtures to match actual model structure
 2. Profile uses Django Groups, not role field
 3. Organization requires specific fields
 4. Consider using existing test fixtures from other test files
 
 ### Result
+
 - ✅ Comprehensive test file created
 - ✅ Test framework configured
 - ⚠️ Tests need fixture fixes to run
@@ -268,23 +300,27 @@ All delete views check `status == "decided"`:
 ### Actions Taken
 
 #### Code Formatting
+
 - ✅ Ran `black` on modified files
 - ✅ Ran `isort` on modified files
 - ✅ Line length: 120 characters
 
 #### Django Checks
+
 - ✅ `python manage.py check` passes with no errors
 - ✅ No syntax errors
 - ✅ All URLs properly configured
 - ✅ All templates reference correct URL names
 
 #### Code Standards
+
 - ✅ All new views have docstrings (Sprint 7 standard)
 - ✅ Consistent naming conventions
 - ✅ Follows existing patterns
 - ✅ Permission checks consistent
 
 ### Files Modified
+
 1. `audits/urls.py` - URL standardization
 2. `audits/views.py` - 2 new detail view classes
 3. `templates/audits/observation_detail.html` - NEW
@@ -294,6 +330,7 @@ All delete views check `status == "decided"`:
 7. `pytest.ini` - NEW
 
 ### Result
+
 - ✅ Code formatted consistently
 - ✅ No linting errors (except pylint crashes - tool issue)
 - ✅ All docstrings present
@@ -308,6 +345,7 @@ All delete views check `status == "decided"`:
 ### Test Scenarios
 
 #### As Auditor (Scheduled Audit)
+
 - [ ] Navigate to audit detail page
 - [ ] Click "Add Nonconformity" - verify form loads
 - [ ] Create NC with all required fields - verify success message
@@ -318,12 +356,14 @@ All delete views check `status == "decided"`:
 - [ ] Repeat for Observations and OFIs
 
 #### As Auditor (Decided Audit)
+
 - [ ] Navigate to decided audit detail page
 - [ ] Verify "Add Finding" buttons are hidden
 - [ ] Verify existing finding Edit/Delete buttons are hidden
 - [ ] Try accessing create URL directly - verify 403 Forbidden
 
 #### As Client User
+
 - [ ] Navigate to audit detail page
 - [ ] Verify can see findings
 - [ ] Click finding clauses - verify detail pages load
@@ -331,12 +371,14 @@ All delete views check `status == "decided"`:
 - [ ] Try accessing create URL directly - verify 403 Forbidden
 
 #### Cross-Browser Testing
+
 - [ ] Chrome/Safari/Firefox
 - [ ] Mobile responsive view
 - [ ] All links work
 - [ ] Forms submit properly
 
 ### Result
+
 - ✅ Test scenarios documented
 - ✅ Ready for manual QA
 - ✅ All acceptance criteria met
@@ -346,6 +388,7 @@ All delete views check `status == "decided"`:
 ## Acceptance Criteria
 
 ### Original Requirements
+
 ✅ All three finding types (NC, Obs, OFI) have complete CRUD operations
 ✅ URL patterns are consistent and follow REST conventions
 ✅ Detail views display all relevant information
@@ -358,6 +401,7 @@ All delete views check `status == "decided"`:
 ✅ Django check passes with no errors
 
 ### Additional Achievements
+
 ✅ Removed legacy function-based URL patterns
 ✅ Standardized URL naming across all finding types
 ✅ Created comprehensive test file (18 test cases)
@@ -370,6 +414,7 @@ All delete views check `status == "decided"`:
 ## Files Changed
 
 ### Modified
+
 1. **audits/urls.py**
    - Removed 7 legacy function-based URLs
    - Added 4 missing class-based URLs
@@ -386,25 +431,29 @@ All delete views check `status == "decided"`:
    - Fixed 2 field references
 
 ### Created
+
 4. **templates/audits/observation_detail.html** (70 lines)
-5. **templates/audits/ofi_detail.html** (70 lines)
-6. **audits/test_findings_crud.py** (450+ lines, 18 tests)
-7. **pytest.ini** (6 lines)
+2. **templates/audits/ofi_detail.html** (70 lines)
+3. **audits/test_findings_crud.py** (450+ lines, 18 tests)
+4. **pytest.ini** (6 lines)
 
 ---
 
 ## Technical Debt / Follow-up
 
 ### High Priority
+
 - [ ] Fix test fixtures in `test_findings_crud.py` to match actual Profile/Organization models
 - [ ] Run full test suite to verify >90% coverage goal
 
 ### Medium Priority
+
 - [ ] Consider adding "View" button in addition to clickable clauses (explicit action)
 - [ ] Add finding count validation (e.g., max findings per audit)
 - [ ] Consider bulk finding operations (bulk delete, bulk export)
 
 ### Low Priority
+
 - [ ] Add finding search/filter functionality in audit detail
 - [ ] Consider pagination if findings list becomes very long
 - [ ] Add finding templates (common NC statements)
@@ -429,6 +478,7 @@ All delete views check `status == "decided"`:
 ## Deployment Checklist
 
 ### Pre-Deployment
+
 - ✅ Code review completed
 - ✅ Django check passes
 - ✅ No syntax errors
@@ -438,6 +488,7 @@ All delete views check `status == "decided"`:
 - [ ] Update CHANGELOG.md
 
 ### Deployment
+
 - [ ] Merge to main branch
 - [ ] Run migrations (if any)
 - [ ] Deploy to staging
@@ -446,6 +497,7 @@ All delete views check `status == "decided"`:
 - [ ] Monitor logs
 
 ### Post-Deployment
+
 - [ ] Verify findings CRUD works in production
 - [ ] Check for any errors in logs
 - [ ] User acceptance testing
@@ -456,6 +508,7 @@ All delete views check `status == "decided"`:
 ## Summary
 
 **Task 8.1 is functionally complete** with all core requirements met:
+
 - Complete CRUD for all finding types ✅
 - Consistent URL patterns ✅
 - Proper permissions and status validation ✅
@@ -463,6 +516,7 @@ All delete views check `status == "decided"`:
 - Code quality standards met ✅
 
 **Remaining work**:
+
 - Test fixture adjustments (low risk)
 - Manual QA (1 hour)
 - CHANGELOG update

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Sprint 8 (November 2025)
 
 **Task 8.1: Findings Management CRUD Enhancement**
+
 - Complete CRUD operations for all finding types (Nonconformities, Observations, OFIs)
 - New detail views: `ObservationDetailView` and `OpportunityForImprovementDetailView`
 - Standardized URL patterns across all finding types
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pytest framework integration
 
 **Task 8.1: Code Improvements**
+
 - Removed legacy function-based URLs (7 deprecated endpoints)
 - Fixed field references in templates (`statement`→`objective_evidence`, `description`→`objective_evidence`)
 - Enhanced audit detail integration with proper URL references
@@ -30,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Sprint 8 (November 2025) - MVP Complete
 
 **Task 8.4: Audit Workflow State Machine**
+
 - Implemented `trunk/workflows/audit_workflow.py` - Robust state machine for audit lifecycle
 - 8 audit statuses with validated transitions (draft → scheduled → in_progress → report_draft → client_review → submitted → decided)
 - Pre-transition validation rules (e.g., can't submit without client responses to major NCs)
@@ -37,27 +40,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive workflow tests (8 test cases)
 
 **Task 8.5: Audit Documentation (Verified Complete)**
+
 - AuditChanges, AuditPlanReview, AuditSummary forms functional
 - All templates exist and integrated with audit detail
 - Lead auditor and CB admin access
 
 **Task 8.6: Test Coverage Enhancement**
+
 - Added 26 new test cases (workflow + CRUD + integration)
 - pytest framework fully configured
 - Test coverage for state transitions, permissions, edge cases
 
 **Task 8.7: Performance Optimization**
+
 - Added 7 database indexes for common query patterns
 - Audit indexes: (organization, status), (lead_auditor, status), (status, date)
 - Finding indexes: (audit, verification_status), (audit, category), (audit, created_at)
 - Query optimization with select_related/prefetch_related in detail views
 
 **Client Response & Verification Workflows (Verified Complete)**
+
 - Task 8.2: `NonconformityResponseView` - Client response to NCs (already implemented)
 - Task 8.3: `NonconformityVerifyView` - Auditor verification workflow (already implemented)
 - Full integration with FindingService
 
 **Sprint Achievements**
+
 - ✅ 50/50 story points delivered
 - ✅ MVP feature-complete
 - ✅ All audit lifecycle workflows functional
@@ -67,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Sprint 7 (November 2025)
 
 **Documentation & Code Quality**
+
 - Added 85+ docstrings across codebase (95.5% coverage)
 - Created `CODE_STANDARDS.md` (950 lines) - comprehensive coding guidelines
 - Security audit: A- grade, 0 high-severity issues

@@ -19,28 +19,33 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 ### ✅ Already Implemented
 
 **Models (100% Complete):**
+
 - ✅ `Nonconformity` model with all fields
 - ✅ `Observation` model with all fields  
 - ✅ `OpportunityForImprovement` model with all fields
 - ✅ Base `Finding` abstract model
 
 **Forms (100% Complete):**
+
 - ✅ `NonconformityForm` in `finding_forms.py`
 - ✅ `ObservationForm` in `finding_forms.py`
 - ✅ `OpportunityForImprovementForm` in `finding_forms.py`
 - ✅ Form validation (standard limited to audit certifications)
 
 **Services (100% Complete):**
+
 - ✅ `FindingService.create_nonconformity()`
 - ✅ `FindingService.create_observation()`
 - ✅ `FindingService.create_ofi()`
 - ✅ Event dispatching for finding creation
 
 **Permission Helpers (100% Complete):**
+
 - ✅ `can_add_finding(user, audit)` - Check if user can add findings
 - ✅ `can_edit_finding(user, finding)` - Check if user can edit findings
 
 **Base Views (80% Complete):**
+
 - ✅ `NonconformityCreateView` - Class-based create view
 - ✅ `NonconformityDetailView` - Detail view with permissions
 - ✅ `NonconformityUpdateView` - Update view with permissions
@@ -53,6 +58,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 - ✅ `OpportunityForImprovementDeleteView` - Delete view
 
 **Templates (80% Complete):**
+
 - ✅ `nonconformity_form.html` - NC create/edit form
 - ✅ `nonconformity_detail.html` - NC detail view
 - ✅ `observation_form.html` - Observation form
@@ -60,6 +66,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 - ✅ `finding_confirm_delete.html` - Delete confirmation
 
 **URLs (Partial - Mixed):**
+
 - ✅ Class-based view URLs exist (nonconformity_create, nonconformity_detail)
 - ⚠️ Legacy function-based URLs exist but views not implemented
 - ⚠️ Missing observation and OFI detail/update/delete URLs
@@ -67,6 +74,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 ### 🔴 Missing / Incomplete
 
 **View Integration:**
+
 - 🔴 Observation detail view not exposed via URL
 - 🔴 OFI detail view not exposed via URL
 - 🔴 Findings not displaying in audit detail page
@@ -74,18 +82,21 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 - 🔴 Audit status validation (prevent adding findings when status='decided')
 
 **URL Routing:**
+
 - 🔴 Clean up duplicate/legacy URLs
 - 🔴 Add missing observation detail/update/delete URLs
 - 🔴 Add missing OFI detail/update/delete URLs
 - 🔴 Standardize URL patterns
 
 **Templates:**
+
 - 🔴 Observation detail template missing
 - 🔴 OFI detail template missing
 - 🔴 Findings list section in audit_detail.html incomplete
 - 🔴 "Add Finding" action buttons in audit detail
 
 **Testing:**
+
 - 🔴 Integration tests for complete CRUD workflow
 - 🔴 Permission tests (auditor can create, client cannot)
 - 🔴 Status validation tests (can't add when decided)
@@ -104,6 +115,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   - Document which URLs are in use vs legacy
   
 - [ ] **1.2** Standardize URL patterns
+
   ```python
   # Nonconformity URLs
   path('audit/<int:audit_pk>/nc/create/', ...)  # Create
@@ -129,6 +141,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   - Update any template references to old URLs
 
 - [ ] **1.4** Test URL routing
+
   ```bash
   python manage.py show_urls | grep -E "nonconformity|observation|ofi"
   ```
@@ -144,6 +157,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 #### 2.1 Observation Detail View
 
 - [ ] **2.1.1** Create `ObservationDetailView` (copy pattern from NonconformityDetailView)
+
   ```python
   class ObservationDetailView(LoginRequiredMixin, DetailView):
       """View observation details."""
@@ -170,6 +184,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 #### 2.2 OFI Detail View
 
 - [ ] **2.2.1** Create `OpportunityForImprovementDetailView`
+
   ```python
   class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
       """View opportunity for improvement details."""
@@ -191,6 +206,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 #### 2.3 Register Detail Views in URLs
 
 - [ ] **2.3.1** Add observation_detail URL
+
   ```python
   path('observation/<int:pk>/', 
        views.ObservationDetailView.as_view(), 
@@ -198,6 +214,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   ```
 
 - [ ] **2.3.2** Add ofi_detail URL
+
   ```python
   path('ofi/<int:pk>/', 
        views.OpportunityForImprovementDetailView.as_view(), 
@@ -220,6 +237,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   - Add `can_add_findings` permission flag
 
 - [ ] **3.1.2** Update permission context
+
   ```python
   context['can_add_findings'] = (
       can_add_finding(user, audit) and 
@@ -234,6 +252,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   - Separate tabs/sections for: Nonconformities, Observations, OFIs
 
 - [ ] **3.2.2** Add "Add Finding" buttons (if `can_add_findings`)
+
   ```html
   {% if can_add_findings %}
   <div class="btn-group">
@@ -273,6 +292,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   - "No opportunities" message if empty
 
 - [ ] **3.2.6** Add finding counts summary
+
   ```html
   <div class="findings-summary">
     <span class="badge bg-danger">{{ nonconformities.count }} NCs</span>
@@ -292,6 +312,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 #### 4.1 View-Level Validation
 
 - [ ] **4.1.1** Update all create views' `test_func()`
+
   ```python
   def test_func(self):
       audit = get_object_or_404(Audit, pk=self.kwargs['audit_pk'])
@@ -299,12 +320,14 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
           return False  # Cannot add findings to decided audits
       return can_add_finding(self.request.user, audit)
   ```
+
   - ✅ NonconformityCreateView (already has this)
   - ✅ ObservationCreateView (already has this)
   - ✅ OpportunityForImprovementCreateView (already has this)
   - Verify all are consistent
 
 - [ ] **4.1.2** Update all update views' `test_func()`
+
   ```python
   def test_func(self):
       finding = self.get_object()
@@ -312,6 +335,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
           return False  # Cannot edit findings in decided audits
       return can_edit_finding(self.request.user, finding)
   ```
+
   - Check NonconformityUpdateView
   - Check ObservationUpdateView
   - Check OpportunityForImprovementUpdateView
@@ -322,6 +346,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 #### 4.2 Template-Level Validation
 
 - [ ] **4.2.1** Hide "Add Finding" buttons when status='decided'
+
   ```html
   {% if can_add_findings and audit.status != 'decided' %}
     <!-- Add buttons -->
@@ -329,6 +354,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   ```
 
 - [ ] **4.2.2** Hide Edit/Delete buttons when status='decided'
+
   ```html
   {% if can_edit and audit.status != 'decided' %}
     <a href="..." class="btn btn-sm btn-secondary">Edit</a>
@@ -336,6 +362,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
   ```
 
 - [ ] **4.2.3** Add informational message when status='decided'
+
   ```html
   {% if audit.status == 'decided' %}
   <div class="alert alert-info">
@@ -454,6 +481,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 #### 5.7 Run Test Suite
 
 - [ ] **5.7.1** Run tests with coverage
+
   ```bash
   python manage.py test audits.test_findings_crud --keepdb --verbosity=2
   ```
@@ -461,6 +489,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 - [ ] **5.7.2** Verify all tests pass (aim for 100%)
 
 - [ ] **5.7.3** Generate coverage report
+
   ```bash
   coverage run --source='.' manage.py test audits.test_findings_crud
   coverage html
@@ -477,16 +506,19 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 #### 6.1 Code Quality
 
 - [ ] **6.1.1** Run Black formatter
+
   ```bash
   black audits/views.py templates/audits/
   ```
 
 - [ ] **6.1.2** Run isort
+
   ```bash
   isort audits/views.py
   ```
 
 - [ ] **6.1.3** Run pylint
+
   ```bash
   pylint audits/views.py --disable=C0301,C0103
   ```
@@ -502,6 +534,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 - [ ] **6.2.2** Add inline comments for complex logic
 
 - [ ] **6.2.3** Update CHANGELOG.md
+
   ```markdown
   ## [Unreleased]
   
@@ -575,7 +608,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 
 ## Acceptance Criteria Validation
 
-### Must Pass:
+### Must Pass
 
 - [ ] ✅ Lead auditors can create/edit/delete findings on assigned audits
 - [ ] ✅ Auditors can create/edit findings on assigned audits
@@ -628,15 +661,19 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 ## Risks & Mitigation
 
 ### Risk 1: URL routing conflicts
+
 **Mitigation:** Review all URLs first, remove legacy patterns before adding new
 
 ### Risk 2: Template inconsistencies
+
 **Mitigation:** Use existing nonconformity templates as reference pattern
 
 ### Risk 3: Permission logic complexity
+
 **Mitigation:** Reuse existing permission helpers (can_add_finding, can_edit_finding)
 
 ### Risk 4: Test coverage time
+
 **Mitigation:** Use test fixtures, focus on critical paths first
 
 ---
@@ -655,6 +692,7 @@ Complete the findings management CRUD functionality for Nonconformities, Observa
 ## Next Steps After Completion
 
 Once Task 8.1 is complete, proceed to:
+
 1. **Task 8.2:** Client Response Workflow (depends on NC CRUD being complete)
 2. **Task 8.3:** Auditor Verification (depends on Task 8.2)
 
