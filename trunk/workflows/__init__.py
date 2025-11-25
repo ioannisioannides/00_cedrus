@@ -1,5 +1,5 @@
 """Workflow state machines for audit and finding lifecycles."""
 
-from .audit_workflow import AuditWorkflow
+from .audit_state_machine import AuditStateMachine
 
-__all__ = ["AuditWorkflow"]
+__all__ = ["AuditStateMachine"]

@@ -10,7 +10,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from .models import Certification, Organization, Site, Standard
+from .models import Certification, Organization, Site, Standard, CertificateHistory, SurveillanceSchedule
+from .forms import SurveillanceScheduleForm, CertificateHistoryForm
 
 
 class CBAdminRequiredMixin(UserPassesTestMixin):
@@ -240,3 +241,46 @@ class CertificationUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, UpdateVi
         "expiry_date",
     ]
     success_url = reverse_lazy("core:certification_list")
+
+
+class CertificationDetailView(LoginRequiredMixin, CBAdminRequiredMixin, DetailView):
+    """View certification details including history and surveillance schedule."""
+
+    model = Certification
+    template_name = "core/certification_detail.html"
+    context_object_name = "certification"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["history"] = self.object.history.all().order_by("-action_date", "-created_at")
+        context["surveillance_schedule"] = getattr(self.object, "surveillance_schedule", None)
+        return context
+
+
+class SurveillanceScheduleUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, UpdateView):
+    """Update surveillance schedule dates."""
+
+    model = SurveillanceSchedule
+    form_class = SurveillanceScheduleForm
+    template_name = "core/surveillance_schedule_form.html"
+
+    def get_success_url(self):
+        return reverse_lazy("core:certification_detail", kwargs={"pk": self.object.certification.pk})
+
+
+class CertificateHistoryCreateView(LoginRequiredMixin, CBAdminRequiredMixin, CreateView):
+    """Manually add a certificate history entry."""
+
+    model = CertificateHistory
+    form_class = CertificateHistoryForm
+    template_name = "core/certificate_history_form.html"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        certification_id = self.kwargs.get("certification_pk")
+        if certification_id:
+            initial["certification"] = get_object_or_404(Certification, pk=certification_id)
+        return initial
+
+    def get_success_url(self):
+        return reverse_lazy("core:certification_detail", kwargs={"pk": self.object.certification.pk})

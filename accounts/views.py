@@ -8,6 +8,22 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from .models import (
+    AuditorCompetenceEvaluation,
+    AuditorQualification,
+    AuditorTrainingRecord,
+    ConflictOfInterest,
+    ImpartialityDeclaration,
+)
+from .forms import (
+    AuditorCompetenceEvaluationForm,
+    AuditorQualificationForm,
+    AuditorTrainingRecordForm,
+    ConflictOfInterestForm,
+    ImpartialityDeclarationForm,
+)
 
 
 class CustomLoginView(LoginView):
@@ -132,3 +148,110 @@ def logout_view(request):
     """Logout view - accepts both GET and POST for convenience."""
     logout(request)
     return redirect("accounts:login")
+
+
+class CBAdminRequiredMixin(UserPassesTestMixin):
+    """Mixin to require CB Admin role."""
+
+    def test_func(self):
+        return self.request.user.groups.filter(name="cb_admin").exists()
+
+
+# ---------------------------------------------------------------------------
+# Auditor Qualification Views
+# ---------------------------------------------------------------------------
+
+class AuditorQualificationListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
+    model = AuditorQualification
+    template_name = "accounts/qualification_list.html"
+    context_object_name = "qualifications"
+    paginate_by = 20
+
+
+class AuditorQualificationCreateView(LoginRequiredMixin, CBAdminRequiredMixin, CreateView):
+    model = AuditorQualification
+    form_class = AuditorQualificationForm
+    template_name = "accounts/qualification_form.html"
+    success_url = reverse_lazy("accounts:qualification_list")
+
+
+class AuditorQualificationUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, UpdateView):
+    model = AuditorQualification
+    form_class = AuditorQualificationForm
+    template_name = "accounts/qualification_form.html"
+    success_url = reverse_lazy("accounts:qualification_list")
+
+
+# ---------------------------------------------------------------------------
+# Auditor Training Views
+# ---------------------------------------------------------------------------
+
+class AuditorTrainingListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
+    model = AuditorTrainingRecord
+    template_name = "accounts/training_list.html"
+    context_object_name = "training_records"
+    paginate_by = 20
+
+
+class AuditorTrainingCreateView(LoginRequiredMixin, CBAdminRequiredMixin, CreateView):
+    model = AuditorTrainingRecord
+    form_class = AuditorTrainingRecordForm
+    template_name = "accounts/training_form.html"
+    success_url = reverse_lazy("accounts:training_list")
+
+
+class AuditorTrainingUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, UpdateView):
+    model = AuditorTrainingRecord
+    form_class = AuditorTrainingRecordForm
+    template_name = "accounts/training_form.html"
+    success_url = reverse_lazy("accounts:training_list")
+
+
+# ---------------------------------------------------------------------------
+# Competence Evaluation Views
+# ---------------------------------------------------------------------------
+
+class CompetenceEvaluationListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
+    model = AuditorCompetenceEvaluation
+    template_name = "accounts/competence_list.html"
+    context_object_name = "evaluations"
+    paginate_by = 20
+
+
+class CompetenceEvaluationCreateView(LoginRequiredMixin, CBAdminRequiredMixin, CreateView):
+    model = AuditorCompetenceEvaluation
+    form_class = AuditorCompetenceEvaluationForm
+    template_name = "accounts/competence_form.html"
+    success_url = reverse_lazy("accounts:competence_list")
+
+
+class CompetenceEvaluationUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, UpdateView):
+    model = AuditorCompetenceEvaluation
+    form_class = AuditorCompetenceEvaluationForm
+    template_name = "accounts/competence_form.html"
+    success_url = reverse_lazy("accounts:competence_list")
+
+
+# ---------------------------------------------------------------------------
+# Conflict of Interest Views
+# ---------------------------------------------------------------------------
+
+class ConflictOfInterestListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
+    model = ConflictOfInterest
+    template_name = "accounts/coi_list.html"
+    context_object_name = "conflicts"
+    paginate_by = 20
+
+
+class ConflictOfInterestCreateView(LoginRequiredMixin, CBAdminRequiredMixin, CreateView):
+    model = ConflictOfInterest
+    form_class = ConflictOfInterestForm
+    template_name = "accounts/coi_form.html"
+    success_url = reverse_lazy("accounts:coi_list")
+
+
+class ConflictOfInterestUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, UpdateView):
+    model = ConflictOfInterest
+    form_class = ConflictOfInterestForm
+    template_name = "accounts/coi_form.html"
+    success_url = reverse_lazy("accounts:coi_list")

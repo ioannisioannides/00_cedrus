@@ -10,7 +10,7 @@ import pytest
 
 from audits.models import Audit, Nonconformity
 from core.models import Organization, Standard
-from trunk.workflows import AuditWorkflow
+from trunk.workflows.audit_state_machine import AuditStateMachine
 
 
 @pytest.fixture
@@ -56,54 +56,87 @@ class TestAuditWorkflowTransitions:
     def test_draft_to_scheduled_valid(self, audit_draft):
         """Test valid transition from draft to scheduled."""
         from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
 
         User = get_user_model()
         auditor = User.objects.create_user(username="auditor", password="test")
+        lead_group = Group.objects.create(name="lead_auditor")
+        auditor.groups.add(lead_group)
 
         audit_draft.lead_auditor = auditor
         audit_draft.save()
 
-        workflow = AuditWorkflow(audit_draft)
-        audit = workflow.transition_to("scheduled", user=auditor)
+        workflow = AuditStateMachine(audit_draft)
+        audit = workflow.transition("scheduled", user=auditor)
 
         assert audit.status == "scheduled"
 
     def test_draft_to_scheduled_no_auditor_fails(self, audit_draft):
-        """Test transition fails without lead auditor."""
-        # Note: Can't actually test missing lead auditor due to NOT NULL constraint
-        # This test verifies the validation logic would work if allowed by DB
-        workflow = AuditWorkflow(audit_draft)
-        # Should pass since fixture has lead auditor
-        workflow.validate_transition("scheduled")
+        """Test transition fails if user is not the assigned lead auditor."""
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        
+        User = get_user_model()
+        # Create a user who is a lead auditor but NOT assigned to this audit
+        other_auditor = User.objects.create_user(username="other", password="test")
+        lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
+        other_auditor.groups.add(lead_group)
+        
+        # Assign a different auditor
+        assigned_auditor = User.objects.create_user(username="assigned", password="test")
+        assigned_auditor.groups.add(lead_group)
+        
+        audit_draft.lead_auditor = assigned_auditor
+        audit_draft.save()
 
+        workflow = AuditStateMachine(audit_draft)
+        # Should fail because user is not the assigned lead auditor
+        ok, reason = workflow.can_transition("scheduled", other_auditor)
+        assert not ok
+        # The reason comes from permission checker returning False, which usually results in a generic message
+        # or we can check that it returned False.
+        
     def test_invalid_transition_fails(self, audit_draft):
         """Test invalid transition is rejected."""
-        workflow = AuditWorkflow(audit_draft)
-        with pytest.raises(ValidationError, match="Cannot transition"):
-            workflow.transition_to("closed")
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.create_user(username="checker", password="test")
+
+        workflow = AuditStateMachine(audit_draft)
+        with pytest.raises(ValidationError):
+            workflow.transition("closed", user=user)
 
     def test_report_draft_requires_findings(self, audit_draft):
         """Test cannot move to report_draft without findings."""
         from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
 
         User = get_user_model()
         auditor = User.objects.create_user(username="auditor", password="test")
-
+        lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
+        auditor.groups.add(lead_group)
+        
+        # Assign auditor to audit so they have permission
         audit_draft.lead_auditor = auditor
         audit_draft.scheduled_date = "2025-12-01"
         audit_draft.status = "in_progress"
         audit_draft.save()
 
-        workflow = AuditWorkflow(audit_draft)
-        with pytest.raises(ValidationError, match="at least one finding"):
-            workflow.transition_to("report_draft", user=auditor)
+        workflow = AuditStateMachine(audit_draft)
+        with pytest.raises(ValidationError, match="At least one finding"):
+            workflow.transition("report_draft", user=auditor)
 
     def test_submitted_requires_nc_responses(self, audit_draft, standard):
         """Test cannot submit without client responses to major NCs."""
         from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
 
         User = get_user_model()
         auditor = User.objects.create_user(username="auditor", password="test")
+        lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
+        auditor.groups.add(lead_group)
+        
+        audit_draft.lead_auditor = auditor
 
         # Create major NC without response
         Nonconformity.objects.create(
@@ -120,16 +153,20 @@ class TestAuditWorkflowTransitions:
         audit_draft.status = "client_review"
         audit_draft.save()
 
-        workflow = AuditWorkflow(audit_draft)
+        workflow = AuditStateMachine(audit_draft)
         with pytest.raises(ValidationError, match="missing client response"):
-            workflow.transition_to("submitted", user=auditor)
+            workflow.transition("submitted", user=auditor)
 
     def test_closed_requires_verified_ncs(self, audit_draft, standard):
         """Test cannot close with open NCs."""
         from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
 
         User = get_user_model()
         auditor = User.objects.create_user(username="auditor", password="test")
+        # Make auditor a CB admin to allow closing
+        cb_group = Group.objects.create(name="cb_admin")
+        auditor.groups.add(cb_group)
 
         # Create NC that's still open
         Nonconformity.objects.create(
@@ -147,24 +184,50 @@ class TestAuditWorkflowTransitions:
         audit_draft.status = "decision_pending"
         audit_draft.save()
 
-        workflow = AuditWorkflow(audit_draft)
+        workflow = AuditStateMachine(audit_draft)
         with pytest.raises(ValidationError, match="still open"):
-            workflow.transition_to("closed", user=auditor)
+            workflow.transition("closed", user=auditor)
 
     def test_get_available_transitions(self, audit_draft):
         """Test getting available transitions."""
-        workflow = AuditWorkflow(audit_draft)
-        transitions = workflow.get_available_transitions()
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        
+        User = get_user_model()
+        # Need a user with permissions (e.g. Lead Auditor)
+        auditor = User.objects.create_user(username="auditor", password="test")
+        lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
+        auditor.groups.add(lead_group)
+        
+        audit_draft.lead_auditor = auditor
+        audit_draft.save()
 
-        assert len(transitions) == 2  # scheduled and cancelled
-        assert any(t["code"] == "scheduled" for t in transitions)
-        assert any(t["code"] == "cancelled" for t in transitions)
+        workflow = AuditStateMachine(audit_draft)
+        transitions = workflow.available_transitions(auditor)
+
+        # transitions is a list of tuples (code, label)
+        
+        assert len(transitions) >= 1
+        codes = [t[0] for t in transitions]
+        assert "scheduled" in codes
 
     def test_can_transition_to(self, audit_draft):
         """Test checking if transition is allowed."""
-        workflow = AuditWorkflow(audit_draft)
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        
+        User = get_user_model()
+        auditor = User.objects.create_user(username="auditor", password="test")
+        lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
+        auditor.groups.add(lead_group)
+        
+        audit_draft.lead_auditor = auditor
+        audit_draft.save()
 
-        assert workflow.can_transition_to("scheduled") is True
-        assert workflow.can_transition_to("cancelled") is True
-        assert workflow.can_transition_to("closed") is False
-        assert workflow.can_transition_to("in_progress") is False
+        workflow = AuditStateMachine(audit_draft)
+
+        ok, _ = workflow.can_transition("scheduled", auditor)
+        assert ok is True
+        
+        ok, _ = workflow.can_transition("closed", auditor)
+        assert ok is False

@@ -49,4 +49,19 @@ urlpatterns = [
         views.CertificationUpdateView.as_view(),
         name="certification_update",
     ),
+    path(
+        "certifications/<int:pk>/",
+        views.CertificationDetailView.as_view(),
+        name="certification_detail",
+    ),
+    path(
+        "certifications/<int:certification_pk>/history/add/",
+        views.CertificateHistoryCreateView.as_view(),
+        name="certificate_history_create",
+    ),
+    path(
+        "surveillance/<int:pk>/edit/",
+        views.SurveillanceScheduleUpdateView.as_view(),
+        name="surveillance_schedule_update",
+    ),
 ]
