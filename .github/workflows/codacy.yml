@@ -57,39 +57,65 @@ jobs:
 
       # Split SARIF file into individual files per tool to avoid category conflicts
       # GitHub Code Scanning no longer accepts multiple runs in a single SARIF file
-      - name: Split SARIF by tool
+      - name: Split SARIF by tool and upload
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -f results.sarif ]; then
-            echo "Splitting SARIF file into separate files per tool..."
-            mkdir -p sarif-splits
+          if [ ! -f results.sarif ]; then
+            echo "No SARIF file found."
+            exit 1
+          fi
+          
+          echo "Processing SARIF file..."
+          RUN_COUNT=$(jq '.runs | length' results.sarif)
+          echo "Found $RUN_COUNT runs in SARIF file"
+          
+          # If only one run, upload directly
+          if [ "$RUN_COUNT" -eq 1 ]; then
+            echo "Single run detected, uploading directly..."
+            TOOL_NAME=$(jq -r '.runs[0].tool.driver.name // "codacy"' results.sarif | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
             
-            # Count runs
-            RUN_COUNT=$(jq '.runs | length' results.sarif)
-            echo "Found $RUN_COUNT runs in SARIF file"
+            # Compress and encode
+            SARIF_CONTENT=$(gzip -c results.sarif | base64 -w0)
             
-            # Extract each run into its own SARIF file
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/${{ github.repository }}/code-scanning/sarifs" \
+              -f "commit_sha=${{ github.sha }}" \
+              -f "ref=${{ github.ref }}" \
+              -f "sarif=$SARIF_CONTENT"
+          else
+            # Extract and upload each run separately
             for i in $(seq 0 $((RUN_COUNT - 1))); do
               TOOL_NAME=$(jq -r ".runs[$i].tool.driver.name // \"tool-$i\"" results.sarif | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
-              OUTPUT_FILE="sarif-splits/${TOOL_NAME}-${i}.sarif"
               
-              echo "Extracting run $i (${TOOL_NAME}) to ${OUTPUT_FILE}..."
+              echo "Processing run $i: $TOOL_NAME"
+              
+              # Extract single run to temp file
               jq --argjson idx "$i" '{
                 "$schema": ."$schema",
                 version: .version,
                 runs: [.runs[$idx]]
-              }' results.sarif > "$OUTPUT_FILE"
+              }' results.sarif > "run-${i}.sarif"
+              
+              # Compress and encode
+              SARIF_CONTENT=$(gzip -c "run-${i}.sarif" | base64 -w0)
+              
+              echo "Uploading run $i ($TOOL_NAME)..."
+              gh api \
+                --method POST \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "/repos/${{ github.repository }}/code-scanning/sarifs" \
+                -f "commit_sha=${{ github.sha }}" \
+                -f "ref=${{ github.ref }}" \
+                -f "sarif=$SARIF_CONTENT" \
+                -f "tool_name=codacy-${TOOL_NAME}" || echo "Warning: Failed to upload run $i"
+              
+              rm -f "run-${i}.sarif"
             done
-            
-            echo "Split complete. Files created:"
-            ls -la sarif-splits/
-          else
-            echo "No SARIF file found."
-            exit 1
           fi
-
-      # Upload each SARIF file separately with unique categories
-      - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: sarif-splits/
-          category: codacy-security-scan
+          
+          echo "Upload complete."
