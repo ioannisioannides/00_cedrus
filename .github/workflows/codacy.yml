@@ -55,20 +55,41 @@ jobs:
           # This will handover control about PR rejection to the GitHub side
           max-allowed-issues: 2147483647
 
-      # Patch the SARIF file to ensure each run has a unique category
-      # This fixes the "multiple SARIF runs with the same category" error
-      - name: Patch SARIF for multiple runs
+      # Split SARIF file into individual files per tool to avoid category conflicts
+      # GitHub Code Scanning no longer accepts multiple runs in a single SARIF file
+      - name: Split SARIF by tool
         run: |
           if [ -f results.sarif ]; then
-            echo "Patching SARIF file to add unique automationDetails.id for each run..."
-            jq '.runs |= [to_entries[] | .value + {automationDetails: {id: ("codacy/" + (.value.tool.driver.name // "unknown") + "/" + (.key|tostring) | ascii_downcase | gsub("[^a-z0-9-]"; "-"))}}]' results.sarif > results.patched.sarif
-            mv results.patched.sarif results.sarif
+            echo "Splitting SARIF file into separate files per tool..."
+            mkdir -p sarif-splits
+            
+            # Count runs
+            RUN_COUNT=$(jq '.runs | length' results.sarif)
+            echo "Found $RUN_COUNT runs in SARIF file"
+            
+            # Extract each run into its own SARIF file
+            for i in $(seq 0 $((RUN_COUNT - 1))); do
+              TOOL_NAME=$(jq -r ".runs[$i].tool.driver.name // \"tool-$i\"" results.sarif | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
+              OUTPUT_FILE="sarif-splits/${TOOL_NAME}-${i}.sarif"
+              
+              echo "Extracting run $i (${TOOL_NAME}) to ${OUTPUT_FILE}..."
+              jq --argjson idx "$i" '{
+                "$schema": ."$schema",
+                version: .version,
+                runs: [.runs[$idx]]
+              }' results.sarif > "$OUTPUT_FILE"
+            done
+            
+            echo "Split complete. Files created:"
+            ls -la sarif-splits/
           else
-            echo "No SARIF file found to patch."
+            echo "No SARIF file found."
+            exit 1
           fi
 
-      # Upload the SARIF file generated in the previous step
-      - name: Upload SARIF results file
+      # Upload each SARIF file separately with unique categories
+      - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: results.sarif
+          sarif_file: sarif-splits/
+          category: codacy-security-scan
