@@ -91,7 +91,7 @@ class HealthCheckTest(TestCase):
         self.assertIn("python_version", data)
         self.assertIn("timestamp", data)
 
-    @override_settings(DEBUG=True)
+    @override_settings(DEBUG=True, INTERNAL_IPS=[])
     def test_detailed_status_debug_mode(self):
         """Test detailed status is accessible in debug mode."""
         response = self.client.get(reverse("core:detailed_status"))
@@ -119,7 +119,7 @@ class HealthCheckTest(TestCase):
         data = response.json()
         self.assertEqual(data["status"], "healthy")
 
-    @override_settings(DEBUG=True)
+    @override_settings(DEBUG=True, INTERNAL_IPS=[])
     @patch("core.health.connection")
     def test_detailed_status_database_error(self, mock_connection):
         """Test detailed status handles database errors gracefully."""
@@ -133,7 +133,7 @@ class HealthCheckTest(TestCase):
         data = response.json()
         self.assertEqual(data["database"]["status"], "error")
 
-    @override_settings(DEBUG=True)
+    @override_settings(DEBUG=True, INTERNAL_IPS=[])
     @patch("core.health.cache")
     def test_detailed_status_cache_error(self, mock_cache):
         """Test detailed status handles cache errors gracefully."""
