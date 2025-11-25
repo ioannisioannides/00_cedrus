@@ -84,6 +84,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
     # File utilities
     gettext \
+    # WeasyPrint dependencies (PDF generation)
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libjpeg62-turbo \
+    libopenjp2-7 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

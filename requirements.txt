@@ -279,3 +279,4 @@ urllib3==2.5.0
 # setuptools
 weasyprint
 qrcode
+Pillow
