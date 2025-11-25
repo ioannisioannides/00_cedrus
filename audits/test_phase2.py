@@ -13,19 +13,9 @@ from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from audits.models import (
-    Audit,
-    AuditorCompetenceWarning,
-    FindingRecurrence,
-    Nonconformity,
-    RootCauseCategory,
-)
+from audits.models import Audit, AuditorCompetenceWarning, FindingRecurrence, Nonconformity, RootCauseCategory
 from core.models import Certification, Organization, Site, Standard
-from trunk.services.duration_validator import (
-    calculate_complexity_factor,
-    get_base_duration,
-    validate_audit_duration,
-)
+from trunk.services.duration_validator import calculate_complexity_factor, get_base_duration, validate_audit_duration
 from trunk.services.sampling import calculate_sample_size, validate_site_selection
 
 

@@ -17,12 +17,7 @@ from .forms import (
     AuditorTrainingRecordForm,
     ConflictOfInterestForm,
 )
-from .models import (
-    AuditorCompetenceEvaluation,
-    AuditorQualification,
-    AuditorTrainingRecord,
-    ConflictOfInterest,
-)
+from .models import AuditorCompetenceEvaluation, AuditorQualification, AuditorTrainingRecord, ConflictOfInterest
 
 
 class CustomLoginView(LoginView):

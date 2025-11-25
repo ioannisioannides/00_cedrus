@@ -18,12 +18,7 @@ from django.contrib.auth.models import Group
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from audits.models import (
-    Audit,
-    AuditChanges,
-    AuditorCompetenceWarning,
-    AuditTeamMember,
-)
+from audits.models import Audit, AuditChanges, AuditorCompetenceWarning, AuditTeamMember
 from audits.team_forms import AuditTeamMemberForm
 from core.models import Organization
 from trunk.services.sampling import calculate_sample_size

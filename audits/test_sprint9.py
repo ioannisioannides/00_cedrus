@@ -21,9 +21,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from accounts.models import Profile
-from audits.finding_forms import (
-    NonconformityForm,
-)
+from audits.finding_forms import NonconformityForm
 from audits.models import Audit, Nonconformity, Observation
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard

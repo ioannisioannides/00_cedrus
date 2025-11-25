@@ -9,25 +9,17 @@ Tests for the "Ultimate Logic" implementation of ISO 17021-1 requirements:
 """
 
 from datetime import date, timedelta
-from django.test import TestCase
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.test import TestCase
 
-from accounts.models import (
-    AuditorQualification,
-    ConflictOfInterest,
-)
-from core.models import (
-    Organization,
-    Standard,
-    Certification,
-    CertificateHistory,
-    SurveillanceSchedule
-)
-from audits.models import Audit, Complaint, Appeal, CertificationDecision
-from trunk.services.complaint_service import ComplaintService
+from accounts.models import AuditorQualification, ConflictOfInterest
+from audits.models import Appeal, Audit, CertificationDecision, Complaint
+from core.models import CertificateHistory, Certification, Organization, Standard, SurveillanceSchedule
 from trunk.services.certificate_service import CertificateService
 from trunk.services.competence_service import CompetenceService
+from trunk.services.complaint_service import ComplaintService
 
 
 class AuditorCompetenceTests(TestCase):
