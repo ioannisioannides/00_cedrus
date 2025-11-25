@@ -106,11 +106,15 @@ class AuditorQualification(models.Model):
     certificate_number: models.CharField = models.CharField(max_length=100)
     issue_date: models.DateField = models.DateField()
     expiry_date: models.DateField = models.DateField(null=True, blank=True)
-    standards: models.ManyToManyField = models.ManyToManyField("core.Standard", blank=True, related_name="auditor_qualifications")
+    standards: models.ManyToManyField = models.ManyToManyField(
+        "core.Standard", blank=True, related_name="auditor_qualifications"
+    )
     nace_codes: models.CharField = models.CharField(
         max_length=255, blank=True, help_text="Comma-separated NACE codes for sector competence"
     )
-    ea_codes: models.CharField = models.CharField(max_length=255, blank=True, help_text="Comma-separated EA codes for sector competence")
+    ea_codes: models.CharField = models.CharField(
+        max_length=255, blank=True, help_text="Comma-separated EA codes for sector competence"
+    )
     certificate_file: models.FileField = models.FileField(upload_to="auditor_qualifications/", blank=True)
     status: models.CharField = models.CharField(
         max_length=20,
@@ -143,8 +147,12 @@ class AuditorTrainingRecord(models.Model):
     training_provider: models.CharField = models.CharField(max_length=255)
     course_date: models.DateField = models.DateField()
     duration_hours: models.FloatField = models.FloatField(null=True, blank=True)
-    standards_covered: models.ManyToManyField = models.ManyToManyField("core.Standard", blank=True, related_name="training_records")
-    cpd_points: models.FloatField = models.FloatField(default=0.0, help_text="Continuing Professional Development points")
+    standards_covered: models.ManyToManyField = models.ManyToManyField(
+        "core.Standard", blank=True, related_name="training_records"
+    )
+    cpd_points: models.FloatField = models.FloatField(
+        default=0.0, help_text="Continuing Professional Development points"
+    )
     certificate_file: models.FileField = models.FileField(upload_to="training_certificates/", blank=True)
     notes: models.TextField = models.TextField(blank=True)
     created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
@@ -161,9 +169,13 @@ class AuditorTrainingRecord(models.Model):
 class AuditorCompetenceEvaluation(models.Model):
     """Annual competence evaluation (witness audits, scoring)."""
 
-    auditor: models.ForeignKey = models.ForeignKey(User, on_delete=models.CASCADE, related_name="competence_evaluations")
+    auditor: models.ForeignKey = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="competence_evaluations"
+    )
     evaluation_date: models.DateField = models.DateField()
-    evaluator: models.ForeignKey = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="evaluations_conducted")
+    evaluator: models.ForeignKey = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="evaluations_conducted"
+    )
     technical_knowledge_score: models.PositiveIntegerField = models.PositiveIntegerField()
     audit_skills_score: models.PositiveIntegerField = models.PositiveIntegerField()
     communication_skills_score: models.PositiveIntegerField = models.PositiveIntegerField()
@@ -207,7 +219,9 @@ class ConflictOfInterest(models.Model):
     ]
 
     auditor: models.ForeignKey = models.ForeignKey(User, on_delete=models.CASCADE, related_name="conflicts_of_interest")
-    organization: models.ForeignKey = models.ForeignKey("core.Organization", on_delete=models.CASCADE, related_name="conflicts_declared")
+    organization: models.ForeignKey = models.ForeignKey(
+        "core.Organization", on_delete=models.CASCADE, related_name="conflicts_declared"
+    )
     relationship_type: models.CharField = models.CharField(max_length=40, choices=RELATIONSHIP_TYPE_CHOICES)
     description: models.TextField = models.TextField()
     declared_date: models.DateField = models.DateField(auto_now_add=True)
@@ -241,7 +255,9 @@ class ConflictOfInterest(models.Model):
 class ImpartialityDeclaration(models.Model):
     """Annual impartiality declaration by personnel (ISO 17021-1 Clause 5)."""
 
-    user: models.ForeignKey = models.ForeignKey(User, on_delete=models.CASCADE, related_name="impartiality_declarations")
+    user: models.ForeignKey = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="impartiality_declarations"
+    )
     declaration_period_year: models.PositiveIntegerField = models.PositiveIntegerField()
     declaration_date: models.DateField = models.DateField(auto_now_add=True)
     no_conflicts_declared: models.BooleanField = models.BooleanField(default=False)
