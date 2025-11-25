@@ -600,6 +600,21 @@ def audit_recommendation_edit(request, audit_pk):
     )
 
 
+def _update_certifications_based_on_recommendation(audit, recommendation):
+    """Update certification statuses based on recommendations."""
+    if recommendation.suspension_recommended:
+        # Update certifications to suspended
+        for cert in audit.certifications.all():
+            cert.certificate_status = "suspended"
+            cert.save()
+
+    if recommendation.revocation_recommended:
+        # Update certifications to withdrawn
+        for cert in audit.certifications.all():
+            cert.certificate_status = "withdrawn"
+            cert.save()
+
+
 @login_required
 def audit_make_decision(request, audit_pk):
     """Make certification decision for an audit."""
@@ -626,20 +641,7 @@ def audit_make_decision(request, audit_pk):
             # Transition to decided status
             try:
                 AuditService.transition_status(audit, "decided", request.user)
-
-                # Update certification statuses based on recommendations
-                # This is a simplified version - can be enhanced
-                if recommendation.suspension_recommended:
-                    # Update certifications to suspended
-                    for cert in audit.certifications.all():
-                        cert.certificate_status = "suspended"
-                        cert.save()
-
-                if recommendation.revocation_recommended:
-                    # Update certifications to withdrawn
-                    for cert in audit.certifications.all():
-                        cert.certificate_status = "withdrawn"
-                        cert.save()
+                _update_certifications_based_on_recommendation(audit, recommendation)
 
                 messages.success(request, "Certification decision has been made and audit is now decided.")
                 return redirect("audits:audit_detail", pk=audit_pk)

@@ -113,6 +113,13 @@ class AuditTeamMemberForm(forms.ModelForm):
         if not self.audit:
             raise ValidationError("Audit is required")
 
+        self._validate_dates(cleaned_data)
+        self._validate_competence(cleaned_data)
+
+        return cleaned_data
+
+    def _validate_dates(self, cleaned_data):
+        """Validate date ranges."""
         date_from = cleaned_data.get("date_from")
         date_to = cleaned_data.get("date_to")
 
@@ -144,7 +151,8 @@ class AuditTeamMemberForm(forms.ModelForm):
                     }
                 )
 
-        # Competence Validation (Sprint 8 / Phase 2A)
+    def _validate_competence(self, cleaned_data):
+        """Validate auditor competence."""
         user = cleaned_data.get("user")
         if user and self.audit and self.request_user:
             try:
@@ -160,8 +168,6 @@ class AuditTeamMemberForm(forms.ModelForm):
                     description=str(e.message) if hasattr(e, "message") else str(e),
                     issued_by=self.request_user,
                 )
-
-        return cleaned_data
 
     def _post_clean(self):
         """Override to set audit before model validation."""

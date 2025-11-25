@@ -152,13 +152,22 @@ class Audit(models.Model):
 
     def clean(self):
         """Validate audit data."""
-        # pylint: disable=too-many-branches
-        from datetime import timedelta
-
         from django.core.exceptions import ValidationError
-        from django.utils import timezone
 
         errors = {}
+        self._validate_dates(errors)
+        self._validate_audit_type(errors)
+
+        if errors:
+            raise ValidationError(errors)
+
+        self._validate_organization_consistency()
+        self._validate_roles()
+
+    def _validate_dates(self, errors):
+        """Validate audit dates."""
+        from datetime import timedelta
+        from django.utils import timezone
 
         # Validate that end date is not before start date
         if self.total_audit_date_from and self.total_audit_date_to:
@@ -171,6 +180,8 @@ class Audit(models.Model):
             if self.total_audit_date_from > one_year_ahead:
                 errors["total_audit_date_from"] = "Audit start date cannot be more than 1 year in the future."
 
+    def _validate_audit_type(self, errors):
+        """Validate audit type specific rules."""
         # Validate audit sequence - Stage 2 must follow Stage 1
         if self.audit_type == "stage2" and self.organization:
             # Check if there's a completed Stage 1 audit for this organization
@@ -189,8 +200,9 @@ class Audit(models.Model):
             if not has_active_cert:
                 errors["audit_type"] = "Surveillance audit requires at least one active certification."
 
-        if errors:
-            raise ValidationError(errors)
+    def _validate_organization_consistency(self):
+        """Validate that related objects belong to the same organization."""
+        from django.core.exceptions import ValidationError
 
         # Validate that certifications belong to the organization
         if self.pk and self.organization:
@@ -205,6 +217,10 @@ class Audit(models.Model):
             invalid_sites = self.sites.exclude(organization=self.organization)
             if invalid_sites.exists():
                 raise ValidationError({"sites": f"All sites must belong to {self.organization.name}."})
+
+    def _validate_roles(self):
+        """Validate user roles."""
+        from django.core.exceptions import ValidationError
 
         # Validate that lead_auditor has proper role
         if self.lead_auditor:
