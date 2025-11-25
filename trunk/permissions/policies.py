@@ -7,9 +7,6 @@ Implements policy checks for ISO 17021-1 compliance:
 - Audit team scoping: Auditors may only transition audits they are assigned to
 """
 
-from typing import Optional
-
-
 class PBACPolicy:
     """Policy-based access control checks for audit workflows."""
 

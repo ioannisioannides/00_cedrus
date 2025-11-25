@@ -184,9 +184,11 @@ class AuditStateMachine:
                 )
             technical_review = self.audit.technical_review
             if technical_review.status != "approved":
+                status_display = technical_review.get_status_display()
                 return (
                     False,
-                    f"Cannot move to decision pending: Technical review status is '{technical_review.get_status_display()}', must be 'Approved'",
+                    f"Cannot move to decision pending: Technical review status is "
+                    f"'{status_display}', must be 'Approved'",
                 )
             return True, "Validation passed"
 

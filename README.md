@@ -853,7 +853,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## License
 
-[Add your license here]
+MIT License - See LICENSE file for details.
 
 ---
 

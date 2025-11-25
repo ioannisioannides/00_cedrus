@@ -24,6 +24,7 @@ LABEL maintainer="Cedrus Excellence Team <team@cedrus.local>"
 LABEL stage="builder"
 
 # Install build dependencies (only needed for compilation)
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -43,6 +44,7 @@ COPY requirements.txt /tmp/requirements.txt
 # Install Python dependencies in virtual environment
 # --no-cache-dir: Don't cache pip downloads (saves space)
 # --disable-pip-version-check: Skip pip version check (faster)
+# hadolint ignore=DL3013
 RUN pip install --no-cache-dir --disable-pip-version-check \
     --upgrade pip setuptools wheel && \
     pip install --no-cache-dir --disable-pip-version-check \
@@ -70,6 +72,7 @@ LABEL org.opencontainers.image.documentation="https://cedrus.local/docs"
 LABEL org.opencontainers.image.source="https://github.com/yourorg/cedrus"
 
 # Install only runtime dependencies (no build tools)
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # PostgreSQL client library
     libpq5 \
@@ -94,8 +97,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create non-root user for security (principle of least privilege)
 # Running as root in containers is a security anti-pattern
+# hadolint ignore=DL3046
 RUN groupadd -g ${GID} cedrus && \
-    useradd -u ${UID} -g ${GID} -m -s /bin/bash cedrus
+    useradd -l -u ${UID} -g ${GID} -m -s /bin/bash cedrus
 
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
