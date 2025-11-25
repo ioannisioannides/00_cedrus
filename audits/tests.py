@@ -16,7 +16,6 @@ from audits.models import (
     AuditRecommendation,
     AuditSummary,
     AuditTeamMember,
-    EvidenceFile,
     Nonconformity,
     Observation,
     OpportunityForImprovement,
@@ -90,7 +89,7 @@ class AuditModelTest(TestCase):
 
     def test_audit_protect_created_by(self):
         """Test that created_by user cannot be deleted if audits exist."""
-        audit = Audit.objects.create(
+        Audit.objects.create(
             organization=self.org,
             audit_type="stage2",
             total_audit_date_from=date.today(),
@@ -105,7 +104,7 @@ class AuditModelTest(TestCase):
 
     def test_audit_protect_lead_auditor(self):
         """Test that lead_auditor cannot be deleted if audits exist."""
-        audit = Audit.objects.create(
+        Audit.objects.create(
             organization=self.org,
             audit_type="stage2",
             total_audit_date_from=date.today(),

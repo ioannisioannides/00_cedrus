@@ -10,6 +10,7 @@ This app contains the core audit workflow models:
 - AuditRecommendation: Final recommendations
 - EvidenceFile: File attachments
 """
+# pylint: disable=too-many-lines
 
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
@@ -108,6 +109,7 @@ class Audit(models.Model):
 
     def clean(self):
         """Validate audit data."""
+        # pylint: disable=too-many-branches
         from datetime import timedelta
 
         from django.core.exceptions import ValidationError
@@ -179,7 +181,10 @@ class Audit(models.Model):
             if not has_auditor_role:
                 raise ValidationError(
                     {
-                        "lead_auditor": f"{self.lead_auditor.username} does not have lead_auditor, auditor, or cb_admin role."
+                        "lead_auditor": (
+                            f"{self.lead_auditor.username} does not have lead_auditor, "
+                            "auditor, or cb_admin role."
+                        )
                     }
                 )
 
@@ -239,14 +244,20 @@ class AuditTeamMember(models.Model):
             if self.date_from < self.audit.total_audit_date_from:
                 raise ValidationError(
                     {
-                        "date_from": f"Team member start date cannot be before audit start date ({self.audit.total_audit_date_from})."
+                        "date_from": (
+                            f"Team member start date cannot be before audit start date "
+                            f"({self.audit.total_audit_date_from})."
+                        )
                     }
                 )
 
             if self.date_to > self.audit.total_audit_date_to:
                 raise ValidationError(
                     {
-                        "date_to": f"Team member end date cannot be after audit end date ({self.audit.total_audit_date_to})."
+                        "date_to": (
+                            f"Team member end date cannot be after audit end date "
+                            f"({self.audit.total_audit_date_to})."
+                        )
                     }
                 )
 
@@ -260,7 +271,10 @@ class AuditTeamMember(models.Model):
             if not is_auditor and self.role in ["lead_auditor", "auditor", "technical_expert"]:
                 raise ValidationError(
                     {
-                        "user": f"{self.user.username} does not have an auditor role and cannot be assigned as {self.get_role_display()}."
+                        "user": (
+                            f"{self.user.username} does not have an auditor role and cannot be "
+                            f"assigned as {self.get_role_display()}."
+                        )
                     }
                 )
 
@@ -858,7 +872,10 @@ class TransferCertification(models.Model):
     """IAF MD17: Transfer certification from previous CB."""
 
     transfer_audit = models.OneToOneField(
-        Audit, on_delete=models.CASCADE, related_name="transfer_certification", limit_choices_to={"audit_type": "transfer"}
+        Audit,
+        on_delete=models.CASCADE,
+        related_name="transfer_certification",
+        limit_choices_to={"audit_type": "transfer"},
     )
     previous_cb_name = models.CharField(max_length=255)
     previous_cb_accreditation_body = models.CharField(max_length=255, blank=True)
@@ -1016,7 +1033,10 @@ class EvidenceFile(models.Model):
             if file_ext not in allowed_extensions:
                 raise ValidationError(
                     {
-                        "file": f'File type "{file_ext}" not allowed. Allowed types: PDF, images (jpg/png/gif), Office documents (docx/xlsx/pptx), text files.'
+                        "file": (
+                            f'File type "{file_ext}" not allowed. Allowed types: PDF, images '
+                            "(jpg/png/gif), Office documents (docx/xlsx/pptx), text files."
+                        )
                     }
                 )
 

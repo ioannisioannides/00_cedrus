@@ -14,7 +14,7 @@ from django.contrib.auth.models import Group, User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from audits.models import Audit, Nonconformity
+from audits.models import Audit
 from core.models import Certification, Organization, Site, Standard
 from trunk.permissions.predicates import PermissionPredicate
 
@@ -124,67 +124,67 @@ class RoleBasedAccessTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create groups
-        self.cb_admin_group = Group.objects.create(name="cb_admin")
-        self.lead_auditor_group = Group.objects.create(name="lead_auditor")
-        self.auditor_group = Group.objects.create(name="auditor")
-        self.client_admin_group = Group.objects.create(name="client_admin")
+        cb_admin_group = Group.objects.create(name="cb_admin")
+        lead_auditor_group = Group.objects.create(name="lead_auditor")
+        auditor_group = Group.objects.create(name="auditor")
+        client_admin_group = Group.objects.create(name="client_admin")
 
         # Create users
         self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")
-        self.cb_admin.groups.add(self.cb_admin_group)
+        self.cb_admin.groups.add(cb_admin_group)
 
         self.lead_auditor = User.objects.create_user(username="lead", password="pass123")
-        self.lead_auditor.groups.add(self.lead_auditor_group)
+        self.lead_auditor.groups.add(lead_auditor_group)
 
         self.auditor = User.objects.create_user(username="auditor", password="pass123")
-        self.auditor.groups.add(self.auditor_group)
+        self.auditor.groups.add(auditor_group)
 
         self.client_admin = User.objects.create_user(username="clientadmin", password="pass123")
-        self.client_admin.groups.add(self.client_admin_group)
+        self.client_admin.groups.add(client_admin_group)
 
         self.other_client = User.objects.create_user(username="otherclient", password="pass123")
-        self.other_client.groups.add(self.client_admin_group)
+        self.other_client.groups.add(client_admin_group)
 
         # Create organizations
         self.org1 = Organization.objects.create(
             name="Org 1", registered_address="123 St", customer_id="ORG001", total_employee_count=10
         )
 
-        self.org2 = Organization.objects.create(
+        org2 = Organization.objects.create(
             name="Org 2", registered_address="456 St", customer_id="ORG002", total_employee_count=20
         )
 
         # Create standard and certifications
         self.standard = Standard.objects.create(code="ISO 9001", title="QMS")
 
-        self.cert1 = Certification.objects.create(
+        cert1 = Certification.objects.create(
             organization=self.org1,
             standard=self.standard,
             certification_scope="Manufacturing",
             certificate_status="active",
         )
 
-        self.cert2 = Certification.objects.create(
-            organization=self.org2,
+        Certification.objects.create(
+            organization=org2,
             standard=self.standard,
             certification_scope="Services",
             certificate_status="active",
         )
 
         # Create sites
-        self.site1 = Site.objects.create(
+        site1 = Site.objects.create(
             organization=self.org1, site_name="Site 1", site_address="123 St"
         )
 
-        self.site2 = Site.objects.create(
-            organization=self.org2, site_name="Site 2", site_address="456 St"
+        Site.objects.create(
+            organization=org2, site_name="Site 2", site_address="456 St"
         )
 
         # Link clients to organizations
         self.client_admin.profile.organization = self.org1
         self.client_admin.profile.save()
 
-        self.other_client.profile.organization = self.org2
+        self.other_client.profile.organization = org2
         self.other_client.profile.save()
 
         # Create audit for org1
@@ -198,8 +198,8 @@ class RoleBasedAccessTest(TestCase):
             created_by=self.cb_admin,
             lead_auditor=self.lead_auditor,
         )
-        self.audit1.certifications.add(self.cert1)
-        self.audit1.sites.add(self.site1)
+        self.audit1.certifications.add(cert1)
+        self.audit1.sites.add(site1)
 
         self.client = Client()
 

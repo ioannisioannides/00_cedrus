@@ -8,6 +8,8 @@ Creates:
 - Sample audit in "draft" status
 """
 
+from datetime import date, timedelta
+
 from django.contrib.auth.models import Group, User
 from django.core.management.base import BaseCommand
 
@@ -22,7 +24,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Seeding data...")
 
-        # Create groups
+        groups = self._create_groups()
+        users = self._create_users(groups)
+        org = self._create_organization()
+        self._link_client_admin(users["client_admin"], org)
+        site = self._create_site(org)
+        standard = self._create_standard()
+        cert = self._create_certification(org, standard)
+        self._create_audit(org, cert, site, users["cb_admin"], users["lead_auditor"])
+
+        self._print_summary()
+
+    def _create_groups(self):
         groups = {
             "cb_admin": Group.objects.get_or_create(name="cb_admin")[0],
             "lead_auditor": Group.objects.get_or_create(name="lead_auditor")[0],
@@ -31,63 +44,49 @@ class Command(BaseCommand):
             "client_user": Group.objects.get_or_create(name="client_user")[0],
         }
         self.stdout.write(self.style.SUCCESS("✓ Created user groups"))
+        return groups
 
-        # Create CB Admin user
-        cb_admin, created = User.objects.get_or_create(
-            username="cbadmin",
+    def _create_user(self, username, email, first_name, last_name, group):  # pylint: disable=too-many-positional-arguments
+        user, created = User.objects.get_or_create(
+            username=username,
             defaults={
-                "email": "cbadmin@cedrus.example",
-                "first_name": "CB",
-                "last_name": "Administrator",
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
             },
         )
         if created:
-            cb_admin.set_password("password123")
-            cb_admin.save()
-            cb_admin.groups.add(groups["cb_admin"])
-            self.stdout.write(self.style.SUCCESS("✓ Created CB Admin user (cbadmin/password123)"))
-        else:
-            self.stdout.write(self.style.WARNING("  CB Admin user already exists"))
-
-        # Create Lead Auditor user
-        lead_auditor, created = User.objects.get_or_create(
-            username="auditor1",
-            defaults={
-                "email": "auditor1@cedrus.example",
-                "first_name": "Lead",
-                "last_name": "Auditor",
-            },
-        )
-        if created:
-            lead_auditor.set_password("password123")
-            lead_auditor.save()
-            lead_auditor.groups.add(groups["lead_auditor"])
+            user.set_password("password123")
+            user.save()
+            user.groups.add(group)
             self.stdout.write(
-                self.style.SUCCESS("✓ Created Lead Auditor user (auditor1/password123)")
+                self.style.SUCCESS(f"✓ Created {first_name} {last_name} ({username}/password123)")
             )
         else:
-            self.stdout.write(self.style.WARNING("  Lead Auditor user already exists"))
+            self.stdout.write(self.style.WARNING(f"  {first_name} {last_name} already exists"))
+        return user
 
-        # Create Client Admin user
-        client_admin, created = User.objects.get_or_create(
-            username="clientadmin",
-            defaults={
-                "email": "clientadmin@cedrus.example",
-                "first_name": "Client",
-                "last_name": "Administrator",
-            },
+    def _create_users(self, groups):
+        cb_admin = self._create_user(
+            "cbadmin", "cbadmin@cedrus.example", "CB", "Administrator", groups["cb_admin"]
         )
-        if created:
-            client_admin.set_password("password123")
-            client_admin.save()
-            client_admin.groups.add(groups["client_admin"])
-            self.stdout.write(
-                self.style.SUCCESS("✓ Created Client Admin user (clientadmin/password123)")
-            )
-        else:
-            self.stdout.write(self.style.WARNING("  Client Admin user already exists"))
+        lead_auditor = self._create_user(
+            "auditor1", "auditor1@cedrus.example", "Lead", "Auditor", groups["lead_auditor"]
+        )
+        client_admin = self._create_user(
+            "clientadmin",
+            "clientadmin@cedrus.example",
+            "Client",
+            "Administrator",
+            groups["client_admin"],
+        )
+        return {
+            "cb_admin": cb_admin,
+            "lead_auditor": lead_auditor,
+            "client_admin": client_admin,
+        }
 
-        # Create sample organization
+    def _create_organization(self):
         org, created = Organization.objects.get_or_create(
             customer_id="CUST001",
             defaults={
@@ -108,8 +107,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("✓ Created sample organization"))
         else:
             self.stdout.write(self.style.WARNING("  Sample organization already exists"))
+        return org
 
-        # Link client admin to organization
+    def _link_client_admin(self, client_admin, org):
         if hasattr(client_admin, "profile"):
             client_admin.profile.organization = org
             client_admin.profile.save()
@@ -117,7 +117,7 @@ class Command(BaseCommand):
             Profile.objects.create(user=client_admin, organization=org)
         self.stdout.write(self.style.SUCCESS("✓ Linked Client Admin to organization"))
 
-        # Create sample site
+    def _create_site(self, org):
         site, created = Site.objects.get_or_create(
             organization=org,
             site_name="Main Production Facility",
@@ -131,8 +131,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("✓ Created sample site"))
         else:
             self.stdout.write(self.style.WARNING("  Sample site already exists"))
+        return site
 
-        # Create sample standard
+    def _create_standard(self):
         standard, created = Standard.objects.get_or_create(
             code="ISO 9001:2015",
             defaults={
@@ -145,8 +146,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("✓ Created sample standard"))
         else:
             self.stdout.write(self.style.WARNING("  Sample standard already exists"))
+        return standard
 
-        # Create sample certification
+    def _create_certification(self, org, standard):
         cert, created = Certification.objects.get_or_create(
             organization=org,
             standard=standard,
@@ -160,10 +162,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("✓ Created sample certification"))
         else:
             self.stdout.write(self.style.WARNING("  Sample certification already exists"))
+        return cert
 
-        # Create sample audit
-        from datetime import date, timedelta
-
+    def _create_audit(self, org, cert, site, cb_admin, lead_auditor):  # pylint: disable=too-many-positional-arguments
         audit, created = Audit.objects.get_or_create(
             organization=org,
             audit_type="surveillance",
@@ -182,7 +183,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("✓ Created sample audit"))
         else:
             self.stdout.write(self.style.WARNING("  Sample audit already exists"))
+        return audit
 
+    def _print_summary(self):
         self.stdout.write(self.style.SUCCESS("\n✓ Seeding complete!"))
         self.stdout.write(self.style.SUCCESS("\nYou can now log in with:"))
         self.stdout.write(self.style.SUCCESS("  - CB Admin: cbadmin / password123"))

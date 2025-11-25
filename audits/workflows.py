@@ -5,9 +5,6 @@ This module implements the state machine for audit status transitions,
 ensuring business rules are enforced and invalid transitions are blocked.
 """
 
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-
 from trunk.workflows.audit_state_machine import AuditStateMachine
 
 
@@ -38,4 +35,3 @@ class AuditWorkflow:
         Get list of available status transitions for the current user.
         """
         return self.sm.available_transitions(user)
-

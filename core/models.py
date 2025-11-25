@@ -5,6 +5,7 @@ These models form the foundation of the platform - the entities that audits
 are performed on and the standards/certifications they hold.
 """
 
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
@@ -189,17 +190,28 @@ class CertificateHistory(models.Model):
     action = models.CharField(max_length=30, choices=ACTION_CHOICES)
     action_date = models.DateField()
     related_audit = models.ForeignKey(
-        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="certificate_history_entries"
+        "audits.Audit",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="certificate_history_entries",
     )
     related_decision = models.ForeignKey(
-        "audits.CertificationDecision", on_delete=models.SET_NULL, null=True, blank=True, related_name="certificate_history_entries"
+        "audits.CertificationDecision",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="certificate_history_entries",
     )
     certificate_number_snapshot = models.CharField(max_length=100, blank=True)
     certification_scope_snapshot = models.TextField(blank=True)
     valid_from = models.DateField(null=True, blank=True)
     valid_to = models.DateField(null=True, blank=True)
     action_by = models.ForeignKey(
-        "auth.User", on_delete=models.SET_NULL, null=True, related_name="certificate_history_actions"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="certificate_history_actions",
     )
     action_reason = models.TextField(blank=True)
     internal_notes = models.TextField(blank=True)
@@ -251,4 +263,4 @@ class SurveillanceSchedule(models.Model):
         ordering = ["-cycle_start"]
 
     def __str__(self):
-        return f"Surveillance schedule for {self.certification}" 
+        return f"Surveillance schedule for {self.certification}"

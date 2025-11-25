@@ -9,7 +9,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from audits.models import Nonconformity, Observation, OpportunityForImprovement
-from core.models import Site, Standard
+from core.models import Site
 
 
 class NonconformityForm(forms.ModelForm):

@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 
-from audits.models import Audit, EvidenceFile, Nonconformity
+from audits.models import EvidenceFile
 from core.models import Certification, Organization, Site, Standard
 from trunk.services.audit_service import AuditService
 from trunk.services.finding_service import FindingService

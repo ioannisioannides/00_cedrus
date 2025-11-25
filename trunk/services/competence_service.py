@@ -36,7 +36,7 @@ class CompetenceService:
         # Check coverage: at least one qualification referencing any of the audit standards
         covered = False
         for q in quals:
-            q_standard_ids = set(q.standards.values_list("id", "id"))
+            q_standard_ids = set(q.standards.values_list("id", flat=True))
             if audit_standards & q_standard_ids:
                 covered = True
                 break

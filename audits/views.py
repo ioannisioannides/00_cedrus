@@ -6,22 +6,20 @@ Different views have different permission requirements:
 - Auditor: Can view/edit assigned audits, add findings
 - Client: Can view their audits, respond to nonconformities
 """
+# pylint: disable=too-many-lines
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ValidationError
 from django.db import models as django_models
-from django.db import transaction
-from django.forms import inlineformset_factory
-from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from core.models import Certification, Organization, Site
-from trunk.permissions.mixins import AuditorRequiredMixin, CBAdminRequiredMixin, ClientRequiredMixin
+from core.models import Organization
+from trunk.permissions.mixins import CBAdminRequiredMixin
 from trunk.permissions.predicates import PermissionPredicate
 from trunk.services.audit_service import AuditService
 from trunk.services.certificate_service import CertificateService
@@ -29,7 +27,7 @@ from trunk.services.finding_service import FindingService
 
 from .documentation_forms import AuditChangesForm, AuditPlanReviewForm, AuditSummaryForm
 from .file_forms import EvidenceFileForm
-from .forms import (
+from .finding_forms import (
     NonconformityForm,
     NonconformityResponseForm,
     NonconformityVerificationForm,
@@ -578,11 +576,11 @@ def audit_summary_edit(request, audit_pk):
     else:
         form = AuditSummaryForm(instance=summary)
 
-        return render(
-            request,
-            "audits/audit_summary_form.html",
-            {"form": form, "audit": audit, "summary": summary},
-        )
+    return render(
+        request,
+        "audits/audit_summary_form.html",
+        {"form": form, "audit": audit, "summary": summary},
+    )
 
 
 # ============================================================================
@@ -758,8 +756,8 @@ def evidence_file_download(request, file_pk):
             filename=evidence_file.file.name.split("/")[-1],
         )
         return response
-    except FileNotFoundError:
-        raise Http404("File not found on server.")
+    except FileNotFoundError as exc:
+        raise Http404("File not found on server.") from exc
 
 
 @login_required
@@ -976,13 +974,12 @@ class NonconformityVerifyView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
         """Process valid form submission."""
         # Get verification action from form
         action = form.cleaned_data["verification_action"]
-        
+
         # Set verification metadata
         nc = form.save(commit=False)
         nc.verified_by = self.request.user
-        from django.utils import timezone
         nc.verified_at = timezone.now()
-        
+
         # Map verification action to status
         if action == "accept":
             nc.verification_status = "accepted"
@@ -993,11 +990,11 @@ class NonconformityVerifyView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
         elif action == "close":
             nc.verification_status = "closed"
             messages.success(self.request, "Nonconformity closed and verified effective.")
-        
+
         # Save verification notes if provided
         if form.cleaned_data.get("verification_notes"):
             nc.verification_notes = form.cleaned_data["verification_notes"]
-        
+
         nc.save()
 
         return redirect(self.get_success_url())
@@ -1506,10 +1503,10 @@ class CertificationDecisionView(LoginRequiredMixin, UserPassesTestMixin, CreateV
                 self.request.user,
                 notes=f"Decision: {self.object.get_decision_display()} by {self.request.user.get_full_name()}",
             )
-            
+
             # Record certificate history and schedule surveillance
             CertificateService.record_decision(self.object)
-            
+
             messages.success(
                 self.request,
                 f"Certification decision made: {self.object.get_decision_display()}. Audit closed.",
@@ -1597,7 +1594,8 @@ def team_member_add(request, audit_pk):
                     competence_warnings = list(warnings)
                     messages.warning(
                         request,
-                        f"Team member added with {warnings.count()} competence warning(s). Review warnings in audit detail.",
+                        f"Team member added with {warnings.count()} competence warning(s). "
+                        "Review warnings in audit detail.",
                     )
                 else:
                     messages.success(request, f"Team member {team_member.name} added successfully.")
@@ -1640,7 +1638,9 @@ def team_member_edit(request, pk):
         return redirect("audits:audit_detail", pk=audit.pk)
 
     if request.method == "POST":
-        form = AuditTeamMemberForm(request.POST, instance=team_member, audit=audit, user=request.user)
+        form = AuditTeamMemberForm(
+            request.POST, instance=team_member, audit=audit, user=request.user
+        )
         if form.is_valid():
             team_member = form.save()
             messages.success(request, f"Team member {team_member.name} updated successfully.")
@@ -1714,8 +1714,6 @@ def nonconformity_add(request, audit_pk):
         messages.error(request, "You don't have permission to add findings to this audit.")
         return redirect("audits:audit_detail", pk=audit_pk)
 
-    from audits.finding_forms import NonconformityForm
-
     if request.method == "POST":
         form = NonconformityForm(request.POST, audit=audit)
         if form.is_valid():
@@ -1759,8 +1757,6 @@ def observation_add(request, audit_pk):
         messages.error(request, "You don't have permission to add findings to this audit.")
         return redirect("audits:audit_detail", pk=audit_pk)
 
-    from audits.finding_forms import ObservationForm
-
     if request.method == "POST":
         form = ObservationForm(request.POST, audit=audit)
         if form.is_valid():
@@ -1801,8 +1797,6 @@ def ofi_add(request, audit_pk):
     if not has_permission:
         messages.error(request, "You don't have permission to add findings to this audit.")
         return redirect("audits:audit_detail", pk=audit_pk)
-
-    from audits.finding_forms import OpportunityForImprovementForm
 
     if request.method == "POST":
         form = OpportunityForImprovementForm(request.POST, audit=audit)
@@ -1855,8 +1849,6 @@ def nonconformity_edit(request, pk):
         )
         return redirect("audits:audit_detail", pk=audit.pk)
 
-    from audits.finding_forms import NonconformityForm
-
     if request.method == "POST":
         form = NonconformityForm(request.POST, instance=nc, audit=audit)
         if form.is_valid():
@@ -1892,8 +1884,6 @@ def observation_edit(request, pk):
         messages.error(request, "You don't have permission to edit this observation.")
         return redirect("audits:audit_detail", pk=audit.pk)
 
-    from audits.finding_forms import ObservationForm
-
     if request.method == "POST":
         form = ObservationForm(request.POST, instance=obs, audit=audit)
         if form.is_valid():
@@ -1928,8 +1918,6 @@ def ofi_edit(request, pk):
     if not (is_creator or is_cb_admin):
         messages.error(request, "You don't have permission to edit this OFI.")
         return redirect("audits:audit_detail", pk=audit.pk)
-
-    from audits.finding_forms import OpportunityForImprovementForm
 
     if request.method == "POST":
         form = OpportunityForImprovementForm(request.POST, instance=ofi, audit=audit)
@@ -2033,8 +2021,6 @@ def nonconformity_respond(request, pk):
         messages.error(request, "This nonconformity has already been responded to or verified.")
         return redirect("audits:audit_detail", pk=audit.pk)
 
-    from audits.finding_forms import NonconformityResponseForm
-
     if request.method == "POST":
         form = NonconformityResponseForm(request.POST, instance=nc)
         if form.is_valid():
@@ -2080,10 +2066,6 @@ def nonconformity_verify(request, pk):
             "Cannot verify - client has not responded or this NC has already been verified.",
         )
         return redirect("audits:audit_detail", pk=audit.pk)
-
-    from django.utils import timezone
-
-    from audits.finding_forms import NonconformityVerificationForm
 
     if request.method == "POST":
         form = NonconformityVerificationForm(request.POST, instance=nc)

@@ -4,6 +4,7 @@ Test findings CRUD operations.
 Sprint 8, Task 8.1 - Phase 5: Integration Testing
 Tests complete CRUD workflow for all finding types.
 """
+# pylint: disable=redefined-outer-name,unused-argument
 
 from django.contrib.auth import get_user_model
 from django.test import Client

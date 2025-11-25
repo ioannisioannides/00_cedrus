@@ -5,9 +5,10 @@
 # - /health/ - Basic application health
 # - /health/ready/ - Readiness check (database + Redis)
 # - /health/live/ - Liveness check
-# 
+#
 # Built by: Dr. Thomas Berg (Caltech PhD, DevOps, 23 years)
 # ==============================================================================
+# pylint: disable=broad-exception-caught
 
 import sys
 
@@ -26,10 +27,10 @@ from django.views.decorators.http import require_GET
 def health_check(request):
     """
     Basic health check endpoint.
-    
+
     Returns 200 OK if application is running.
     Used by Docker HEALTHCHECK directive.
-    
+
     Response:
         {
             "status": "healthy",
@@ -52,15 +53,15 @@ def health_check(request):
 def readiness_check(request):
     """
     Readiness check endpoint.
-    
+
     Verifies that application is ready to serve traffic:
     - Database connection
     - Redis connection
     - Critical models accessible
-    
+
     Returns 200 if ready, 503 if not ready.
     Used by Kubernetes readinessProbe and load balancers.
-    
+
     Response (healthy):
         {
             "status": "ready",
@@ -71,7 +72,7 @@ def readiness_check(request):
                 "models": "healthy"
             }
         }
-    
+
     Response (unhealthy):
         {
             "status": "not_ready",
@@ -86,7 +87,7 @@ def readiness_check(request):
     """
     checks = {}
     errors = []
-    
+
     # Database check
     try:
         with connection.cursor() as cursor:
@@ -100,14 +101,14 @@ def readiness_check(request):
     except Exception as e:
         checks["database"] = "unhealthy"
         errors.append(f"Database connection failed: {str(e)}")
-    
+
     # Cache check (Redis)
     try:
         cache_key = "health_check_test"
         cache_value = "test_value"
         cache.set(cache_key, cache_value, timeout=10)
         retrieved_value = cache.get(cache_key)
-        
+
         if retrieved_value == cache_value:
             checks["cache"] = "healthy"
         else:
@@ -116,7 +117,7 @@ def readiness_check(request):
     except Exception as e:
         checks["cache"] = "unhealthy"
         errors.append(f"Cache connection failed: {str(e)}")
-    
+
     # Model access check (verify ORM is working)
     try:
         User = get_user_model()
@@ -126,22 +127,22 @@ def readiness_check(request):
     except Exception as e:
         checks["models"] = "unhealthy"
         errors.append(f"Model access failed: {str(e)}")
-    
+
     # Determine overall status
     all_healthy = all(status == "healthy" for status in checks.values())
-    
+
     response_data = {
         "timestamp": timezone.now().isoformat(),
         "checks": checks,
     }
-    
+
     if all_healthy:
         response_data["status"] = "ready"
         return JsonResponse(response_data, status=200)
-    else:
-        response_data["status"] = "not_ready"
-        response_data["errors"] = errors
-        return JsonResponse(response_data, status=503)
+
+    response_data["status"] = "not_ready"
+    response_data["errors"] = errors
+    return JsonResponse(response_data, status=503)
 
 
 @never_cache
@@ -149,13 +150,13 @@ def readiness_check(request):
 def liveness_check(request):
     """
     Liveness check endpoint.
-    
+
     Verifies that application is alive and not deadlocked.
     Should be very lightweight - just verify Python interpreter is running.
-    
+
     Returns 200 if alive, 503 if dead.
     Used by Kubernetes livenessProbe.
-    
+
     Response:
         {
             "status": "alive",
@@ -167,10 +168,10 @@ def liveness_check(request):
     try:
         # Get Python version
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-        
+
         # Basic uptime check (if process info available)
         # This is a simple alive check - just verify we can execute Python code
-        
+
         return JsonResponse(
             {
                 "status": "alive",
@@ -196,16 +197,16 @@ def liveness_check(request):
 def detailed_status(request):
     """
     Detailed status endpoint (admin/debugging only).
-    
+
     Returns comprehensive system status including:
     - Application version
     - Database status
     - Cache status
     - Settings (non-sensitive)
     - System resources
-    
+
     Should be restricted to admin users in production.
-    
+
     Response:
         {
             "status": "healthy",
@@ -221,12 +222,12 @@ def detailed_status(request):
         return JsonResponse(
             {"error": "Forbidden - admin access required"}, status=403
         )
-    
+
     status_data = {
         "status": "healthy",
         "timestamp": timezone.now().isoformat(),
     }
-    
+
     # Application info
     status_data["application"] = {
         "version": "0.1.0",
@@ -234,13 +235,13 @@ def detailed_status(request):
         "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         "django_version": settings.DJANGO_VERSION if hasattr(settings, "DJANGO_VERSION") else "unknown",
     }
-    
+
     # Database info
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT version()")
             db_version = cursor.fetchone()[0]
-        
+
         status_data["database"] = {
             "status": "connected",
             "engine": connection.settings_dict.get("ENGINE", "unknown").split(".")[-1],
@@ -252,13 +253,13 @@ def detailed_status(request):
             "status": "error",
             "error": str(e),
         }
-    
+
     # Cache info
     try:
         cache_key = "detailed_status_test"
         cache.set(cache_key, "test", timeout=10)
         cache_works = cache.get(cache_key) == "test"
-        
+
         status_data["cache"] = {
             "status": "connected" if cache_works else "error",
             "backend": settings.CACHES["default"]["BACKEND"].split(".")[-1],
@@ -268,11 +269,11 @@ def detailed_status(request):
             "status": "error",
             "error": str(e),
         }
-    
+
     # System info (basic)
     status_data["system"] = {
         "platform": sys.platform,
         "python_implementation": sys.implementation.name,
     }
-    
+
     return JsonResponse(status_data, status=200)

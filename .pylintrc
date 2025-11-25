@@ -11,8 +11,10 @@ disable=
     E1101,  # no-member (Django dynamic attributes)
     E5142,  # imported-auth-user (Django best practice, not an error)
     W0212,  # protected-access
-    C0330,  # bad-continuation
     R0801,  # duplicate-code
+    R0901,  # too-many-ancestors (Django CBVs)
+    W0201,  # attribute-defined-outside-init (Django views)
+    C0415,  # import-outside-toplevel (Circular imports common in Django)
 
 [FORMAT]
 max-line-length=120
@@ -38,7 +40,7 @@ generated-members=
     _default_manager,
     _base_manager,
     # Common reverse relation patterns
-    *_set,
+    .*_set,
     # QuerySet methods
     get,
     filter,

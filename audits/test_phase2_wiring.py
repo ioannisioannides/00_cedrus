@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name,unused-argument
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
@@ -5,8 +6,7 @@ from django.urls import reverse
 
 import pytest
 
-from accounts.models import AuditorQualification, Profile
-from audits.models import Appeal, Audit, AuditorCompetenceWarning, AuditTeamMember, CertificationDecision, Complaint
+from audits.models import Appeal, Audit, AuditorCompetenceWarning, Complaint
 from core.models import CertificateHistory, Certification, Organization, Standard, SurveillanceSchedule
 
 
@@ -31,7 +31,7 @@ class TestPhase2Wiring:
     @pytest.fixture
     def organization(self):
         return Organization.objects.create(
-            name="Test Org", 
+            name="Test Org",
             customer_id="CUST001",
             total_employee_count=100
         )
@@ -79,13 +79,13 @@ class TestPhase2Wiring:
         """Test that making a decision triggers CertificateService and creates history/schedule."""
         client.force_login(cb_admin)
         url = reverse("audits:certification_decision_create", kwargs={"audit_pk": audit.pk})
-        
+
         data = {
             "decision": "grant",
             "decision_notes": "Approved",
             "certifications_affected": [certification.pk]
         }
-        
+
         # Audit needs to be in decision_pending for the view to allow access?
         # Let's check the view logic. It checks for "decision_pending".
         # But my fixture set it to "submitted".
@@ -95,20 +95,20 @@ class TestPhase2Wiring:
         # Let me re-read views.py to be sure which view I edited.
         # I edited CertificationDecisionView.form_valid.
         # And the test_func checks PermissionPredicate.can_make_certification_decision.
-        
+
         # Let's update audit status to decision_pending if that's what the view expects.
         # Actually, the view I edited (CertificationDecisionView) had:
         # if audit.status != "decision_pending": return False (in test_func)
-        
+
         audit.status = "decision_pending"
         audit.save()
-        
+
         response = client.post(url, data)
         assert response.status_code == 302
-        
+
         # Check if history was created
         assert CertificateHistory.objects.filter(related_audit=audit).exists()
-        
+
         # Check if surveillance schedule was created
         assert SurveillanceSchedule.objects.filter(certification=certification).exists()
 
@@ -116,7 +116,7 @@ class TestPhase2Wiring:
         """Test that adding a team member triggers competence check."""
         client.force_login(cb_admin)
         url = reverse("audits:team_member_add", kwargs={"audit_pk": audit.pk})
-        
+
         # Auditor has NO qualifications, so this should trigger a warning
         data = {
             "user": auditor.pk,
@@ -124,13 +124,13 @@ class TestPhase2Wiring:
             "date_from": audit.total_audit_date_from,
             "date_to": audit.total_audit_date_to
         }
-        
+
         response = client.post(url, data)
         assert response.status_code == 302 # Redirects on success (warning doesn't block)
-        
+
         # Check if warning was created
         assert AuditorCompetenceWarning.objects.filter(audit=audit, auditor=auditor).exists()
-        
+
         # Now give auditor qualification and try again (with a new auditor to avoid unique constraints if any)
         # Actually AuditTeamMember doesn't enforce unique user per audit in model? Let's assume it does or doesn't.
         # Let's just check the warning creation for the first case.
@@ -139,7 +139,7 @@ class TestPhase2Wiring:
         """Test complaint creation view."""
         client.force_login(cb_admin)
         url = reverse("audits:complaint_create")
-        
+
         data = {
             "complainant_name": "John Doe",
             "complainant_email": "john@example.com",
@@ -147,7 +147,7 @@ class TestPhase2Wiring:
             "complaint_type": "audit_conduct",
             "description": "Something went wrong"
         }
-        
+
         response = client.post(url, data)
         assert response.status_code == 302
         assert Complaint.objects.filter(description="Something went wrong").exists()
@@ -156,13 +156,13 @@ class TestPhase2Wiring:
         """Test appeal creation view."""
         client.force_login(cb_admin)
         url = reverse("audits:appeal_create")
-        
+
         data = {
             "appellant_name": "Jane Doe",
             "appellant_email": "jane@example.com",
             "grounds": "Unfair decision"
         }
-        
+
         response = client.post(url, data)
         assert response.status_code == 302
         assert Appeal.objects.filter(grounds="Unfair decision").exists()

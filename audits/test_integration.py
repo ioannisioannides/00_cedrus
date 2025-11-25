@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group, User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
+from audits.models import Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Site, Standard
 from trunk.services.audit_service import AuditService
 from trunk.services.finding_service import FindingService
@@ -70,18 +70,14 @@ class AuditWorkflowIntegrationTest(TestCase):
 
         self.client = Client()
 
-    def test_complete_audit_workflow(self):
-        """Test full audit workflow from creation to decision."""
-
-        # Step 1: CB Admin creates audit
+    def _create_audit(self):
         self.client.login(username="cbadmin", password="pass123")
-
-        audit = AuditService.create_audit(
+        return AuditService.create_audit(
             organization=self.org,
             certifications=[self.cert],
             sites=[self.site],
             audit_data={
-                "audit_type": "surveillance",  # Use surveillance to avoid stage1 requirement
+                "audit_type": "surveillance",
                 "total_audit_date_from": date.today(),
                 "total_audit_date_to": date.today() + timedelta(days=3),
                 "planned_duration_hours": 24.0,
@@ -91,12 +87,8 @@ class AuditWorkflowIntegrationTest(TestCase):
             created_by=self.cb_admin,
         )
 
-        self.assertEqual(audit.status, "draft")
-        self.assertEqual(audit.lead_auditor, self.lead_auditor)
-
-        # Step 2: Lead Auditor adds a major nonconformity
+    def _create_findings(self, audit):
         self.client.login(username="lead", password="pass123")
-
         nc = FindingService.create_nonconformity(
             audit=audit,
             user=self.lead_auditor,
@@ -109,12 +101,7 @@ class AuditWorkflowIntegrationTest(TestCase):
                 "auditor_explanation": "Organization lacks documented information control",
             },
         )
-
-        self.assertEqual(nc.verification_status, "open")
-        self.assertEqual(nc.category, "major")
-
-        # Step 3: Lead Auditor adds observations and OFIs
-        obs = FindingService.create_observation(
+        FindingService.create_observation(
             audit=audit,
             user=self.lead_auditor,
             data={
@@ -124,8 +111,7 @@ class AuditWorkflowIntegrationTest(TestCase):
                 "explanation": "Process works well but could be documented better",
             },
         )
-
-        ofi = FindingService.create_ofi(
+        FindingService.create_ofi(
             audit=audit,
             user=self.lead_auditor,
             data={
@@ -134,38 +120,43 @@ class AuditWorkflowIntegrationTest(TestCase):
                 "description": "Consider implementing automated monitoring",
             },
         )
+        return nc
 
-        self.assertIsNotNone(obs)
-        self.assertIsNotNone(ofi)
+    def _transition_audit(self, audit, status):
+        self.client.post(
+            reverse("audits:audit_transition_status", args=[audit.pk, status])
+        )
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, status)
+
+    def test_complete_audit_workflow(self):
+        """Test full audit workflow from creation to decision."""
+
+        # Step 1: CB Admin creates audit
+        audit = self._create_audit()
+
+        self.assertEqual(audit.status, "draft")
+        self.assertEqual(audit.lead_auditor, self.lead_auditor)
+
+        # Step 2 & 3: Lead Auditor adds findings
+        nc = self._create_findings(audit)
+
+        self.assertEqual(nc.verification_status, "open")
+        self.assertEqual(nc.category, "major")
+        self.assertIsNotNone(nc)
 
         # Step 4: Lead Auditor transitions through workflow
         # draft → scheduled
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "scheduled"])
-        )
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "scheduled")
+        self._transition_audit(audit, "scheduled")
 
         # scheduled → in_progress
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "in_progress"])
-        )
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "in_progress")
+        self._transition_audit(audit, "in_progress")
 
         # in_progress → report_draft (requires findings, which we have)
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "report_draft"])
-        )
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "report_draft")
+        self._transition_audit(audit, "report_draft")
 
         # report_draft → client_review
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "client_review"])
-        )
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "client_review")
+        self._transition_audit(audit, "client_review")
 
         # Step 5: Client responds to nonconformity
         self.client.login(username="clientadmin", password="pass123")
@@ -201,7 +192,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         # Step 7: Create and approve technical review (required before submission)
         from audits.models import TechnicalReview
 
-        tech_review = TechnicalReview.objects.create(
+        TechnicalReview.objects.create(
             audit=audit,
             reviewer=self.cb_admin,
             scope_verified=True,
@@ -215,26 +206,13 @@ class AuditWorkflowIntegrationTest(TestCase):
         # Step 8: CB Admin or Lead Auditor moves to submitted (after technical review)
         self.client.login(username="cbadmin", password="pass123")
 
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "submitted"])
-        )
-
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "submitted")
+        self._transition_audit(audit, "submitted")
 
         # Step 8.1: Move to technical_review
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "technical_review"])
-        )
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "technical_review")
+        self._transition_audit(audit, "technical_review")
 
         # Step 8.2: Move to decision_pending
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "decision_pending"])
-        )
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "decision_pending")
+        self._transition_audit(audit, "decision_pending")
 
         # Step 9: Create certification decision (audit is now in 'submitted' status)
         from audits.models import CertificationDecision
@@ -248,12 +226,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         decision.certifications_affected.add(self.cert)
 
         # Step 12: Transition to closed
-        response = self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, "closed"])
-        )
-
-        audit.refresh_from_db()
-        self.assertEqual(audit.status, "closed")
+        self._transition_audit(audit, "closed")
 
         # Verify the complete workflow
         self.assertEqual(Nonconformity.objects.filter(audit=audit).count(), 1)

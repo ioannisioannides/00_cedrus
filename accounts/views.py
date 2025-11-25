@@ -2,27 +2,26 @@
 Views for accounts app: login, logout, and role-based dashboards.
 """
 
-from django.contrib.auth import login, logout
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import (
-    AuditorCompetenceEvaluation,
-    AuditorQualification,
-    AuditorTrainingRecord,
-    ConflictOfInterest,
-    ImpartialityDeclaration,
-)
+from django.views.generic import CreateView, ListView, UpdateView
+
 from .forms import (
     AuditorCompetenceEvaluationForm,
     AuditorQualificationForm,
     AuditorTrainingRecordForm,
     ConflictOfInterestForm,
-    ImpartialityDeclarationForm,
+)
+from .models import (
+    AuditorCompetenceEvaluation,
+    AuditorQualification,
+    AuditorTrainingRecord,
+    ConflictOfInterest,
 )
 
 
@@ -49,23 +48,23 @@ def dashboard(request):
     # Check groups in priority order
     if user.groups.filter(name="cb_admin").exists():
         return redirect("accounts:dashboard_cb")
-    elif (
+    if (
         user.groups.filter(name="lead_auditor").exists()
         or user.groups.filter(name="auditor").exists()
     ):
         return redirect("accounts:dashboard_auditor")
-    elif (
+    if (
         user.groups.filter(name="client_admin").exists()
         or user.groups.filter(name="client_user").exists()
     ):
         return redirect("accounts:dashboard_client")
-    else:
-        # No role assigned - show basic dashboard
-        return render(
-            request,
-            "accounts/dashboard.html",
-            {"user": user, "message": "No role assigned. Please contact an administrator."},
-        )
+
+    # No role assigned - show basic dashboard
+    return render(
+        request,
+        "accounts/dashboard.html",
+        {"user": user, "message": "No role assigned. Please contact an administrator."},
+    )
 
 
 @login_required
@@ -74,6 +73,7 @@ def dashboard_cb(request):
     if not request.user.groups.filter(name="cb_admin").exists():
         return redirect("accounts:dashboard")
 
+    # pylint: disable=import-outside-toplevel
     from audits.models import Audit
     from core.models import Certification, Organization
 
@@ -96,8 +96,7 @@ def dashboard_auditor(request):
     ):
         return redirect("accounts:dashboard")
 
-    from django.db.models import Q
-
+    # pylint: disable=import-outside-toplevel
     from audits.models import Audit
 
     # Show audits where user is lead auditor or team member
@@ -124,6 +123,7 @@ def dashboard_client(request):
     ):
         return redirect("accounts:dashboard")
 
+    # pylint: disable=import-outside-toplevel
     from audits.models import Audit
 
     # Get user's organization

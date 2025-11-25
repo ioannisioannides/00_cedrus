@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-from audits.models import Audit, AuditorCompetenceWarning, AuditTeamMember
+from audits.models import AuditorCompetenceWarning, AuditTeamMember
 from trunk.services.competence_service import CompetenceService
 
 
@@ -98,7 +98,7 @@ class AuditTeamMemberForm(forms.ModelForm):
         if user:
             # Auto-fill from user
             return user.get_full_name() or user.username
-        elif not name:
+        if not name:
             raise ValidationError(
                 "Name is required for external experts (when no user is selected)."
             )
@@ -130,7 +130,10 @@ class AuditTeamMemberForm(forms.ModelForm):
             if date_from < self.audit.total_audit_date_from:
                 raise ValidationError(
                     {
-                        "date_from": f"Team member start date cannot be before audit start date ({self.audit.total_audit_date_from})."
+                        "date_from": (
+                            "Team member start date cannot be before audit start date "
+                            f"({self.audit.total_audit_date_from})."
+                        )
                     }
                 )
 
@@ -138,7 +141,10 @@ class AuditTeamMemberForm(forms.ModelForm):
             if date_to > self.audit.total_audit_date_to:
                 raise ValidationError(
                     {
-                        "date_to": f"Team member end date cannot be after audit end date ({self.audit.total_audit_date_to})."
+                        "date_to": (
+                            "Team member end date cannot be after audit end date "
+                            f"({self.audit.total_audit_date_to})."
+                        )
                     }
                 )
 

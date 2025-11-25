@@ -16,7 +16,6 @@ All tests follow ISO 17021-1:2015 requirements.
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -24,13 +23,10 @@ from audits.forms import (
     NonconformityForm,
     NonconformityResponseForm,
     NonconformityVerificationForm,
-    ObservationForm,
-    OpportunityForImprovementForm,
 )
 from audits.models import Audit, AuditStatusLog, Nonconformity, Observation, OpportunityForImprovement
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Site, Standard
-from trunk.services.finding_service import FindingService
 
 
 class NonconformityCreationTests(TestCase):
@@ -731,7 +727,7 @@ class StatusWorkflowEnforcementTests(TestCase):
     def test_valid_transition_draft_to_in_review(self):
         """Test valid transition: draft → in_review."""
         workflow = AuditWorkflow(self.audit)
-        allowed, reason = workflow.can_transition("scheduled", self.lead_auditor)
+        allowed, _ = workflow.can_transition("scheduled", self.lead_auditor)
 
         self.assertTrue(allowed)
 
@@ -911,12 +907,12 @@ class Phase3IntegrationTests(TestCase):
         workflow.transition("scheduled", self.lead_auditor)
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "scheduled")
-        
+
         # scheduled → in_progress
         workflow = AuditWorkflow(self.audit)
         workflow.transition("in_progress", self.lead_auditor)
         self.audit.refresh_from_db()
-        
+
         # in_progress → report_draft
         workflow = AuditWorkflow(self.audit)
         workflow.transition("report_draft", self.lead_auditor)
@@ -951,7 +947,7 @@ class Phase3IntegrationTests(TestCase):
         """Test audit with all finding types: NC, Observation, OFI."""
 
         # Create one of each finding type
-        nc = Nonconformity.objects.create(
+        Nonconformity.objects.create(
             audit=self.audit,
             standard=self.standard,
             clause="4.1",
@@ -962,7 +958,7 @@ class Phase3IntegrationTests(TestCase):
             created_by=self.lead_auditor,
         )
 
-        obs = Observation.objects.create(
+        Observation.objects.create(
             audit=self.audit,
             standard=self.standard,
             clause="5.1",
@@ -971,7 +967,7 @@ class Phase3IntegrationTests(TestCase):
             created_by=self.lead_auditor,
         )
 
-        ofi = OpportunityForImprovement.objects.create(
+        OpportunityForImprovement.objects.create(
             audit=self.audit,
             standard=self.standard,
             clause="9.3",

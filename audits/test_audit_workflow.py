@@ -3,6 +3,7 @@ Test audit workflow state machine.
 
 Sprint 8, Task 8.4: Workflow validation tests
 """
+# pylint: disable=redefined-outer-name,unused-argument
 
 from django.core.exceptions import ValidationError
 
@@ -75,27 +76,27 @@ class TestAuditWorkflowTransitions:
         """Test transition fails if user is not the assigned lead auditor."""
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
-        
+
         User = get_user_model()
         # Create a user who is a lead auditor but NOT assigned to this audit
         other_auditor = User.objects.create_user(username="other", password="test")
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         other_auditor.groups.add(lead_group)
-        
+
         # Assign a different auditor
         assigned_auditor = User.objects.create_user(username="assigned", password="test")
         assigned_auditor.groups.add(lead_group)
-        
+
         audit_draft.lead_auditor = assigned_auditor
         audit_draft.save()
 
         workflow = AuditStateMachine(audit_draft)
         # Should fail because user is not the assigned lead auditor
-        ok, reason = workflow.can_transition("scheduled", other_auditor)
+        ok, _ = workflow.can_transition("scheduled", other_auditor)
         assert not ok
         # The reason comes from permission checker returning False, which usually results in a generic message
         # or we can check that it returned False.
-        
+
     def test_invalid_transition_fails(self, audit_draft):
         """Test invalid transition is rejected."""
         from django.contrib.auth import get_user_model
@@ -115,7 +116,7 @@ class TestAuditWorkflowTransitions:
         auditor = User.objects.create_user(username="auditor", password="test")
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
-        
+
         # Assign auditor to audit so they have permission
         audit_draft.lead_auditor = auditor
         audit_draft.scheduled_date = "2025-12-01"
@@ -135,7 +136,7 @@ class TestAuditWorkflowTransitions:
         auditor = User.objects.create_user(username="auditor", password="test")
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
-        
+
         audit_draft.lead_auditor = auditor
 
         # Create major NC without response
@@ -192,13 +193,13 @@ class TestAuditWorkflowTransitions:
         """Test getting available transitions."""
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
-        
+
         User = get_user_model()
         # Need a user with permissions (e.g. Lead Auditor)
         auditor = User.objects.create_user(username="auditor", password="test")
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
-        
+
         audit_draft.lead_auditor = auditor
         audit_draft.save()
 
@@ -206,7 +207,7 @@ class TestAuditWorkflowTransitions:
         transitions = workflow.available_transitions(auditor)
 
         # transitions is a list of tuples (code, label)
-        
+
         assert len(transitions) >= 1
         codes = [t[0] for t in transitions]
         assert "scheduled" in codes
@@ -215,12 +216,12 @@ class TestAuditWorkflowTransitions:
         """Test checking if transition is allowed."""
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
-        
+
         User = get_user_model()
         auditor = User.objects.create_user(username="auditor", password="test")
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
-        
+
         audit_draft.lead_auditor = auditor
         audit_draft.save()
 
@@ -228,6 +229,6 @@ class TestAuditWorkflowTransitions:
 
         ok, _ = workflow.can_transition("scheduled", auditor)
         assert ok is True
-        
+
         ok, _ = workflow.can_transition("closed", auditor)
         assert ok is False

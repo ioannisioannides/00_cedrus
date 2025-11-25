@@ -350,19 +350,19 @@ class IAFmd5DurationTests(TestCase):
 
     def test_complexity_factor_complex_processes(self):
         """Test complexity factor for complex processes."""
-        factor, reasons = calculate_complexity_factor(process_complexity="complex")
+        factor, _ = calculate_complexity_factor(process_complexity="complex")
 
         self.assertEqual(factor, 1.15)  # +15% for complex processes
 
     def test_complexity_factor_high_regulatory(self):
         """Test complexity factor for high regulatory environment."""
-        factor, reasons = calculate_complexity_factor(regulatory_environment="high")
+        factor, _ = calculate_complexity_factor(regulatory_environment="high")
 
         self.assertEqual(factor, 1.10)  # +10% for high regulatory
 
     def test_complexity_factor_limits(self):
         """Test complexity factor is capped at 1.3."""
-        factor, reasons = calculate_complexity_factor(
+        factor, _ = calculate_complexity_factor(
             number_of_sites=10,
             scope_variation="high",
             process_complexity="complex",
@@ -500,10 +500,6 @@ class Phase2IntegrationTests(TestCase):
     def test_root_cause_tracking_across_audits(self):
         """Test root cause categorization and recurrence tracking."""
         # Create root cause categories
-        resource_cat = RootCauseCategory.objects.create(
-            name="Resource Inadequacy", code="RC-001", description="Insufficient resources"
-        )
-
         training_cat = RootCauseCategory.objects.create(
             name="Training Deficiency", code="RC-002", description="Inadequate training"
         )

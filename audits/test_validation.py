@@ -3,7 +3,7 @@ Test Suite for Sprint 7 Validation Logic
 Tests covering Tasks 1-4 and 6-7: Model validation, file uploads, security
 """
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth.models import Group, User
@@ -38,11 +38,11 @@ class AuditTeamMemberDateValidationTests(TestCase):
         self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_auditor_group)
-        
+
         self.auditor = User.objects.create_user(username="auditor", password="password123")
         auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(auditor_group)
-        
+
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage1",

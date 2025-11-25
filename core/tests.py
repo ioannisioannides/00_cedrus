@@ -5,7 +5,6 @@ Comprehensive tests for core app: organizations, sites, standards, certification
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -201,7 +200,7 @@ class CertificationModelTest(TestCase):
 
     def test_certification_protect_standard(self):
         """Test that standard cannot be deleted if certifications exist."""
-        cert = Certification.objects.create(
+        _ = Certification.objects.create(
             organization=self.org,
             standard=self.std,
             certification_scope="Scope",
@@ -395,7 +394,7 @@ class SiteViewPermissionTest(TestCase):
         org2 = Organization.objects.create(
             name="Org 2", registered_address="999 St", customer_id="ORG002", total_employee_count=5
         )
-        site2 = Site.objects.create(organization=org2, site_name="Site 2", site_address="888 St")
+        _ = Site.objects.create(organization=org2, site_name="Site 2", site_address="888 St")
 
         self.client.login(username="cbadmin", password="pass123")
         response = self.client.get(reverse("core:site_list"), {"organization": self.org.pk})
@@ -446,7 +445,7 @@ class CertificationViewPermissionTest(TestCase):
 
     def test_certification_duplicate_prevention(self):
         """Test that duplicate certifications are prevented."""
-        cert = Certification.objects.create(
+        _ = Certification.objects.create(
             organization=self.org,
             standard=self.std,
             certification_scope="Scope 1",

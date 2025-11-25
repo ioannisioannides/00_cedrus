@@ -10,7 +10,6 @@ from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from audits.models import Audit
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Site, Standard
 from trunk.services.audit_service import AuditService
@@ -79,7 +78,7 @@ class AuditWorkflowTest(TestCase):
         """Test valid transition from draft to client_review."""
         workflow = AuditWorkflow(self.audit)
 
-        can_transition, reason = workflow.can_transition("scheduled", self.lead_auditor)
+        can_transition, _ = workflow.can_transition("scheduled", self.lead_auditor)
         self.assertTrue(can_transition)
 
         workflow.transition("scheduled", self.lead_auditor)
@@ -108,7 +107,7 @@ class AuditWorkflowTest(TestCase):
         """Test regular auditor cannot make status transitions."""
         workflow = AuditWorkflow(self.audit)
 
-        can_transition, reason = workflow.can_transition("scheduled", self.auditor)
+        can_transition, _ = workflow.can_transition("scheduled", self.auditor)
         self.assertFalse(can_transition)
 
     def test_cb_admin_can_override_transitions(self):
@@ -150,7 +149,7 @@ class AuditWorkflowTest(TestCase):
         workflow.transition("in_progress", self.lead_auditor)
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "in_progress")
-        
+
         # Create at least one finding (required for report_draft transition)
         FindingService.create_observation(
             audit=self.audit,
@@ -162,7 +161,7 @@ class AuditWorkflowTest(TestCase):
                 "explanation": "Test explanation",
             },
         )
-        
+
         # in_progress → report_draft
         workflow = AuditWorkflow(self.audit)
         workflow.transition("report_draft", self.lead_auditor)
@@ -307,7 +306,7 @@ class AuditWorkflowValidationTest(TestCase):
 
         # Try to transition to client_review (should succeed per ISO 17021-1)
         workflow = AuditWorkflow(self.audit)
-        can_transition, reason = workflow.can_transition("client_review", self.lead_auditor)
+        can_transition, _ = workflow.can_transition("client_review", self.lead_auditor)
 
         # ISO 17021-1: Reports WITH findings must be sent to clients for response
         self.assertTrue(can_transition)

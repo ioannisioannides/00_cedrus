@@ -20,7 +20,7 @@ from audits.models import (
     Nonconformity,
 )
 from audits.workflows import AuditWorkflow
-from core.models import Certification, Organization, Site, Standard
+from core.models import Certification, Organization, Standard
 
 
 class AuditWorkflowTest(TestCase):
@@ -69,7 +69,7 @@ class AuditWorkflowTest(TestCase):
     def test_workflow_draft_to_in_review(self):
         """Test transition from draft to in_review."""
         workflow = AuditWorkflow(self.audit)
-        allowed, reason = workflow.can_transition("scheduled", self.lead_auditor)
+        allowed, _ = workflow.can_transition("scheduled", self.lead_auditor)
         self.assertTrue(allowed)
 
         workflow.transition("scheduled", self.lead_auditor)
@@ -99,7 +99,7 @@ class AuditWorkflowTest(TestCase):
         workflow = AuditWorkflow(self.audit)
         workflow.transition("client_review", self.lead_auditor)
         self.audit.refresh_from_db()
-        
+
         # Try to submit - should fail without technical review and NC responses
         from audits.models import TechnicalReview
         TechnicalReview.objects.create(
@@ -111,7 +111,7 @@ class AuditWorkflowTest(TestCase):
             conclusion_clear=True,
             status="approved",
         )
-        
+
         workflow = AuditWorkflow(self.audit)
         allowed, reason = workflow.can_transition("submitted", self.lead_auditor)
         self.assertFalse(allowed)
@@ -126,7 +126,7 @@ class AuditWorkflowTest(TestCase):
 
         # Now should be able to submit
         workflow = AuditWorkflow(self.audit)
-        allowed, reason = workflow.can_transition("submitted", self.lead_auditor)
+        allowed, _ = workflow.can_transition("submitted", self.lead_auditor)
         self.assertTrue(allowed)
 
     def test_workflow_permission_checks(self):
@@ -144,7 +144,7 @@ class AuditWorkflowTest(TestCase):
         # Move to client_review
         self.audit.status = "client_review"
         self.audit.save()
-        
+
         # Create approved technical review (required for transition)
         from audits.models import TechnicalReview
         TechnicalReview.objects.create(
@@ -390,7 +390,7 @@ class AuditRecommendationTest(TestCase):
 
     def test_make_decision_changes_status(self):
         """Test making decision changes audit status to closed."""
-        from audits.models import CertificationDecision, TechnicalReview
+        from audits.models import TechnicalReview
 
         self.client.login(username="cbadmin", password="pass123")
 

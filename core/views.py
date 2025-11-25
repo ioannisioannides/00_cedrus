@@ -4,14 +4,13 @@ Views for core app: organizations, sites, standards, certifications.
 All views require CB Admin permissions (except read-only views for clients).
 """
 
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from .models import Certification, Organization, Site, Standard, CertificateHistory, SurveillanceSchedule
-from .forms import SurveillanceScheduleForm, CertificateHistoryForm
+from .forms import CertificateHistoryForm, SurveillanceScheduleForm
+from .models import CertificateHistory, Certification, Organization, Site, Standard, SurveillanceSchedule
 
 
 class CBAdminRequiredMixin(UserPassesTestMixin):

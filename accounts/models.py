@@ -75,13 +75,13 @@ class Profile(models.Model):
         """Get a human-readable role name."""
         if self.is_cb_admin():
             return "CB Admin"
-        elif self.is_lead_auditor():
+        if self.is_lead_auditor():
             return "Lead Auditor"
-        elif self.user.groups.filter(name="auditor").exists():
+        if self.user.groups.filter(name="auditor").exists():
             return "Auditor"
-        elif self.is_client_admin():
+        if self.is_client_admin():
             return "Client Admin"
-        elif self.user.groups.filter(name="client_user").exists():
+        if self.user.groups.filter(name="client_user").exists():
             return "Client User"
         return "No Role"
 
@@ -117,7 +117,12 @@ class AuditorQualification(models.Model):
     certificate_file = models.FileField(upload_to="auditor_qualifications/", blank=True)
     status = models.CharField(
         max_length=20,
-        choices=[("active", "Active"), ("expired", "Expired"), ("suspended", "Suspended"), ("withdrawn", "Withdrawn")],
+        choices=[
+            ("active", "Active"),
+            ("expired", "Expired"),
+            ("suspended", "Suspended"),
+            ("withdrawn", "Withdrawn"),
+        ],
         default="active",
     )
     notes = models.TextField(blank=True)
@@ -215,11 +220,17 @@ class ConflictOfInterest(models.Model):
     relationship_end_date = models.DateField(null=True, blank=True)
     impartiality_risk = models.CharField(
         max_length=20,
-        choices=[("low", "Low"), ("medium", "Medium"), ("high", "High - Assignment Prohibited")],
+        choices=[
+            ("low", "Low"),
+            ("medium", "Medium"),
+            ("high", "High - Assignment Prohibited"),
+        ],
         default="low",
     )
     mitigation_measures = models.TextField(blank=True)
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="coi_approvals")
+    approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="coi_approvals"
+    )
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -241,7 +252,9 @@ class ImpartialityDeclaration(models.Model):
     no_conflicts_declared = models.BooleanField(default=False)
     conflicts_detailed = models.TextField(blank=True)
     declaration_accepted = models.BooleanField(default=False)
-    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="impartiality_reviews")
+    reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="impartiality_reviews"
+    )
 
     class Meta:
         verbose_name = "Impartiality Declaration"
@@ -254,14 +267,14 @@ class ImpartialityDeclaration(models.Model):
 
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_user_profile(sender, instance, created, **kwargs):  # pylint: disable=unused-argument
     """Automatically create a profile when a user is created."""
     if created:
         Profile.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
+def save_user_profile(sender, instance, **kwargs):  # pylint: disable=unused-argument
     """Save the profile when the user is saved."""
     if hasattr(instance, "profile"):
         instance.profile.save()

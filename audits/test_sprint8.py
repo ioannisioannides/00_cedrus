@@ -12,7 +12,6 @@ Tests cover:
 """
 
 from datetime import date, timedelta
-from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -23,8 +22,6 @@ from audits.models import (
     Audit,
     AuditChanges,
     AuditorCompetenceWarning,
-    AuditPlanReview,
-    AuditSummary,
     AuditTeamMember,
 )
 from audits.team_forms import AuditTeamMemberForm
@@ -48,7 +45,6 @@ class AuditTeamMemberFormTests(TestCase):
         self.user = User.objects.create_user(
             username="auditor1", password="testpass123", first_name="John", last_name="Auditor"
         )
-        from django.contrib.auth.models import Group
 
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.user.groups.add(auditor_group)

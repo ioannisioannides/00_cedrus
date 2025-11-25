@@ -23,12 +23,8 @@ from django.urls import reverse
 from accounts.models import Profile
 from audits.finding_forms import (
     NonconformityForm,
-    NonconformityResponseForm,
-    NonconformityVerificationForm,
-    ObservationForm,
-    OpportunityForImprovementForm,
 )
-from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
+from audits.models import Audit, Nonconformity, Observation
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard
 
@@ -536,7 +532,7 @@ class WorkflowIntegrationTests(TestCase):
         # Move audit to report_draft status first
         self.audit.status = "report_draft"
         self.audit.save()
-        
+
         # Create open major NC
         Nonconformity.objects.create(
             audit=self.audit,
@@ -551,7 +547,7 @@ class WorkflowIntegrationTests(TestCase):
         )
 
         workflow = AuditWorkflow(self.audit)
-        can_transition, reason = workflow.can_transition("client_review", self.auditor)
+        can_transition, _ = workflow.can_transition("client_review", self.auditor)
 
         # ISO 17021-1: Reports MUST be sent to clients WITH findings so they can respond
         self.assertTrue(can_transition)
@@ -561,7 +557,7 @@ class WorkflowIntegrationTests(TestCase):
         # Move audit to report_draft status first
         self.audit.status = "report_draft"
         self.audit.save()
-        
+
         # Create major NC with client response
         Nonconformity.objects.create(
             audit=self.audit,
@@ -580,7 +576,7 @@ class WorkflowIntegrationTests(TestCase):
         )
 
         workflow = AuditWorkflow(self.audit)
-        can_transition, reason = workflow.can_transition("client_review", self.auditor)
+        can_transition, _ = workflow.can_transition("client_review", self.auditor)
 
         self.assertTrue(can_transition)
 
@@ -589,7 +585,7 @@ class WorkflowIntegrationTests(TestCase):
         # Move audit to report_draft status first
         self.audit.status = "report_draft"
         self.audit.save()
-        
+
         # Create minor NC (open is OK)
         Nonconformity.objects.create(
             audit=self.audit,
@@ -604,6 +600,6 @@ class WorkflowIntegrationTests(TestCase):
         )
 
         workflow = AuditWorkflow(self.audit)
-        can_transition, reason = workflow.can_transition("client_review", self.auditor)
+        can_transition, _ = workflow.can_transition("client_review", self.auditor)
 
         self.assertTrue(can_transition)

@@ -8,7 +8,7 @@ standards belong to the audit's certifications.
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import Audit, Nonconformity, Observation, OpportunityForImprovement
+from .models import Nonconformity, Observation, OpportunityForImprovement
 
 
 class NonconformityForm(forms.ModelForm):

@@ -3,10 +3,10 @@
 from django.db import migrations
 
 
-def migrate_status_values(apps, schema_editor):
+def migrate_status_values(apps, _schema_editor):
     """Migrate old status values to new workflow statuses."""
     Audit = apps.get_model("audits", "Audit")
-    
+
     # Map old statuses to new ones
     status_mapping = {
         "draft": "draft",  # No change
@@ -17,15 +17,15 @@ def migrate_status_values(apps, schema_editor):
         "decision_pending": "submitted",  # Waiting for decision
         "closed": "decided",  # Final state
     }
-    
+
     for old_status, new_status in status_mapping.items():
         Audit.objects.filter(status=old_status).update(status=new_status)
 
 
-def reverse_migrate_status_values(apps, schema_editor):
+def reverse_migrate_status_values(apps, _schema_editor):
     """Reverse migration - map new statuses back to old ones."""
     Audit = apps.get_model("audits", "Audit")
-    
+
     # Reverse mapping (best effort)
     reverse_mapping = {
         "draft": "draft",
@@ -37,7 +37,7 @@ def reverse_migrate_status_values(apps, schema_editor):
         "decided": "closed",
         "cancelled": "draft",
     }
-    
+
     for new_status, old_status in reverse_mapping.items():
         Audit.objects.filter(status=new_status).update(status=old_status)
 

@@ -9,7 +9,6 @@ from datetime import date, timedelta
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
-from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Site, Standard
 from trunk.events import EventType, event_dispatcher
 from trunk.services.audit_service import AuditService
