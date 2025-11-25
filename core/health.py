@@ -181,12 +181,12 @@ def liveness_check(request):
             },
             status=200,
         )
-    except Exception as e:
+    except Exception:
         return JsonResponse(
             {
                 "status": "dead",
                 "timestamp": timezone.now().isoformat(),
-                "error": str(e),
+                "error": "Internal Server Error",
             },
             status=503,
         )
