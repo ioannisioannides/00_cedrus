@@ -199,7 +199,7 @@ class NonconformityVerificationForm(forms.ModelForm):
 
     class Meta:
         model = Nonconformity
-        fields = []  # We handle status update in the view
+        fields: list[str] = []  # We handle status update in the view
 
     def clean(self):
         cleaned_data = super().clean()

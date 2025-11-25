@@ -83,3 +83,10 @@ exclude_dirs = [
 # - MEDIUM: 0 ✅
 # - LOW: 0 (after B101 skip) ✅
 # ==============================================================================
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+disable_error_code = ["misc"]
+
+[tool.django-stubs]
+django_settings_module = "cedrus.settings"

@@ -534,7 +534,7 @@ class Nonconformity(Finding):
         blank=True,
         related_name="nonconformities",
         help_text="Root cause categories for systematic analysis",
-    )
+    )  # type: ignore
 
     class Meta:
         verbose_name = "Nonconformity"

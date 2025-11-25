@@ -326,7 +326,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 # ADMIN CONFIGURATION
 # =============================================================================
 
-ADMINS = [
+ADMINS: list[tuple[str, str]] = [
     # Add admin emails to receive error notifications
     # ('Your Name', 'your.email@example.com'),
 ]
