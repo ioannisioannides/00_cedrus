@@ -31,17 +31,17 @@ class AuditFormsTest(TestCase):
         )
         self.std1 = Standard.objects.create(code="ISO 9001", title="QMS")
         self.std2 = Standard.objects.create(code="ISO 14001", title="EMS")
-        
+
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.std1,
             certification_scope="Test scope",
             certificate_status="active",
         )
-        
+
         self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
         self.lead_auditor = User.objects.create_user(username="lead", password="pass")
-        
+
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage2",

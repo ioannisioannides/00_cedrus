@@ -165,7 +165,7 @@ class NonconformityResponseForm(forms.ModelForm):
         root_cause = cleaned_data.get("client_root_cause", "").strip()
         correction = cleaned_data.get("client_correction", "").strip()
         corrective_action = cleaned_data.get("client_corrective_action", "").strip()
-        
+
         errors = {}
 
         # All three fields are required for a complete response
@@ -175,7 +175,7 @@ class NonconformityResponseForm(forms.ModelForm):
             errors["client_correction"] = "Immediate correction is required."
         if not corrective_action:
             errors["client_corrective_action"] = "Corrective action plan is required."
-            
+
         if errors:
             raise ValidationError(errors)
 

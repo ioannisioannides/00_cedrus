@@ -42,11 +42,11 @@ class AuditListViewTest(TestCase):
             customer_id="ORG001",
             total_employee_count=10,
         )
-        
+
         # Link client to org
         self.client_user.profile.organization = self.org
         self.client_user.profile.save()
-        
+
         # Create audits
         self.audit1 = Audit.objects.create(
             organization=self.org,
@@ -124,11 +124,11 @@ class AuditDetailViewTest(TestCase):
             customer_id="ORG001",
             total_employee_count=10,
         )
-        
+
         # Link client to org
         self.client_user.profile.organization = self.org
         self.client_user.profile.save()
-        
+
         # Create audits
         self.audit = Audit.objects.create(
             organization=self.org,
@@ -420,9 +420,7 @@ class FindingViewTest(TestCase):
             "auditor_explanation": "Explanation",
             "due_date": date.today(),
         }
-        response = self.client.post(
-            reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk}), data)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Nonconformity.objects.filter(audit=self.audit).exists())
 
@@ -435,9 +433,7 @@ class FindingViewTest(TestCase):
             "statement": "Statement",
             "explanation": "Explanation",
         }
-        response = self.client.post(
-            reverse("audits:observation_create", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:observation_create", kwargs={"audit_pk": self.audit.pk}), data)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Observation.objects.filter(audit=self.audit).exists())
 
@@ -449,18 +445,14 @@ class FindingViewTest(TestCase):
             "clause": "4.1",
             "description": "Description",
         }
-        response = self.client.post(
-            reverse("audits:ofi_create", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:ofi_create", kwargs={"audit_pk": self.audit.pk}), data)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(OpportunityForImprovement.objects.filter(audit=self.audit).exists())
 
     def test_client_cannot_create_finding(self):
         """Test that client cannot create findings."""
         self.client.login(username="client", password="password")
-        response = self.client.get(
-            reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
-        )
+        response = self.client.get(reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk}))
         self.assertEqual(response.status_code, 403)
 
     def test_nonconformity_detail(self):
@@ -483,7 +475,7 @@ class FindingViewTest(TestCase):
         # Audit must be in client_review status
         self.audit.status = "client_review"
         self.audit.save()
-        
+
         nc = Nonconformity.objects.create(
             audit=self.audit,
             standard=self.std,
@@ -494,7 +486,7 @@ class FindingViewTest(TestCase):
             created_by=self.auditor,
             verification_status="open",
         )
-        
+
         self.client.login(username="client", password="password")
         data = {
             "client_root_cause": "Root cause",
@@ -502,9 +494,7 @@ class FindingViewTest(TestCase):
             "client_corrective_action": "Action",
             "due_date": date.today(),
         }
-        response = self.client.post(
-            reverse("audits:nonconformity_respond", kwargs={"pk": nc.pk}), data
-        )
+        response = self.client.post(reverse("audits:nonconformity_respond", kwargs={"pk": nc.pk}), data)
         self.assertEqual(response.status_code, 302)
         nc.refresh_from_db()
         self.assertEqual(nc.client_root_cause, "Root cause")
@@ -525,15 +515,13 @@ class FindingViewTest(TestCase):
             client_correction="Correction",
             client_corrective_action="Action",
         )
-        
+
         self.client.login(username="auditor", password="password")
         data = {
             "verification_action": "accept",
             "verification_notes": "Good",
         }
-        response = self.client.post(
-            reverse("audits:nonconformity_verify", kwargs={"pk": nc.pk}), data
-        )
+        response = self.client.post(reverse("audits:nonconformity_verify", kwargs={"pk": nc.pk}), data)
         self.assertEqual(response.status_code, 302)
         nc.refresh_from_db()
         self.assertEqual(nc.verification_status, "accepted")
@@ -559,9 +547,7 @@ class FindingViewTest(TestCase):
             "auditor_explanation": "Updated Explanation",
             "due_date": date.today(),
         }
-        response = self.client.post(
-            reverse("audits:nonconformity_update", kwargs={"pk": nc.pk}), data
-        )
+        response = self.client.post(reverse("audits:nonconformity_update", kwargs={"pk": nc.pk}), data)
         self.assertEqual(response.status_code, 302)
         nc.refresh_from_db()
         self.assertEqual(nc.clause, "4.2")
@@ -583,9 +569,7 @@ class FindingViewTest(TestCase):
             "statement": "Updated Statement",
             "explanation": "Updated Explanation",
         }
-        response = self.client.post(
-            reverse("audits:observation_update", kwargs={"pk": obs.pk}), data
-        )
+        response = self.client.post(reverse("audits:observation_update", kwargs={"pk": obs.pk}), data)
         self.assertEqual(response.status_code, 302)
         obs.refresh_from_db()
         self.assertEqual(obs.clause, "4.2")
@@ -606,9 +590,7 @@ class FindingViewTest(TestCase):
             "clause": "4.2",
             "description": "Updated Description",
         }
-        response = self.client.post(
-            reverse("audits:ofi_update", kwargs={"pk": ofi.pk}), data
-        )
+        response = self.client.post(reverse("audits:ofi_update", kwargs={"pk": ofi.pk}), data)
         self.assertEqual(response.status_code, 302)
         ofi.refresh_from_db()
         self.assertEqual(ofi.clause, "4.2")
@@ -674,19 +656,18 @@ class EvidenceFileViewTest(TestCase):
     def test_evidence_file_upload(self):
         """Test uploading evidence file."""
         from django.core.files.uploadedfile import SimpleUploadedFile
-        
+
         self.client.login(username="auditor", password="password")
         file = SimpleUploadedFile("test.pdf", b"content")
         data = {
             "file": file,
             # evidence_type defaults to 'document' if not provided (form doesn't have it)
         }
-        response = self.client.post(
-            reverse("audits:evidence_file_upload", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:evidence_file_upload", kwargs={"audit_pk": self.audit.pk}), data)
         self.assertEqual(response.status_code, 302)
         # Check if file exists (EvidenceFile model)
         from audits.models import EvidenceFile
+
         self.assertTrue(EvidenceFile.objects.filter(audit=self.audit).exists())
 
     def test_evidence_file_delete(self):
@@ -694,7 +675,7 @@ class EvidenceFileViewTest(TestCase):
         from django.core.files.uploadedfile import SimpleUploadedFile
 
         from audits.models import EvidenceFile
-        
+
         file = SimpleUploadedFile("test.pdf", b"content")
         evidence_file = EvidenceFile.objects.create(
             audit=self.audit,
@@ -703,11 +684,9 @@ class EvidenceFileViewTest(TestCase):
             evidence_type="other",
             uploaded_by=self.auditor,
         )
-        
+
         self.client.login(username="auditor", password="password")
-        response = self.client.post(
-            reverse("audits:evidence_file_delete", kwargs={"file_pk": evidence_file.pk})
-        )
+        response = self.client.post(reverse("audits:evidence_file_delete", kwargs={"file_pk": evidence_file.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(EvidenceFile.objects.filter(pk=evidence_file.pk).exists())
 
@@ -727,9 +706,7 @@ class EvidenceFileViewTest(TestCase):
         )
 
         self.client.login(username="auditor", password="password")
-        response = self.client.get(
-            reverse("audits:evidence_file_download", kwargs={"file_pk": evidence_file.pk})
-        )
+        response = self.client.get(reverse("audits:evidence_file_download", kwargs={"file_pk": evidence_file.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertIn('attachment; filename="test', response["Content-Disposition"])
@@ -773,9 +750,7 @@ class TechnicalReviewViewTest(TestCase):
             "reviewer_notes": "All good",
             "status": "approved",
         }
-        response = self.client.post(
-            reverse("audits:technical_review_create", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:technical_review_create", kwargs={"audit_pk": self.audit.pk}), data)
         self.assertEqual(response.status_code, 302)
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "decision_pending")
@@ -784,6 +759,7 @@ class TechnicalReviewViewTest(TestCase):
     def test_technical_review_update(self):
         """Test updating technical review."""
         from audits.models import TechnicalReview
+
         review = TechnicalReview.objects.create(
             audit=self.audit,
             reviewer=self.cb_admin,
@@ -799,9 +775,7 @@ class TechnicalReviewViewTest(TestCase):
             "reviewer_notes": "Updated notes",
             "status": "approved",
         }
-        response = self.client.post(
-            reverse("audits:technical_review_update", kwargs={"pk": review.pk}), data
-        )
+        response = self.client.post(reverse("audits:technical_review_update", kwargs={"pk": review.pk}), data)
         self.assertEqual(response.status_code, 302)
         review.refresh_from_db()
         self.assertEqual(review.status, "approved")
@@ -867,6 +841,7 @@ class CertificationDecisionViewTest(TestCase):
     def test_certification_decision_update(self):
         """Test updating certification decision."""
         from audits.models import CertificationDecision
+
         decision = CertificationDecision.objects.create(
             audit=self.audit,
             decision_maker=self.cb_admin,
@@ -874,16 +849,14 @@ class CertificationDecisionViewTest(TestCase):
             decision_notes="Initial decision",
         )
         decision.certifications_affected.add(self.cert)
-        
+
         self.client.login(username="cbadmin", password="password")
         data = {
             "decision": "refuse",
             "decision_notes": "Updated decision",
             "certifications_affected": [self.cert.pk],
         }
-        response = self.client.post(
-            reverse("audits:certification_decision_update", kwargs={"pk": decision.pk}), data
-        )
+        response = self.client.post(reverse("audits:certification_decision_update", kwargs={"pk": decision.pk}), data)
         self.assertEqual(response.status_code, 302)
         decision.refresh_from_db()
         self.assertEqual(decision.decision, "refuse")
@@ -932,9 +905,7 @@ class FindingDeleteViewTest(TestCase):
             created_by=self.auditor,
         )
         self.client.login(username="auditor", password="password")
-        response = self.client.post(
-            reverse("audits:nonconformity_delete", kwargs={"pk": nc.pk})
-        )
+        response = self.client.post(reverse("audits:nonconformity_delete", kwargs={"pk": nc.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Nonconformity.objects.filter(pk=nc.pk).exists())
 
@@ -948,9 +919,7 @@ class FindingDeleteViewTest(TestCase):
             created_by=self.auditor,
         )
         self.client.login(username="auditor", password="password")
-        response = self.client.post(
-            reverse("audits:observation_delete", kwargs={"pk": obs.pk})
-        )
+        response = self.client.post(reverse("audits:observation_delete", kwargs={"pk": obs.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Observation.objects.filter(pk=obs.pk).exists())
 
@@ -964,9 +933,7 @@ class FindingDeleteViewTest(TestCase):
             created_by=self.auditor,
         )
         self.client.login(username="auditor", password="password")
-        response = self.client.post(
-            reverse("audits:ofi_delete", kwargs={"pk": ofi.pk})
-        )
+        response = self.client.post(reverse("audits:ofi_delete", kwargs={"pk": ofi.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(OpportunityForImprovement.objects.filter(pk=ofi.pk).exists())
 
@@ -1013,11 +980,10 @@ class TeamMemberViewTest(TestCase):
             "date_from": date.today(),
             "date_to": date.today() + timedelta(days=1),
         }
-        response = self.client.post(
-            reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk}), data)
         self.assertEqual(response.status_code, 302)
         from audits.models import AuditTeamMember
+
         self.assertTrue(AuditTeamMember.objects.filter(audit=self.audit, user=self.other_auditor).exists())
 
     def test_team_member_add_with_warning(self):
@@ -1033,7 +999,7 @@ class TeamMemberViewTest(TestCase):
             description="Warning",
             issued_by=self.cb_admin,
         )
-        
+
         self.client.login(username="auditor", password="password")
         data = {
             "user": self.other_auditor.id,
@@ -1041,9 +1007,7 @@ class TeamMemberViewTest(TestCase):
             "date_from": date.today(),
             "date_to": date.today() + timedelta(days=1),
         }
-        response = self.client.post(
-            reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk}), data)
         self.assertEqual(response.status_code, 302)
         # Check for warning message
         messages = list(response.wsgi_request._messages)
@@ -1052,6 +1016,7 @@ class TeamMemberViewTest(TestCase):
     def test_team_member_edit(self):
         """Test editing a team member."""
         from audits.models import AuditTeamMember
+
         member = AuditTeamMember.objects.create(
             audit=self.audit,
             user=self.other_auditor,
@@ -1066,9 +1031,7 @@ class TeamMemberViewTest(TestCase):
             "date_from": date.today(),
             "date_to": date.today() + timedelta(days=1),
         }
-        response = self.client.post(
-            reverse("audits:team_member_edit", kwargs={"pk": member.pk}), data
-        )
+        response = self.client.post(reverse("audits:team_member_edit", kwargs={"pk": member.pk}), data)
         self.assertEqual(response.status_code, 302)
         member.refresh_from_db()
         self.assertEqual(member.role, "technical_expert")
@@ -1076,6 +1039,7 @@ class TeamMemberViewTest(TestCase):
     def test_team_member_delete(self):
         """Test deleting a team member."""
         from audits.models import AuditTeamMember
+
         member = AuditTeamMember.objects.create(
             audit=self.audit,
             user=self.other_auditor,
@@ -1084,9 +1048,7 @@ class TeamMemberViewTest(TestCase):
             date_to=date.today() + timedelta(days=1),
         )
         self.client.login(username="auditor", password="password")
-        response = self.client.post(
-            reverse("audits:team_member_delete", kwargs={"pk": member.pk})
-        )
+        response = self.client.post(reverse("audits:team_member_delete", kwargs={"pk": member.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(AuditTeamMember.objects.filter(pk=member.pk).exists())
 
@@ -1127,16 +1089,14 @@ class AuditMakeDecisionViewTest(TestCase):
             "revocation_recommended": False,
             "stage2_required": False,
         }
-        response = self.client.post(
-            reverse("audits:audit_make_decision", kwargs={"audit_pk": self.audit.pk}), data
-        )
+        response = self.client.post(reverse("audits:audit_make_decision", kwargs={"audit_pk": self.audit.pk}), data)
         # The view catches ValidationError and re-renders the form (status 200)
         self.assertEqual(response.status_code, 200)
-        
+
         # Check for error message
         messages = list(response.context["messages"])
         self.assertTrue(any("Invalid transition" in str(m) for m in messages))
-        
+
         # Status should remain submitted
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "submitted")
@@ -1161,7 +1121,7 @@ class AuditUpdateViewTest(TestCase):
             customer_id="ORG001",
             total_employee_count=10,
         )
-        
+
         # Create Site and Certification
         self.site = Site.objects.create(
             organization=self.org,
@@ -1217,7 +1177,7 @@ class AuditUpdateViewTest(TestCase):
         # Create another auditor
         other_auditor = User.objects.create_user(username="other_auditor_update", password="password")
         other_auditor.groups.add(self.auditor_group)
-        
+
         self.client.login(username="other_auditor_update", password="password")
         response = self.client.get(reverse("audits:audit_update", kwargs={"pk": self.audit.pk}))
         self.assertEqual(response.status_code, 403)

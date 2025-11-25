@@ -94,7 +94,7 @@ class AppealViewTest(TestCase):
         # For now, we just need a related_decision string or object?
         # Appeal model: related_decision = models.OneToOneField('CertificationDecision', ...)
         # Let's check Appeal model.
-        
+
     def test_appeal_list(self):
         """Test appeal list view."""
         self.client.login(username="user", password="password")
@@ -105,12 +105,13 @@ class AppealViewTest(TestCase):
         """Test creating an appeal."""
         # Need a CertificationDecision first
         from audits.models import CertificationDecision
+
         decision = CertificationDecision.objects.create(
             audit=self.audit,
             decision="grant",
             decision_maker=self.user,
         )
-        
+
         self.client.login(username="user", password="password")
         data = {
             "appellant_name": "Jane Doe",
@@ -125,6 +126,7 @@ class AppealViewTest(TestCase):
     def test_appeal_detail(self):
         """Test appeal detail view."""
         from audits.models import CertificationDecision
+
         decision = CertificationDecision.objects.create(
             audit=self.audit,
             decision="grant",

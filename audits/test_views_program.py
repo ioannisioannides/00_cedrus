@@ -12,7 +12,7 @@ from core.models import Organization
 class AuditProgramViewTest(TestCase):
     def setUp(self):
         self.client = Client()
-        
+
         # Create Groups
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
         self.client_admin_group, _ = Group.objects.get_or_create(name="client_admin")
@@ -47,7 +47,7 @@ class AuditProgramViewTest(TestCase):
             year=2025,
             objectives="Test Objectives",
             risks_opportunities="Test Risks",
-            created_by=self.cb_admin
+            created_by=self.cb_admin,
         )
 
     def test_program_list_cb_admin(self):

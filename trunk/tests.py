@@ -324,9 +324,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, lambda p: events.append(p))
 
-        on_audit_status_changed(
-            {"audit": self.audit, "new_status": "client_review", "changed_by": self.user}
-        )
+        on_audit_status_changed({"audit": self.audit, "new_status": "client_review", "changed_by": self.user})
 
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["audit"], self.audit)
@@ -336,9 +334,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CB, lambda p: events.append(p))
 
-        on_audit_status_changed(
-            {"audit": self.audit, "new_status": "submitted", "changed_by": self.user}
-        )
+        on_audit_status_changed({"audit": self.audit, "new_status": "submitted", "changed_by": self.user})
 
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["audit"], self.audit)
@@ -348,9 +344,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.AUDIT_DECIDED, lambda p: events.append(p))
 
-        on_audit_status_changed(
-            {"audit": self.audit, "new_status": "decided", "changed_by": self.user}
-        )
+        on_audit_status_changed({"audit": self.audit, "new_status": "decided", "changed_by": self.user})
 
         self.assertEqual(len(events), 1)
 

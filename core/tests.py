@@ -112,9 +112,7 @@ class HealthCheckTest(TestCase):
     @override_settings(DEBUG=False)
     def test_detailed_status_production_superuser(self):
         """Test detailed status is accessible for superusers in production."""
-        superuser = User.objects.create_superuser(
-            username="admin", email="admin@test.com", password="adminpass"
-        )
+        superuser = User.objects.create_superuser(username="admin", email="admin@test.com", password="adminpass")
         self.client.login(username="admin", password="adminpass")
         response = self.client.get(reverse("core:detailed_status"))
         self.assertEqual(response.status_code, 200)
