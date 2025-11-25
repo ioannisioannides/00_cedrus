@@ -61,7 +61,7 @@ jobs:
         run: |
           if [ -f results.sarif ]; then
             echo "Patching SARIF file to add unique automationDetails.id for each run..."
-            jq '.runs |= map(. + {automationDetails: {id: ("codacy/" + (.tool.driver.name // "unknown") | ascii_downcase | gsub("[^a-z0-9-]"; "-"))}})' results.sarif > results.patched.sarif
+            jq '.runs |= [to_entries[] | .value + {automationDetails: {id: ("codacy/" + (.value.tool.driver.name // "unknown") + "/" + (.key|tostring) | ascii_downcase | gsub("[^a-z0-9-]"; "-"))}}]' results.sarif > results.patched.sarif
             mv results.patched.sarif results.sarif
           else
             echo "No SARIF file found to patch."
