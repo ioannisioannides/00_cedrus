@@ -8,7 +8,7 @@
 # Built by: Dr. Thomas Berg (Caltech PhD, DevOps, 23 years)
 # ==============================================================================
 
-set -e
+set -euo pipefail
 
 # Configuration
 BACKUP_DIR="/backups"
@@ -26,25 +26,22 @@ echo "Retention: ${RETENTION_DAYS} days"
 echo "======================================================================"
 
 # Create backup directory if not exists
-mkdir -p ${BACKUP_DIR}
+mkdir -p "${BACKUP_DIR}"
 
 # Perform backup
 echo "[INFO] Starting database backup..."
-PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
+if PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump \
     -h postgres \
-    -U ${POSTGRES_USER} \
-    -d ${POSTGRES_DB} \
+    -U "${POSTGRES_USER}" \
+    -d "${POSTGRES_DB}" \
     --format=plain \
     --no-owner \
     --no-acl \
     --clean \
     --if-exists \
-    | gzip > ${BACKUP_FILE}
-
-# Check if backup was successful
-if [ $? -eq 0 ]; then
+    | gzip > "${BACKUP_FILE}"; then
     echo "[SUCCESS] Backup completed successfully!"
-    echo "[INFO] Backup size: $(du -h ${BACKUP_FILE} | cut -f1)"
+    echo "[INFO] Backup size: $(du -h "${BACKUP_FILE}" | cut -f1)"
 else
     echo "[ERROR] Backup failed!"
     exit 1
@@ -52,15 +49,17 @@ fi
 
 # Remove old backups (retention policy)
 echo "[INFO] Cleaning up old backups (keeping last ${RETENTION_DAYS} days)..."
-find ${BACKUP_DIR} -name "cedrus_backup_*.sql.gz" -mtime +${RETENTION_DAYS} -delete
+find "${BACKUP_DIR}" -name 'cedrus_backup_*.sql.gz' -mtime +"${RETENTION_DAYS}" -delete
 
 # List current backups
 echo "[INFO] Current backups:"
-ls -lh ${BACKUP_DIR}/cedrus_backup_*.sql.gz 2>/dev/null || echo "No backups found"
+if ! find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' -exec ls -lh {} + 2>/dev/null; then
+    echo "No backups found"
+fi
 
 # Backup statistics
-BACKUP_COUNT=$(ls -1 ${BACKUP_DIR}/cedrus_backup_*.sql.gz 2>/dev/null | wc -l)
-TOTAL_SIZE=$(du -sh ${BACKUP_DIR} | cut -f1)
+BACKUP_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' | wc -l || true)
+TOTAL_SIZE=$(du -sh "${BACKUP_DIR}" | cut -f1)
 
 echo "======================================================================"
 echo "Backup Summary:"
