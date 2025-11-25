@@ -109,9 +109,7 @@ class SiteModelTest(TestCase):
 
     def test_site_optional_employee_count(self):
         """Test that site_employee_count can be null."""
-        site = Site.objects.create(
-            organization=self.org, site_name="No Count Site", site_address="789 St"
-        )
+        site = Site.objects.create(organization=self.org, site_name="No Count Site", site_address="789 St")
         self.assertIsNone(site.site_employee_count)
 
     def test_site_active_flag(self):
@@ -123,9 +121,7 @@ class SiteModelTest(TestCase):
 
     def test_site_str(self):
         """Test site string representation."""
-        site = Site.objects.create(
-            organization=self.org, site_name="Test Site", site_address="123 St"
-        )
+        site = Site.objects.create(organization=self.org, site_name="Test Site", site_address="123 St")
         self.assertIn("Test Site", str(site))
         self.assertIn("Test Org", str(site))
 
@@ -295,9 +291,7 @@ class OrganizationViewPermissionTest(TestCase):
     def test_organization_list_requires_login(self):
         """Test organization list requires authentication."""
         response = self.client.get(reverse("core:organization_list"))
-        self.assertRedirects(
-            response, f"{reverse('accounts:login')}?next={reverse('core:organization_list')}"
-        )
+        self.assertRedirects(response, f"{reverse('accounts:login')}?next={reverse('core:organization_list')}")
 
     def test_organization_create_cb_admin(self):
         """Test CB Admin can create organization."""
@@ -363,9 +357,7 @@ class SiteViewPermissionTest(TestCase):
             customer_id="ORG001",
             total_employee_count=10,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Test Site", site_address="456 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Test Site", site_address="456 St")
 
     def test_site_list_cb_admin(self):
         """Test CB Admin can access site list."""
@@ -439,9 +431,7 @@ class CertificationViewPermissionTest(TestCase):
             },
         )
         self.assertRedirects(response, reverse("core:certification_list"))
-        self.assertTrue(
-            Certification.objects.filter(organization=self.org, standard=self.std).exists()
-        )
+        self.assertTrue(Certification.objects.filter(organization=self.org, standard=self.std).exists())
 
     def test_certification_duplicate_prevention(self):
         """Test that duplicate certifications are prevented."""

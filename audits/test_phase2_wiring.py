@@ -30,11 +30,7 @@ class TestPhase2Wiring:
 
     @pytest.fixture
     def organization(self):
-        return Organization.objects.create(
-            name="Test Org",
-            customer_id="CUST001",
-            total_employee_count=100
-        )
+        return Organization.objects.create(name="Test Org", customer_id="CUST001", total_employee_count=100)
 
     @pytest.fixture
     def standard(self):
@@ -47,7 +43,7 @@ class TestPhase2Wiring:
             standard=standard,
             certificate_id="CERT-001",
             issue_date=date.today(),
-            expiry_date=date.today() + timedelta(days=1095)
+            expiry_date=date.today() + timedelta(days=1095),
         )
 
     @pytest.fixture
@@ -60,7 +56,7 @@ class TestPhase2Wiring:
             audit_type="stage1",
             total_audit_date_from=date.today() - timedelta(days=30),
             total_audit_date_to=date.today() - timedelta(days=28),
-            status="closed"
+            status="closed",
         )
 
         audit = Audit.objects.create(
@@ -70,7 +66,7 @@ class TestPhase2Wiring:
             audit_type="stage2",
             total_audit_date_from=date.today(),
             total_audit_date_to=date.today() + timedelta(days=2),
-            status="submitted" # Ready for decision
+            status="submitted",  # Ready for decision
         )
         audit.certifications.add(certification)
         return audit
@@ -80,11 +76,7 @@ class TestPhase2Wiring:
         client.force_login(cb_admin)
         url = reverse("audits:certification_decision_create", kwargs={"audit_pk": audit.pk})
 
-        data = {
-            "decision": "grant",
-            "decision_notes": "Approved",
-            "certifications_affected": [certification.pk]
-        }
+        data = {"decision": "grant", "decision_notes": "Approved", "certifications_affected": [certification.pk]}
 
         # Audit needs to be in decision_pending for the view to allow access?
         # Let's check the view logic. It checks for "decision_pending".
@@ -122,11 +114,11 @@ class TestPhase2Wiring:
             "user": auditor.pk,
             "role": "auditor",
             "date_from": audit.total_audit_date_from,
-            "date_to": audit.total_audit_date_to
+            "date_to": audit.total_audit_date_to,
         }
 
         response = client.post(url, data)
-        assert response.status_code == 302 # Redirects on success (warning doesn't block)
+        assert response.status_code == 302  # Redirects on success (warning doesn't block)
 
         # Check if warning was created
         assert AuditorCompetenceWarning.objects.filter(audit=audit, auditor=auditor).exists()
@@ -145,7 +137,7 @@ class TestPhase2Wiring:
             "complainant_email": "john@example.com",
             "organization": organization.pk,
             "complaint_type": "audit_conduct",
-            "description": "Something went wrong"
+            "description": "Something went wrong",
         }
 
         response = client.post(url, data)
@@ -157,11 +149,7 @@ class TestPhase2Wiring:
         client.force_login(cb_admin)
         url = reverse("audits:appeal_create")
 
-        data = {
-            "appellant_name": "Jane Doe",
-            "appellant_email": "jane@example.com",
-            "grounds": "Unfair decision"
-        }
+        data = {"appellant_name": "Jane Doe", "appellant_email": "jane@example.com", "grounds": "Unfair decision"}
 
         response = client.post(url, data)
         assert response.status_code == 302

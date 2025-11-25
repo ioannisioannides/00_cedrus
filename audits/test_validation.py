@@ -26,9 +26,7 @@ class AuditTeamMemberDateValidationTests(TestCase):
             registered_address="123 Test St",
             total_employee_count=100,
         )
-        self.standard = Standard.objects.create(
-            code="ISO9001", title="ISO 9001:2015 Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO9001", title="ISO 9001:2015 Quality Management Systems")
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -133,9 +131,7 @@ class AuditDateValidationTests(TestCase):
             registered_address="123 Test St",
             total_employee_count=100,
         )
-        self.standard = Standard.objects.create(
-            code="ISO9001", title="ISO 9001:2015 Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO9001", title="ISO 9001:2015 Quality Management Systems")
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -213,9 +209,7 @@ class OrganizationScopedValidationTests(TestCase):
             registered_address="456 Test Ave",
             total_employee_count=50,
         )
-        self.standard = Standard.objects.create(
-            code="ISO9001", title="ISO 9001:2015 Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO9001", title="ISO 9001:2015 Quality Management Systems")
         self.cert1 = Certification.objects.create(
             organization=self.org1,
             standard=self.standard,
@@ -228,12 +222,8 @@ class OrganizationScopedValidationTests(TestCase):
             certificate_status="active",
             certification_scope="Services",
         )
-        self.site1 = Site.objects.create(
-            organization=self.org1, site_name="Site 1", site_address="123 Test St"
-        )
-        self.site2 = Site.objects.create(
-            organization=self.org2, site_name="Site 2", site_address="456 Test Ave"
-        )
+        self.site1 = Site.objects.create(organization=self.org1, site_name="Site 1", site_address="123 Test St")
+        self.site2 = Site.objects.create(organization=self.org2, site_name="Site 2", site_address="456 Test Ave")
         self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_auditor_group)
@@ -317,9 +307,7 @@ class LeadAuditorRoleValidationTests(TestCase):
             registered_address="123 Test St",
             total_employee_count=100,
         )
-        self.standard = Standard.objects.create(
-            code="ISO9001", title="ISO 9001:2015 Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO9001", title="ISO 9001:2015 Quality Management Systems")
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -422,9 +410,7 @@ class FileTypeValidationTests(TestCase):
             registered_address="123 Test St",
             total_employee_count=100,
         )
-        self.standard = Standard.objects.create(
-            code="ISO9001", title="ISO 9001:2015 Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO9001", title="ISO 9001:2015 Quality Management Systems")
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -507,9 +493,7 @@ class FileTypeValidationTests(TestCase):
     def test_invalid_executable_file(self):
         """Executable files are rejected"""
         file_content = b"fake exe content"
-        uploaded_file = SimpleUploadedFile(
-            "malware.exe", file_content, content_type="application/x-msdownload"
-        )
+        uploaded_file = SimpleUploadedFile("malware.exe", file_content, content_type="application/x-msdownload")
         evidence = EvidenceFile(
             audit=self.audit,
             uploaded_by=self.lead_auditor,
@@ -523,9 +507,7 @@ class FileTypeValidationTests(TestCase):
     def test_invalid_script_file(self):
         """Script files are rejected"""
         file_content = b"#!/bin/bash\nrm -rf /"
-        uploaded_file = SimpleUploadedFile(
-            "script.sh", file_content, content_type="application/x-sh"
-        )
+        uploaded_file = SimpleUploadedFile("script.sh", file_content, content_type="application/x-sh")
         evidence = EvidenceFile(
             audit=self.audit,
             uploaded_by=self.lead_auditor,
@@ -539,9 +521,7 @@ class FileTypeValidationTests(TestCase):
     def test_invalid_zip_file(self):
         """ZIP files are rejected (not in allowed list)"""
         file_content = b"PK\x03\x04 fake zip"
-        uploaded_file = SimpleUploadedFile(
-            "archive.zip", file_content, content_type="application/zip"
-        )
+        uploaded_file = SimpleUploadedFile("archive.zip", file_content, content_type="application/zip")
         evidence = EvidenceFile(
             audit=self.audit,
             uploaded_by=self.lead_auditor,
@@ -564,9 +544,7 @@ class FileSizeValidationTests(TestCase):
             registered_address="123 Test St",
             total_employee_count=100,
         )
-        self.standard = Standard.objects.create(
-            code="ISO9001", title="ISO 9001:2015 Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO9001", title="ISO 9001:2015 Quality Management Systems")
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -620,9 +598,7 @@ class FileSizeValidationTests(TestCase):
         """Files over 10MB are rejected"""
         # 11MB file
         file_content = b"x" * (11 * 1024 * 1024)
-        uploaded_file = SimpleUploadedFile(
-            "large.pdf", file_content, content_type="application/pdf"
-        )
+        uploaded_file = SimpleUploadedFile("large.pdf", file_content, content_type="application/pdf")
         evidence = EvidenceFile(
             audit=self.audit,
             uploaded_by=self.lead_auditor,
@@ -646,9 +622,7 @@ class ValidationIntegrationTests(TestCase):
             registered_address="123 Test St",
             total_employee_count=100,
         )
-        self.standard = Standard.objects.create(
-            code="ISO9001", title="ISO 9001:2015 Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO9001", title="ISO 9001:2015 Quality Management Systems")
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -690,9 +664,7 @@ class ValidationIntegrationTests(TestCase):
 
         # Upload valid evidence
         file_content = b"%PDF-1.4 test"
-        uploaded_file = SimpleUploadedFile(
-            "evidence.pdf", file_content, content_type="application/pdf"
-        )
+        uploaded_file = SimpleUploadedFile("evidence.pdf", file_content, content_type="application/pdf")
         evidence = EvidenceFile.objects.create(
             audit=audit, uploaded_by=self.lead_auditor, file=uploaded_file, evidence_type="document"
         )

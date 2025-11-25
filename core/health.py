@@ -219,9 +219,7 @@ def detailed_status(request):
     """
     # Only allow in DEBUG mode or for superusers
     if not settings.DEBUG and not (request.user.is_authenticated and request.user.is_superuser):
-        return JsonResponse(
-            {"error": "Forbidden - admin access required"}, status=403
-        )
+        return JsonResponse({"error": "Forbidden - admin access required"}, status=403)
 
     status_data = {
         "status": "healthy",

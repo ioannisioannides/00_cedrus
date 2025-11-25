@@ -53,9 +53,7 @@ class AuditWorkflowTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         # Create base audit (stage1 doesn't require prior audits)
         self.audit = AuditService.create_audit(
@@ -263,9 +261,7 @@ class AuditWorkflowValidationTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         # Create audit
         self.audit = AuditService.create_audit(
@@ -407,9 +403,7 @@ class AuditWorkflowAvailableTransitionsTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         # Create audit
         self.audit = AuditService.create_audit(

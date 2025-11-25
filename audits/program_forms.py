@@ -15,11 +15,21 @@ class AuditProgramForm(forms.ModelForm):
         model = AuditProgram
         fields = ["title", "year", "status", "objectives", "risks_opportunities"]
         widgets = {
-            "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., 2025 Internal Audit Program"}),
+            "title": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "e.g., 2025 Internal Audit Program"}
+            ),
             "year": forms.NumberInput(attrs={"class": "form-control", "min": 2000, "max": 2100}),
             "status": forms.Select(attrs={"class": "form-select"}),
-            "objectives": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Define the objectives of this audit program..."}),
-            "risks_opportunities": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Identify risks and opportunities..."}),
+            "objectives": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "Define the objectives of this audit program...",
+                }
+            ),
+            "risks_opportunities": forms.Textarea(
+                attrs={"class": "form-control", "rows": 4, "placeholder": "Identify risks and opportunities..."}
+            ),
         }
         help_texts = {
             "objectives": "What do you want to achieve with this program? (ISO 19011 5.2)",

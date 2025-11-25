@@ -27,9 +27,7 @@ class NonconformityForm(forms.ModelForm):
         ]
         widgets = {
             "standard": forms.Select(attrs={"class": "form-select"}),
-            "clause": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}
-            ),
+            "clause": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}),
             "category": forms.Select(attrs={"class": "form-select"}),
             "objective_evidence": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "statement_of_nc": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
@@ -61,13 +59,9 @@ class NonconformityForm(forms.ModelForm):
 
         # Validate that standard is from audit's certifications
         if self.audit and standard:
-            audit_standards = self.audit.certifications.values_list(
-                "standard", flat=True
-            ).distinct()
+            audit_standards = self.audit.certifications.values_list("standard", flat=True).distinct()
             if standard.id not in audit_standards:
-                raise ValidationError(
-                    "The selected standard must be one of the standards covered by this audit."
-                )
+                raise ValidationError("The selected standard must be one of the standards covered by this audit.")
 
         return cleaned_data
 
@@ -80,9 +74,7 @@ class ObservationForm(forms.ModelForm):
         fields = ["standard", "clause", "statement", "explanation"]
         widgets = {
             "standard": forms.Select(attrs={"class": "form-select"}),
-            "clause": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}
-            ),
+            "clause": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}),
             "statement": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "explanation": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
@@ -108,13 +100,9 @@ class ObservationForm(forms.ModelForm):
         standard = cleaned_data.get("standard")
 
         if self.audit and standard:
-            audit_standards = self.audit.certifications.values_list(
-                "standard", flat=True
-            ).distinct()
+            audit_standards = self.audit.certifications.values_list("standard", flat=True).distinct()
             if standard.id not in audit_standards:
-                raise ValidationError(
-                    "The selected standard must be one of the standards covered by this audit."
-                )
+                raise ValidationError("The selected standard must be one of the standards covered by this audit.")
 
         return cleaned_data
 
@@ -127,9 +115,7 @@ class OpportunityForImprovementForm(forms.ModelForm):
         fields = ["standard", "clause", "description"]
         widgets = {
             "standard": forms.Select(attrs={"class": "form-select"}),
-            "clause": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}
-            ),
+            "clause": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
 
@@ -154,13 +140,9 @@ class OpportunityForImprovementForm(forms.ModelForm):
         standard = cleaned_data.get("standard")
 
         if self.audit and standard:
-            audit_standards = self.audit.certifications.values_list(
-                "standard", flat=True
-            ).distinct()
+            audit_standards = self.audit.certifications.values_list("standard", flat=True).distinct()
             if standard.id not in audit_standards:
-                raise ValidationError(
-                    "The selected standard must be one of the standards covered by this audit."
-                )
+                raise ValidationError("The selected standard must be one of the standards covered by this audit.")
 
         return cleaned_data
 
@@ -190,9 +172,7 @@ class NonconformityResponseForm(forms.ModelForm):
         if not correction:
             raise ValidationError({"client_correction": "Immediate correction is required."})
         if not corrective_action:
-            raise ValidationError(
-                {"client_corrective_action": "Corrective action plan is required."}
-            )
+            raise ValidationError({"client_corrective_action": "Corrective action plan is required."})
 
         return cleaned_data
 

@@ -172,13 +172,9 @@ class RoleBasedAccessTest(TestCase):
         )
 
         # Create sites
-        site1 = Site.objects.create(
-            organization=self.org1, site_name="Site 1", site_address="123 St"
-        )
+        site1 = Site.objects.create(organization=self.org1, site_name="Site 1", site_address="123 St")
 
-        Site.objects.create(
-            organization=org2, site_name="Site 2", site_address="456 St"
-        )
+        Site.objects.create(organization=org2, site_name="Site 2", site_address="456 St")
 
         # Link clients to organizations
         self.client_admin.profile.organization = self.org1

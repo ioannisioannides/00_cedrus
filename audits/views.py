@@ -6,6 +6,7 @@ Different views have different permission requirements:
 - Auditor: Can view/edit assigned audits, add findings
 - Client: Can view their audits, respond to nonconformities
 """
+
 # pylint: disable=too-many-lines
 
 from django.contrib import messages
@@ -63,10 +64,7 @@ def can_add_finding(user, audit):
         return True
 
     # Auditors can add findings if they're assigned to the audit
-    if (
-        user.groups.filter(name="lead_auditor").exists()
-        or user.groups.filter(name="auditor").exists()
-    ):
+    if user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists():
         return audit.lead_auditor == user or audit.team_members.filter(user=user).exists()
 
     return False
@@ -96,10 +94,7 @@ def can_respond_to_nc(user, nonconformity):
     audit = nonconformity.audit
 
     # Must be client user
-    if not (
-        user.groups.filter(name="client_admin").exists()
-        or user.groups.filter(name="client_user").exists()
-    ):
+    if not (user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists()):
         return False
 
     # Must be for their organization
@@ -125,10 +120,7 @@ def can_verify_nc(user, nonconformity):
     audit = nonconformity.audit
 
     # Must be auditor
-    if not (
-        user.groups.filter(name="lead_auditor").exists()
-        or user.groups.filter(name="auditor").exists()
-    ):
+    if not (user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists()):
         return False
 
     # Must be assigned to audit
@@ -269,9 +261,7 @@ class AuditDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         """Get audit queryset with optimized relationships based on user role."""
         user = self.request.user
-        queryset = Audit.objects.select_related(
-            "organization", "lead_auditor", "created_by"
-        ).prefetch_related(
+        queryset = Audit.objects.select_related("organization", "lead_auditor", "created_by").prefetch_related(
             "certifications",
             "sites",
             "team_members",
@@ -309,9 +299,7 @@ class AuditDetailView(LoginRequiredMixin, DetailView):
         context["ofis"] = audit.opportunityforimprovement_set.all()
 
         # Add counts
-        context["open_ncs_count"] = audit.nonconformity_set.exclude(
-            verification_status="closed"
-        ).count()
+        context["open_ncs_count"] = audit.nonconformity_set.exclude(verification_status="closed").count()
 
         # Check if user can edit
         context["can_edit"] = PermissionPredicate.is_cb_admin(user) or (
@@ -329,15 +317,11 @@ class AuditDetailView(LoginRequiredMixin, DetailView):
 
         # Check if user can submit to client
         context["can_submit_to_client"] = (
-            audit.status == "draft"
-            and PermissionPredicate.is_lead_auditor(user)
-            and audit.lead_auditor == user
+            audit.status == "draft" and PermissionPredicate.is_lead_auditor(user) and audit.lead_auditor == user
         )
 
         # Check if user can make decision
-        context["can_make_decision"] = (
-            audit.status == "submitted_to_cb" and PermissionPredicate.is_cb_admin(user)
-        )
+        context["can_make_decision"] = audit.status == "submitted_to_cb" and PermissionPredicate.is_cb_admin(user)
 
         # Get or create related records
         context["changes"], _ = AuditChanges.objects.get_or_create(audit=audit)
@@ -355,9 +339,7 @@ class AuditDetailView(LoginRequiredMixin, DetailView):
 
             # Calculate sampling requirements
             try:
-                sampling_info = calculate_sample_size(
-                    total_sites=total_sites, is_initial_certification=is_initial
-                )
+                sampling_info = calculate_sample_size(total_sites=total_sites, is_initial_certification=is_initial)
                 context["sampling_info"] = sampling_info
                 context["is_multi_site"] = True
             except (ValueError, TypeError, ZeroDivisionError) as e:
@@ -396,11 +378,7 @@ class AuditUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         if PermissionPredicate.is_cb_admin(user):
             return True
 
-        if (
-            PermissionPredicate.is_lead_auditor(user)
-            and audit.lead_auditor == user
-            and audit.status == "draft"
-        ):
+        if PermissionPredicate.is_lead_auditor(user) and audit.lead_auditor == user and audit.status == "draft":
             return True
 
         return False
@@ -629,9 +607,7 @@ def audit_make_decision(request, audit_pk):
 
     # Only CB Admin can make decisions
     if not PermissionPredicate.is_cb_admin(request.user):
-        messages.error(
-            request, "Only Certification Body Administrators can make certification decisions."
-        )
+        messages.error(request, "Only Certification Body Administrators can make certification decisions.")
         return redirect("audits:audit_detail", pk=audit_pk)
 
     # Audit must be in submitted status
@@ -665,9 +641,7 @@ def audit_make_decision(request, audit_pk):
                         cert.certificate_status = "withdrawn"
                         cert.save()
 
-                messages.success(
-                    request, "Certification decision has been made and audit is now decided."
-                )
+                messages.success(request, "Certification decision has been made and audit is now decided.")
                 return redirect("audits:audit_detail", pk=audit_pk)
             except ValidationError as e:
                 messages.error(request, str(e))
@@ -736,15 +710,9 @@ def evidence_file_download(request, file_pk):
 
     if user.groups.filter(name="cb_admin").exists():
         can_view = True
-    elif (
-        user.groups.filter(name="lead_auditor").exists()
-        or user.groups.filter(name="auditor").exists()
-    ):
+    elif user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists():
         can_view = audit.lead_auditor == user or audit.team_members.filter(user=user).exists()
-    elif (
-        user.groups.filter(name="client_admin").exists()
-        or user.groups.filter(name="client_user").exists()
-    ):
+    elif user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists():
         if hasattr(user, "profile") and user.profile.organization:
             can_view = audit.organization == user.profile.organization
 
@@ -825,9 +793,7 @@ class NonconformityCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVie
         """Create nonconformity using FindingService."""
         audit = self.get_audit()
         # Use FindingService to create nonconformity
-        FindingService.create_nonconformity(
-            audit=audit, user=self.request.user, data=form.cleaned_data
-        )
+        FindingService.create_nonconformity(audit=audit, user=self.request.user, data=form.cleaned_data)
         messages.success(self.request, "Nonconformity created successfully.")
         return redirect(self.get_success_url())
 
@@ -854,26 +820,17 @@ class NonconformityDetailView(LoginRequiredMixin, DetailView):
         """Get nonconformity queryset with role-based filtering."""
         # Use same permission logic as audit detail
         user = self.request.user
-        queryset = Nonconformity.objects.select_related(
-            "audit", "standard", "created_by", "verified_by"
-        )
+        queryset = Nonconformity.objects.select_related("audit", "standard", "created_by", "verified_by")
 
         if user.groups.filter(name="cb_admin").exists():
             return queryset
 
-        if (
-            user.groups.filter(name="lead_auditor").exists()
-            or user.groups.filter(name="auditor").exists()
-        ):
+        if user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists():
             return queryset.filter(
-                django_models.Q(audit__lead_auditor=user)
-                | django_models.Q(audit__team_members__user=user)
+                django_models.Q(audit__lead_auditor=user) | django_models.Q(audit__team_members__user=user)
             ).distinct()
 
-        if (
-            user.groups.filter(name="client_admin").exists()
-            or user.groups.filter(name="client_user").exists()
-        ):
+        if user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists():
             if hasattr(user, "profile") and user.profile.organization:
                 return queryset.filter(audit__organization=user.profile.organization)
 
@@ -889,8 +846,7 @@ class NonconformityDetailView(LoginRequiredMixin, DetailView):
         context["can_respond"] = can_respond_to_nc(user, nc)
         context["can_verify"] = can_verify_nc(user, nc)
         context["is_client"] = (
-            user.groups.filter(name="client_admin").exists()
-            or user.groups.filter(name="client_user").exists()
+            user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists()
         )
         return context
 
@@ -1035,9 +991,7 @@ class ObservationCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView)
         """Process valid form submission."""
         audit = self.get_audit()
         # Use FindingService to create observation
-        FindingService.create_observation(
-            audit=audit, user=self.request.user, data=form.cleaned_data
-        )
+        FindingService.create_observation(audit=audit, user=self.request.user, data=form.cleaned_data)
         messages.success(self.request, "Observation created successfully.")
         return redirect(self.get_success_url())
 
@@ -1070,8 +1024,7 @@ class ObservationDetailView(LoginRequiredMixin, DetailView):
 
         if PermissionPredicate.is_auditor(user):
             return queryset.filter(
-                django_models.Q(audit__lead_auditor=user)
-                | django_models.Q(audit__team_members__user=user)
+                django_models.Q(audit__lead_auditor=user) | django_models.Q(audit__team_members__user=user)
             ).distinct()
 
         if PermissionPredicate.is_client_user(user):
@@ -1086,9 +1039,7 @@ class ObservationDetailView(LoginRequiredMixin, DetailView):
         observation = self.object
         user = self.request.user
 
-        context["can_edit"] = (
-            can_edit_finding(user, observation) and observation.audit.status != "decided"
-        )
+        context["can_edit"] = can_edit_finding(user, observation) and observation.audit.status != "decided"
         context["audit"] = observation.audit
         return context
 
@@ -1185,17 +1136,14 @@ class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         """Get OFI queryset with role-based filtering."""
         user = self.request.user
-        queryset = OpportunityForImprovement.objects.select_related(
-            "audit", "standard", "created_by"
-        )
+        queryset = OpportunityForImprovement.objects.select_related("audit", "standard", "created_by")
 
         if PermissionPredicate.is_cb_admin(user):
             return queryset
 
         if PermissionPredicate.is_auditor(user):
             return queryset.filter(
-                django_models.Q(audit__lead_auditor=user)
-                | django_models.Q(audit__team_members__user=user)
+                django_models.Q(audit__lead_auditor=user) | django_models.Q(audit__team_members__user=user)
             ).distinct()
 
         if PermissionPredicate.is_client_user(user):
@@ -1384,15 +1332,11 @@ class TechnicalReviewView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                     self.request.user,
                     notes=f"Technical review approved by {self.request.user.get_full_name()}",
                 )
-                messages.success(
-                    self.request, "Technical review completed. Audit moved to decision pending."
-                )
+                messages.success(self.request, "Technical review completed. Audit moved to decision pending.")
             except ValidationError as e:
                 messages.error(self.request, f"Error transitioning audit: {e}")
         else:
-            messages.success(
-                self.request, "Technical review saved. Audit remains in technical review status."
-            )
+            messages.success(self.request, "Technical review saved. Audit remains in technical review status.")
 
         return redirect(self.get_success_url())
 
@@ -1433,9 +1377,7 @@ class TechnicalReviewUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
                     self.request.user,
                     notes=f"Technical review approved by {self.request.user.get_full_name()}",
                 )
-                messages.success(
-                    self.request, "Technical review approved. Audit moved to decision pending."
-                )
+                messages.success(self.request, "Technical review approved. Audit moved to decision pending.")
             except ValidationError as e:
                 messages.error(self.request, f"Error transitioning audit: {e}")
         else:
@@ -1589,9 +1531,7 @@ def team_member_add(request, audit_pk):
             # Check for competence warnings (only if user is selected)
             if team_member.user:
                 # Check for warnings related to this team member
-                warnings = AuditorCompetenceWarning.objects.filter(
-                    audit=audit, auditor=team_member.user
-                )
+                warnings = AuditorCompetenceWarning.objects.filter(audit=audit, auditor=team_member.user)
                 if warnings.exists():
                     competence_warnings = list(warnings)
                     messages.warning(
@@ -1640,9 +1580,7 @@ def team_member_edit(request, pk):
         return redirect("audits:audit_detail", pk=audit.pk)
 
     if request.method == "POST":
-        form = AuditTeamMemberForm(
-            request.POST, instance=team_member, audit=audit, user=request.user
-        )
+        form = AuditTeamMemberForm(request.POST, instance=team_member, audit=audit, user=request.user)
         if form.is_valid():
             team_member = form.save()
             messages.success(request, f"Team member {team_member.name} updated successfully.")
@@ -1725,9 +1663,7 @@ def nonconformity_add(request, audit_pk):
             nc.save()
             form.save_m2m()
 
-            messages.success(
-                request, f"{nc.get_category_display()} nonconformity added to clause {nc.clause}."
-            )
+            messages.success(request, f"{nc.get_category_display()} nonconformity added to clause {nc.clause}.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
         form = NonconformityForm(audit=audit)

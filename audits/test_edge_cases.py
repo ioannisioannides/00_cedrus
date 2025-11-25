@@ -41,9 +41,7 @@ class DateValidationTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
     def test_audit_end_date_must_be_after_start_date(self):
         """Test that audit end date must be after or equal to start date."""
@@ -142,9 +140,7 @@ class StatusTransitionTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         self.client_app = Client()
 
@@ -210,9 +206,7 @@ class FileUploadTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         self.audit = AuditService.create_audit(
             organization=self.org,
@@ -258,9 +252,7 @@ class FileUploadTest(TestCase):
         """Test multiple evidence files can be attached."""
         for i in range(3):
             file_content = f"Test file {i}".encode()
-            uploaded_file = SimpleUploadedFile(
-                f"test{i}.txt", file_content, content_type="text/plain"
-            )
+            uploaded_file = SimpleUploadedFile(f"test{i}.txt", file_content, content_type="text/plain")
 
             EvidenceFile.objects.create(
                 audit=self.audit, finding=self.nc, file=uploaded_file, uploaded_by=self.lead_auditor
@@ -299,9 +291,7 @@ class NCCategoryTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         self.audit = AuditService.create_audit(
             organization=self.org,
@@ -380,9 +370,7 @@ class EmptyStringTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         self.audit = AuditService.create_audit(
             organization=self.org,

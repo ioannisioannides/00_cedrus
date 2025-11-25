@@ -288,9 +288,7 @@ class FindingStandardValidationTests(TestCase):
             total_employee_count=50,
         )
         self.std_iso9001 = Standard.objects.create(code="ISO 9001:2015", title="Quality Management")
-        self.std_iso27001 = Standard.objects.create(
-            code="ISO 27001:2013", title="Information Security"
-        )
+        self.std_iso27001 = Standard.objects.create(code="ISO 27001:2013", title="Information Security")
 
         self.cert_iso9001 = Certification.objects.create(
             organization=self.org,

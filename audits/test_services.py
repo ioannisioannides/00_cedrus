@@ -40,9 +40,7 @@ class AuditServiceTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
     def test_create_audit_basic(self):
         """Test basic audit creation."""
@@ -95,9 +93,7 @@ class AuditServiceTest(TestCase):
 
     def test_create_audit_with_multiple_sites(self):
         """Test audit creation with multiple sites."""
-        site2 = Site.objects.create(
-            organization=self.org, site_name="Site 2", site_address="456 St"
-        )
+        site2 = Site.objects.create(organization=self.org, site_name="Site 2", site_address="456 St")
 
         audit = AuditService.create_audit(
             organization=self.org,
@@ -250,9 +246,7 @@ class FindingServiceTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
         self.audit = AuditService.create_audit(
             organization=self.org,
@@ -386,9 +380,7 @@ class FindingServiceTest(TestCase):
             },
         )
 
-        FindingService.verify_nonconformity(
-            nc=nc, user=self.lead_auditor, action="accept", notes="Looks good"
-        )
+        FindingService.verify_nonconformity(nc=nc, user=self.lead_auditor, action="accept", notes="Looks good")
 
         nc.refresh_from_db()
         self.assertEqual(nc.verification_status, "accepted")
@@ -450,13 +442,9 @@ class FindingServiceTest(TestCase):
             },
         )
 
-        FindingService.verify_nonconformity(
-            nc=nc, user=self.lead_auditor, action="accept", notes="Accepted"
-        )
+        FindingService.verify_nonconformity(nc=nc, user=self.lead_auditor, action="accept", notes="Accepted")
 
-        FindingService.verify_nonconformity(
-            nc=nc, user=self.lead_auditor, action="close", notes="Verified effective"
-        )
+        FindingService.verify_nonconformity(nc=nc, user=self.lead_auditor, action="close", notes="Verified effective")
 
         nc.refresh_from_db()
         self.assertEqual(nc.verification_status, "closed")

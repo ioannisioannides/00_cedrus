@@ -51,9 +51,7 @@ class NonconformityFormTests(TestCase):
             created_by=self.auditor,
             lead_auditor=self.auditor,
         )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality management systems - Requirements"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
         # Create certification and link to audit
         self.certification = Certification.objects.create(
             organization=self.org,
@@ -125,9 +123,7 @@ class NonconformityViewTests(TestCase):
             created_by=self.auditor,
         )
 
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality management systems - Requirements"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
         # Create certification and link to audit
         self.certification = Certification.objects.create(
             organization=self.org,
@@ -269,9 +265,7 @@ class ClientResponseTests(TestCase):
             lead_auditor=self.auditor,
         )
 
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality management systems - Requirements"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
         # Create certification and link to audit
         self.certification = Certification.objects.create(
             organization=self.org,
@@ -372,9 +366,7 @@ class AuditorVerificationTests(TestCase):
             lead_auditor=self.auditor,
         )
 
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality management systems - Requirements"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
         # Create certification and link to audit
         self.certification = Certification.objects.create(
             organization=self.org,
@@ -460,9 +452,7 @@ class ObservationViewTests(TestCase):
             lead_auditor=self.auditor,
         )
 
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality management systems - Requirements"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
         # Create certification and link to audit
         self.certification = Certification.objects.create(
             organization=self.org,
@@ -513,9 +503,7 @@ class WorkflowIntegrationTests(TestCase):
             created_by=self.auditor,
         )
 
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality management systems - Requirements"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
         # Create certification and link to audit
         self.certification = Certification.objects.create(
             organization=self.org,

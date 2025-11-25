@@ -47,9 +47,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         )
 
         # Create standard
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
 
         # Create certification
         self.cert = Certification.objects.create(
@@ -60,9 +58,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         )
 
         # Create site
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
 
         # Link client to organization
         self.client_admin.profile.organization = self.org
@@ -123,9 +119,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         return nc
 
     def _transition_audit(self, audit, status):
-        self.client.post(
-            reverse("audits:audit_transition_status", args=[audit.pk, status])
-        )
+        self.client.post(reverse("audits:audit_transition_status", args=[audit.pk, status]))
         audit.refresh_from_db()
         self.assertEqual(audit.status, status)
 

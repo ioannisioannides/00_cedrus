@@ -43,9 +43,7 @@ class MultiSiteEdgeCaseTests(TestCase):
 
     def test_single_site_no_sampling(self):
         """Test that single-site audits don't show sampling info."""
-        site = Site.objects.create(
-            organization=self.org, site_name="Only Site", site_address="123 Main St"
-        )
+        site = Site.objects.create(organization=self.org, site_name="Only Site", site_address="123 Main St")
         self.audit.sites.add(site)
 
         # Single site should not trigger multi-site sampling
@@ -55,9 +53,7 @@ class MultiSiteEdgeCaseTests(TestCase):
         """Test IAF MD1 sampling with large number of sites."""
         # Create 100 sites
         for i in range(100):
-            site = Site.objects.create(
-                organization=self.org, site_name=f"Site {i+1}", site_address=f"Address {i+1}"
-            )
+            site = Site.objects.create(organization=self.org, site_name=f"Site {i+1}", site_address=f"Address {i+1}")
             self.audit.sites.add(site)
 
         result = calculate_sample_size(total_sites=100, is_initial_certification=True)
@@ -67,9 +63,7 @@ class MultiSiteEdgeCaseTests(TestCase):
     def test_exact_square_root_sites(self):
         """Test sampling when site count is perfect square."""
         for i in range(16):  # 16 = 4²
-            site = Site.objects.create(
-                organization=self.org, site_name=f"Site {i+1}", site_address=f"Address {i+1}"
-            )
+            site = Site.objects.create(organization=self.org, site_name=f"Site {i+1}", site_address=f"Address {i+1}")
             self.audit.sites.add(site)
 
         result = calculate_sample_size(total_sites=16, is_initial_certification=True)
@@ -168,9 +162,7 @@ class MultipleNCEdgeCaseTests(TestCase):
             lead_auditor=self.auditor,
         )
 
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality management systems - Requirements"
-        )
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
 
     def test_multiple_major_ncs_block_submission(self):
         """Test that multiple open major NCs block submission."""
@@ -189,9 +181,7 @@ class MultipleNCEdgeCaseTests(TestCase):
             )
 
         self.assertEqual(
-            self.audit.nonconformity_set.filter(
-                category="major", verification_status="open"
-            ).count(),
+            self.audit.nonconformity_set.filter(category="major", verification_status="open").count(),
             3,
         )
 
@@ -289,9 +279,7 @@ class RolePermissionEdgeCaseTests(TestCase):
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
-        self.lead_auditor = User.objects.create_user(
-            username="leadauditor1", password="testpass123"
-        )
+        self.lead_auditor = User.objects.create_user(username="leadauditor1", password="testpass123")
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_group)
 

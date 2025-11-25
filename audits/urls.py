@@ -15,7 +15,6 @@ urlpatterns = [
     path("programs/<int:pk>/", views_program.AuditProgramDetailView.as_view(), name="program_detail"),
     path("programs/<int:pk>/edit/", views_program.AuditProgramUpdateView.as_view(), name="program_update"),
     path("programs/<int:pk>/delete/", views_program.AuditProgramDeleteView.as_view(), name="program_delete"),
-
     # Audit views
     path("", views.AuditListView.as_view(), name="audit_list"),
     path("create/", views.AuditCreateView.as_view(), name="audit_create"),
@@ -47,9 +46,7 @@ urlpatterns = [
     ),
     path("<int:audit_pk>/decision/", views.audit_make_decision, name="audit_make_decision"),
     # Evidence File views
-    path(
-        "<int:audit_pk>/evidence/upload/", views.evidence_file_upload, name="evidence_file_upload"
-    ),
+    path("<int:audit_pk>/evidence/upload/", views.evidence_file_upload, name="evidence_file_upload"),
     path(
         "evidence/<int:file_pk>/download/",
         views.evidence_file_download,
@@ -67,9 +64,7 @@ urlpatterns = [
     ),
     path("nc/<int:pk>/", views.NonconformityDetailView.as_view(), name="nonconformity_detail"),
     path("nc/<int:pk>/edit/", views.NonconformityUpdateView.as_view(), name="nonconformity_update"),
-    path(
-        "nc/<int:pk>/delete/", views.NonconformityDeleteView.as_view(), name="nonconformity_delete"
-    ),
+    path("nc/<int:pk>/delete/", views.NonconformityDeleteView.as_view(), name="nonconformity_delete"),
     # Observation URLs
     path(
         "audit/<int:audit_pk>/observation/create/",
@@ -94,9 +89,7 @@ urlpatterns = [
         name="ofi_create",
     ),
     path("ofi/<int:pk>/", views.OpportunityForImprovementDetailView.as_view(), name="ofi_detail"),
-    path(
-        "ofi/<int:pk>/edit/", views.OpportunityForImprovementUpdateView.as_view(), name="ofi_update"
-    ),
+    path("ofi/<int:pk>/edit/", views.OpportunityForImprovementUpdateView.as_view(), name="ofi_update"),
     path(
         "ofi/<int:pk>/delete/",
         views.OpportunityForImprovementDeleteView.as_view(),
@@ -108,9 +101,7 @@ urlpatterns = [
         views.NonconformityResponseView.as_view(),
         name="nonconformity_respond",
     ),
-    path(
-        "nc/<int:pk>/verify/", views.NonconformityVerifyView.as_view(), name="nonconformity_verify"
-    ),
+    path("nc/<int:pk>/verify/", views.NonconformityVerifyView.as_view(), name="nonconformity_verify"),
     # Technical Review views (ISO 17021 Clause 9.5)
     path(
         "audit/<int:audit_pk>/technical-review/",

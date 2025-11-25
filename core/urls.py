@@ -21,9 +21,7 @@ urlpatterns = [
         views.OrganizationDetailView.as_view(),
         name="organization_detail",
     ),
-    path(
-        "organizations/create/", views.OrganizationCreateView.as_view(), name="organization_create"
-    ),
+    path("organizations/create/", views.OrganizationCreateView.as_view(), name="organization_create"),
     path(
         "organizations/<int:pk>/edit/",
         views.OrganizationUpdateView.as_view(),

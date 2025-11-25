@@ -186,9 +186,7 @@ class TeamMemberViewTests(TestCase):
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
-        self.assertTrue(
-            AuditTeamMember.objects.filter(audit=self.audit, user=self.auditor_user).exists()
-        )
+        self.assertTrue(AuditTeamMember.objects.filter(audit=self.audit, user=self.auditor_user).exists())
 
     def test_team_member_add_post_external_expert(self):
         """Test adding external expert via POST."""
@@ -203,9 +201,7 @@ class TeamMemberViewTests(TestCase):
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(
-            AuditTeamMember.objects.filter(audit=self.audit, name="Jane External").exists()
-        )
+        self.assertTrue(AuditTeamMember.objects.filter(audit=self.audit, name="Jane External").exists())
 
     def test_team_member_edit_as_cb_admin(self):
         """Test cb_admin can edit team members."""
@@ -345,9 +341,7 @@ class MultiSiteSamplingTests(TestCase):
 
     def test_calculate_sample_size_with_high_risk(self):
         """Test IAF MD1 with high-risk sites adjustment."""
-        result = calculate_sample_size(
-            total_sites=10, high_risk_sites=5, is_initial_certification=True
-        )
+        result = calculate_sample_size(total_sites=10, high_risk_sites=5, is_initial_certification=True)
         # Base: √10 ≈ 3.16 → 4
         # Risk adjustment: 5 high-risk sites → +1 (per 5 sites)
         self.assertEqual(result["minimum_sites"], 5)
@@ -381,9 +375,7 @@ class MultiSiteSamplingTests(TestCase):
 
         # Add multiple sites
         for i in range(5):
-            site = Site.objects.create(
-                organization=org, site_name=f"Site {i+1}", site_address=f"Address {i+1}"
-            )
+            site = Site.objects.create(organization=org, site_name=f"Site {i+1}", site_address=f"Address {i+1}")
             audit.sites.add(site)
 
         url = reverse("audits:audit_detail", kwargs={"pk": audit.pk})

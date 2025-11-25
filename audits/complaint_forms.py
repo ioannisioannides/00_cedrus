@@ -1,6 +1,7 @@
 """
 Forms for Complaints and Appeals (Phase 2A).
 """
+
 from django import forms
 
 from audits.models import Appeal, Complaint
@@ -8,6 +9,7 @@ from audits.models import Appeal, Complaint
 
 class ComplaintForm(forms.ModelForm):
     """Form for submitting a complaint."""
+
     class Meta:
         model = Complaint
         fields = [
@@ -22,8 +24,10 @@ class ComplaintForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 5}),
         }
 
+
 class AppealForm(forms.ModelForm):
     """Form for submitting an appeal."""
+
     class Meta:
         model = Appeal
         fields = [

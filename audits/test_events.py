@@ -62,9 +62,7 @@ class EventSystemTest(TestCase):
             certificate_status="active",
         )
 
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Site 1", site_address="123 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
     def tearDown(self):
         """Clean up event handlers."""
@@ -142,12 +140,8 @@ class EventSystemTest(TestCase):
         self.assertEqual(len(self.events_received), 2)
 
         # Check for status change event
-        status_change_events = [
-            e for e in self.events_received if "old_status" in e and e["old_status"] == "draft"
-        ]
-        self.assertEqual(
-            len(status_change_events), 2
-        )  # One in AUDIT_UPDATED, one in STATUS_CHANGED
+        status_change_events = [e for e in self.events_received if "old_status" in e and e["old_status"] == "draft"]
+        self.assertEqual(len(status_change_events), 2)  # One in AUDIT_UPDATED, one in STATUS_CHANGED
 
     def test_finding_created_event(self):
         """Test FINDING_CREATED event is emitted."""
@@ -271,9 +265,7 @@ class EventSystemTest(TestCase):
 
         self.events_received.clear()
 
-        FindingService.verify_nonconformity(
-            nc=nc, user=self.lead_auditor, action="accept", notes="Accepted"
-        )
+        FindingService.verify_nonconformity(nc=nc, user=self.lead_auditor, action="accept", notes="Accepted")
 
         self.assertEqual(len(self.events_received), 1)
         event_payload = self.events_received[0]
@@ -367,15 +359,11 @@ class EventSystemTest(TestCase):
             },
         )
 
-        FindingService.verify_nonconformity(
-            nc=nc, user=self.lead_auditor, action="accept", notes="Accepted"
-        )
+        FindingService.verify_nonconformity(nc=nc, user=self.lead_auditor, action="accept", notes="Accepted")
 
         self.events_received.clear()
 
-        FindingService.verify_nonconformity(
-            nc=nc, user=self.lead_auditor, action="close", notes="Verified effective"
-        )
+        FindingService.verify_nonconformity(nc=nc, user=self.lead_auditor, action="close", notes="Verified effective")
 
         self.assertEqual(len(self.events_received), 1)
         event_payload = self.events_received[0]

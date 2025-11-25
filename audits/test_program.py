@@ -15,17 +15,13 @@ class AuditProgramTests(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.org = Organization.objects.create(
-            name="Test Org", 
-            customer_id="CUST-001",
-            total_employee_count=10
-        )
-        
+        self.org = Organization.objects.create(name="Test Org", customer_id="CUST-001", total_employee_count=10)
+
         # Create CB Admin
         self.cb_admin = User.objects.create_user(username="cb_admin", password="password")
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
-        
+
         # Create Client Admin
         self.client_admin = User.objects.create_user(username="client_admin", password="password")
         client_group = Group.objects.create(name="client_admin")
@@ -56,10 +52,11 @@ class AuditProgramTests(TestCase):
         # So this test might fail if I don't fix the view or setup profile for CB Admin.
         # Let's give CB Admin a profile with organization for this test.
         from accounts.models import Profile
+
         profile, _ = Profile.objects.get_or_create(user=self.cb_admin)
         profile.organization = self.org
         profile.save()
-        
+
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(AuditProgram.objects.filter(title="2025 Program").exists())
@@ -83,10 +80,7 @@ class AuditProgramTests(TestCase):
     def test_list_programs(self):
         """Test listing programs."""
         AuditProgram.objects.create(
-            organization=self.org,
-            title="Existing Program",
-            year=2024,
-            created_by=self.cb_admin
+            organization=self.org, title="Existing Program", year=2024, created_by=self.cb_admin
         )
         self.client.login(username="client_admin", password="password")
         url = reverse("audits:program_list")

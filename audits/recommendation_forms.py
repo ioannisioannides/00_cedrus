@@ -44,22 +44,16 @@ class AuditRecommendationForm(forms.ModelForm):
         revocation_certificates = cleaned_data.get("revocation_certificates", "").strip()
 
         if special_audit_required and not special_audit_details:
-            raise ValidationError(
-                {"special_audit_details": "Details are required when special audit is recommended."}
-            )
+            raise ValidationError({"special_audit_details": "Details are required when special audit is recommended."})
 
         if suspension_recommended and not suspension_certificates:
             raise ValidationError(
-                {
-                    "suspension_certificates": "Certificate list is required when suspension is recommended."
-                }
+                {"suspension_certificates": "Certificate list is required when suspension is recommended."}
             )
 
         if revocation_recommended and not revocation_certificates:
             raise ValidationError(
-                {
-                    "revocation_certificates": "Certificate list is required when revocation is recommended."
-                }
+                {"revocation_certificates": "Certificate list is required when revocation is recommended."}
             )
 
         return cleaned_data

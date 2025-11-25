@@ -40,9 +40,7 @@ class AuditModelTest(TestCase):
             certification_scope="Test scope",
             certificate_status="active",
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Test Site", site_address="456 St"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Test Site", site_address="456 St")
         self.lead_auditor = User.objects.create_user(username="lead", password="pass123")
         lead_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_group)

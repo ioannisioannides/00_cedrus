@@ -36,9 +36,7 @@ class AuditorQualificationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Filter auditors only for the auditor field
-        self.fields["auditor"].queryset = User.objects.filter(
-            groups__name__in=["auditor", "lead_auditor"]
-        ).distinct()
+        self.fields["auditor"].queryset = User.objects.filter(groups__name__in=["auditor", "lead_auditor"]).distinct()
 
 
 class AuditorTrainingRecordForm(forms.ModelForm):

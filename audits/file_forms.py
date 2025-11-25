@@ -31,9 +31,7 @@ class EvidenceFileForm(forms.ModelForm):
         if audit:
             self.fields["finding"].queryset = audit.nonconformity_set.all()
             self.fields["finding"].required = False
-            self.fields["finding"].empty_label = (
-                "General audit evidence (not linked to specific NC)"
-            )
+            self.fields["finding"].empty_label = "General audit evidence (not linked to specific NC)"
         else:
             from .models import Nonconformity
 
@@ -50,8 +48,6 @@ class EvidenceFileForm(forms.ModelForm):
             allowed_extensions = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png"]
             file_ext = file.name.lower().split(".")[-1] if "." in file.name else ""
             if file_ext not in [ext.lstrip(".") for ext in allowed_extensions]:
-                raise forms.ValidationError(
-                    f"File type not allowed. Allowed types: {', '.join(allowed_extensions)}"
-                )
+                raise forms.ValidationError(f"File type not allowed. Allowed types: {', '.join(allowed_extensions)}")
 
         return file

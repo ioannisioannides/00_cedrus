@@ -46,7 +46,9 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("✓ Created user groups"))
         return groups
 
-    def _create_user(self, username, email, first_name, last_name, group):  # pylint: disable=too-many-positional-arguments
+    def _create_user(
+        self, username, email, first_name, last_name, group
+    ):  # pylint: disable=too-many-positional-arguments
         user, created = User.objects.get_or_create(
             username=username,
             defaults={
@@ -59,17 +61,13 @@ class Command(BaseCommand):
             user.set_password("password123")
             user.save()
             user.groups.add(group)
-            self.stdout.write(
-                self.style.SUCCESS(f"✓ Created {first_name} {last_name} ({username}/password123)")
-            )
+            self.stdout.write(self.style.SUCCESS(f"✓ Created {first_name} {last_name} ({username}/password123)"))
         else:
             self.stdout.write(self.style.WARNING(f"  {first_name} {last_name} already exists"))
         return user
 
     def _create_users(self, groups):
-        cb_admin = self._create_user(
-            "cbadmin", "cbadmin@cedrus.example", "CB", "Administrator", groups["cb_admin"]
-        )
+        cb_admin = self._create_user("cbadmin", "cbadmin@cedrus.example", "CB", "Administrator", groups["cb_admin"])
         lead_auditor = self._create_user(
             "auditor1", "auditor1@cedrus.example", "Lead", "Auditor", groups["lead_auditor"]
         )

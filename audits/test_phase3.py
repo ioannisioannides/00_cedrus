@@ -49,12 +49,8 @@ class NonconformityCreationTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -123,9 +119,7 @@ class NonconformityCreationTests(TestCase):
 
     def test_nonconformity_requires_standard_from_audit(self):
         """Test that NC standard must be from audit certifications."""
-        other_standard = Standard.objects.create(
-            code="ISO 14001:2015", title="Environmental Management Systems"
-        )
+        other_standard = Standard.objects.create(code="ISO 14001:2015", title="Environmental Management Systems")
 
         form = NonconformityForm(
             audit=self.audit,
@@ -165,9 +159,7 @@ class NonconformityCreationTests(TestCase):
         self.audit.save()
 
         self.client.login(username="leadaud", password="test")
-        response = self.client.get(
-            reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
-        )
+        response = self.client.get(reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk}))
 
         # Should be forbidden (403) - test_func blocks this
         # Audits in "closed" status are closed and cannot have new findings added
@@ -193,12 +185,8 @@ class ObservationCreationTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -276,12 +264,8 @@ class OpportunityForImprovementTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -353,12 +337,8 @@ class ClientResponsePortalTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -460,12 +440,8 @@ class AuditorVerificationWorkflowTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -561,12 +537,8 @@ class FindingsListViewTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -695,12 +667,8 @@ class StatusWorkflowEnforcementTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
@@ -854,12 +822,8 @@ class Phase3IntegrationTests(TestCase):
             customer_id="ORG001",
             total_employee_count=50,
         )
-        self.site = Site.objects.create(
-            organization=self.org, site_name="Main Site", site_address="123 Test St"
-        )
-        self.standard = Standard.objects.create(
-            code="ISO 9001:2015", title="Quality Management Systems"
-        )
+        self.site = Site.objects.create(organization=self.org, site_name="Main Site", site_address="123 Test St")
+        self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
         self.certification = Certification.objects.create(
             organization=self.org,
             standard=self.standard,

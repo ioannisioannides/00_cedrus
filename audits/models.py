@@ -10,6 +10,7 @@ This app contains the core audit workflow models:
 - AuditRecommendation: Final recommendations
 - EvidenceFile: File attachments
 """
+
 # pylint: disable=too-many-lines
 
 from django.contrib.auth.models import User
@@ -32,18 +33,16 @@ class AuditProgram(models.Model):
         ("cancelled", "Cancelled"),
     ]
 
-    organization = models.ForeignKey(
-        "core.Organization", on_delete=models.CASCADE, related_name="audit_programs"
-    )
+    organization = models.ForeignKey("core.Organization", on_delete=models.CASCADE, related_name="audit_programs")
     title = models.CharField(max_length=255, help_text="Program title (e.g., '2025 Internal Audit Program')")
     year = models.PositiveIntegerField(help_text="Program year")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
-    
+
     objectives = models.TextField(help_text="Audit program objectives (ISO 19011 5.2)")
     risks_opportunities = models.TextField(
         help_text="Risks and opportunities associated with the audit program (ISO 19011 5.3)"
     )
-    
+
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="audit_programs_created")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -98,20 +97,14 @@ class Audit(models.Model):
         related_name="audits",
         help_text="Audit program this audit belongs to",
     )
-    organization = models.ForeignKey(
-        "core.Organization", on_delete=models.CASCADE, related_name="audits"
-    )
+    organization = models.ForeignKey("core.Organization", on_delete=models.CASCADE, related_name="audits")
     certifications = models.ManyToManyField(
         "core.Certification",
         related_name="audits",
         help_text="Certifications covered by this audit",
     )
-    sites = models.ManyToManyField(
-        "core.Site", related_name="audits", help_text="Sites covered by this audit"
-    )
-    audit_type = models.CharField(
-        max_length=20, choices=AUDIT_TYPE_CHOICES, help_text="Type of audit"
-    )
+    sites = models.ManyToManyField("core.Site", related_name="audits", help_text="Sites covered by this audit")
+    audit_type = models.CharField(max_length=20, choices=AUDIT_TYPE_CHOICES, help_text="Type of audit")
     total_audit_date_from = models.DateField(help_text="Audit start date")
     total_audit_date_to = models.DateField(help_text="Audit end date")
 
@@ -176,9 +169,7 @@ class Audit(models.Model):
         if self.total_audit_date_from:
             one_year_ahead = timezone.now().date() + timedelta(days=365)
             if self.total_audit_date_from > one_year_ahead:
-                errors["total_audit_date_from"] = (
-                    "Audit start date cannot be more than 1 year in the future."
-                )
+                errors["total_audit_date_from"] = "Audit start date cannot be more than 1 year in the future."
 
         # Validate audit sequence - Stage 2 must follow Stage 1
         if self.audit_type == "stage2" and self.organization:
@@ -188,9 +179,7 @@ class Audit(models.Model):
             ).exists()
 
             if not previous_stage1:
-                errors["audit_type"] = (
-                    "Stage 2 audit requires a completed Stage 1 audit for this organization."
-                )
+                errors["audit_type"] = "Stage 2 audit requires a completed Stage 1 audit for this organization."
 
         # Validate surveillance audits - require previous certification
         if self.audit_type == "surveillance" and self.organization and self.pk:
@@ -198,9 +187,7 @@ class Audit(models.Model):
             has_active_cert = self.certifications.filter(certificate_status="active").exists()
 
             if not has_active_cert:
-                errors["audit_type"] = (
-                    "Surveillance audit requires at least one active certification."
-                )
+                errors["audit_type"] = "Surveillance audit requires at least one active certification."
 
         if errors:
             raise ValidationError(errors)
@@ -211,17 +198,13 @@ class Audit(models.Model):
             invalid_certs = self.certifications.exclude(organization=self.organization)
             if invalid_certs.exists():
                 raise ValidationError(
-                    {
-                        "certifications": f"All certifications must belong to {self.organization.name}."
-                    }
+                    {"certifications": f"All certifications must belong to {self.organization.name}."}
                 )
 
             # Check sites (only after save since it's M2M)
             invalid_sites = self.sites.exclude(organization=self.organization)
             if invalid_sites.exists():
-                raise ValidationError(
-                    {"sites": f"All sites must belong to {self.organization.name}."}
-                )
+                raise ValidationError({"sites": f"All sites must belong to {self.organization.name}."})
 
         # Validate that lead_auditor has proper role
         if self.lead_auditor:
@@ -232,8 +215,7 @@ class Audit(models.Model):
                 raise ValidationError(
                     {
                         "lead_auditor": (
-                            f"{self.lead_auditor.username} does not have lead_auditor, "
-                            "auditor, or cb_admin role."
+                            f"{self.lead_auditor.username} does not have lead_auditor, " "auditor, or cb_admin role."
                         )
                     }
                 )
@@ -340,9 +322,7 @@ class AuditChanges(models.Model):
     change_of_name = models.BooleanField(default=False)
     change_of_scope = models.BooleanField(default=False)
     change_of_sites = models.BooleanField(default=False)
-    change_of_ms_rep = models.BooleanField(
-        default=False, help_text="Change of Management System Representative"
-    )
+    change_of_ms_rep = models.BooleanField(default=False, help_text="Change of Management System Representative")
     change_of_signatory = models.BooleanField(default=False)
     change_of_employee_count = models.BooleanField(default=False)
     change_of_contact_info = models.BooleanField(default=False)
@@ -366,22 +346,12 @@ class AuditPlanReview(models.Model):
     """
 
     audit = models.OneToOneField(Audit, on_delete=models.CASCADE, related_name="plan_review")
-    deviations_yes_no = models.BooleanField(
-        default=False, help_text="Were there deviations from the audit plan?"
-    )
+    deviations_yes_no = models.BooleanField(default=False, help_text="Were there deviations from the audit plan?")
     deviations_details = models.TextField(blank=True, help_text="Details of deviations")
-    issues_affecting_yes_no = models.BooleanField(
-        default=False, help_text="Were there issues affecting the audit?"
-    )
-    issues_affecting_details = models.TextField(
-        blank=True, help_text="Details of issues affecting the audit"
-    )
-    next_audit_date_from = models.DateField(
-        null=True, blank=True, help_text="Proposed next audit start date"
-    )
-    next_audit_date_to = models.DateField(
-        null=True, blank=True, help_text="Proposed next audit end date"
-    )
+    issues_affecting_yes_no = models.BooleanField(default=False, help_text="Were there issues affecting the audit?")
+    issues_affecting_details = models.TextField(blank=True, help_text="Details of issues affecting the audit")
+    next_audit_date_from = models.DateField(null=True, blank=True, help_text="Proposed next audit start date")
+    next_audit_date_to = models.DateField(null=True, blank=True, help_text="Proposed next audit end date")
 
     class Meta:
         verbose_name = "Audit Plan Review"
@@ -409,9 +379,7 @@ class AuditSummary(models.Model):
     scope_appropriate = models.BooleanField(default=False)
     scope_comments = models.TextField(blank=True)
 
-    ms_meets_requirements = models.BooleanField(
-        default=False, help_text="Management system meets requirements"
-    )
+    ms_meets_requirements = models.BooleanField(default=False, help_text="Management system meets requirements")
     ms_comments = models.TextField(blank=True)
 
     management_review_effective = models.BooleanField(default=False)
@@ -486,7 +454,7 @@ class Finding(models.Model):
 
         # Validate that standard belongs to one of the audit's certifications
         # Only validate if audit is available (not excluded from validation)
-        if self.standard and hasattr(self, 'audit') and self.audit:
+        if self.standard and hasattr(self, "audit") and self.audit:
             # Get standards from audit's certifications
             audit_standards = self.audit.certifications.values_list("standard", flat=True)
 
@@ -498,11 +466,9 @@ class Finding(models.Model):
 
         # Validate that site belongs to the audit's organization
         # Only validate if audit is available
-        if self.site and hasattr(self, 'audit') and self.audit:
+        if self.site and hasattr(self, "audit") and self.audit:
             if self.site.organization != self.audit.organization:
-                errors["site"] = (
-                    f"Site {self.site.site_name} does not belong to {self.audit.organization.name}."
-                )
+                errors["site"] = f"Site {self.site.site_name} does not belong to {self.audit.organization.name}."
 
         if errors:
             raise ValidationError(errors)
@@ -528,9 +494,7 @@ class Nonconformity(Finding):
         ("closed", "Closed"),
     ]
 
-    category = models.CharField(
-        max_length=10, choices=CATEGORY_CHOICES, help_text="Major or minor nonconformity"
-    )
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, help_text="Major or minor nonconformity")
     objective_evidence = models.TextField(help_text="Objective evidence of the nonconformity")
     statement_of_nc = models.TextField(help_text="Statement of the nonconformity")
     auditor_explanation = models.TextField(help_text="Auditor's explanation")
@@ -538,22 +502,14 @@ class Nonconformity(Finding):
     # Client response fields (editable by client)
     client_root_cause = models.TextField(blank=True, help_text="Client's root cause analysis")
     client_correction = models.TextField(blank=True, help_text="Client's immediate correction")
-    client_corrective_action = models.TextField(
-        blank=True, help_text="Client's corrective action plan"
-    )
+    client_corrective_action = models.TextField(blank=True, help_text="Client's corrective action plan")
     due_date = models.DateField(null=True, blank=True, help_text="Due date for corrective action")
 
     # Verification fields
-    verification_status = models.CharField(
-        max_length=20, choices=VERIFICATION_STATUS_CHOICES, default="open"
-    )
-    verified_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="ncs_verified"
-    )
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default="open")
+    verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="ncs_verified")
     verified_at = models.DateTimeField(null=True, blank=True)
-    verification_notes = models.TextField(
-        blank=True, help_text="Notes from the auditor during verification"
-    )
+    verification_notes = models.TextField(blank=True, help_text="Notes from the auditor during verification")
 
     # Phase 2: Root cause categorization
     root_cause_categories = models.ManyToManyField(
@@ -621,9 +577,7 @@ class AuditRecommendation(models.Model):
 
     audit = models.OneToOneField(Audit, on_delete=models.CASCADE, related_name="recommendation")
     special_audit_required = models.BooleanField(default=False)
-    special_audit_details = models.TextField(
-        blank=True, help_text="Details of special audit requirements"
-    )
+    special_audit_details = models.TextField(blank=True, help_text="Details of special audit requirements")
     suspension_recommended = models.BooleanField(default=False)
     suspension_certificates = models.TextField(
         blank=True, help_text="List of certificates to suspend (simple text for now)"
@@ -654,9 +608,7 @@ class AuditStatusLog(models.Model):
     audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name="status_logs")
     from_status = models.CharField(max_length=30, help_text="Previous status")
     to_status = models.CharField(max_length=30, help_text="New status")
-    changed_by = models.ForeignKey(
-        User, on_delete=models.PROTECT, related_name="audit_status_changes"
-    )
+    changed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="audit_status_changes")
     changed_at = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, help_text="Notes about this transition")
 
@@ -676,6 +628,7 @@ class AuditStatusLog(models.Model):
 # ---------------------------------------------------------------------------
 # Phase 2A: Complaints & Appeals (ISO 17021-1 Clause 9.8)
 # ---------------------------------------------------------------------------
+
 
 class Complaint(models.Model):
     """Formal complaint management record (ISO 17021-1 Clause 9.8)."""
@@ -803,21 +756,13 @@ class TechnicalReview(models.Model):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending")
 
     # ISO 17021-1 Clause 9.4.8 requirements checklist
-    scope_verified = models.BooleanField(
-        default=False, help_text="Audit scope clearly defined and verified"
-    )
+    scope_verified = models.BooleanField(default=False, help_text="Audit scope clearly defined and verified")
     objectives_verified = models.BooleanField(default=False, help_text="Audit objectives met")
-    findings_reviewed = models.BooleanField(
-        default=False, help_text="All findings reviewed and properly documented"
-    )
-    conclusion_clear = models.BooleanField(
-        default=False, help_text="Audit conclusion is clear and justified"
-    )
+    findings_reviewed = models.BooleanField(default=False, help_text="All findings reviewed and properly documented")
+    conclusion_clear = models.BooleanField(default=False, help_text="Audit conclusion is clear and justified")
 
     reviewer_notes = models.TextField(blank=True, help_text="Technical reviewer's notes")
-    clarification_requested = models.TextField(
-        blank=True, help_text="Clarifications requested from audit team"
-    )
+    clarification_requested = models.TextField(blank=True, help_text="Clarifications requested from audit team")
 
     class Meta:
         verbose_name = "Technical Review"
@@ -843,9 +788,7 @@ class CertificationDecision(models.Model):
         ("special_audit", "Require Special Audit"),
     ]
 
-    audit = models.OneToOneField(
-        Audit, on_delete=models.CASCADE, related_name="certification_decision"
-    )
+    audit = models.OneToOneField(Audit, on_delete=models.CASCADE, related_name="certification_decision")
     decision_maker = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
@@ -853,9 +796,7 @@ class CertificationDecision(models.Model):
         help_text="Person making final certification decision",
     )
     decided_at = models.DateTimeField(auto_now_add=True)
-    decision = models.CharField(
-        max_length=30, choices=DECISION_CHOICES, help_text="Final certification decision"
-    )
+    decision = models.CharField(max_length=30, choices=DECISION_CHOICES, help_text="Final certification decision")
     decision_notes = models.TextField(help_text="Justification for the decision")
 
     # Link to affected certifications
@@ -877,6 +818,7 @@ class CertificationDecision(models.Model):
 # ---------------------------------------------------------------------------
 # Phase 2B: Remote Audit & Transfer Certification & Pre-Audit Docs
 # ---------------------------------------------------------------------------
+
 
 class RemoteAuditLog(models.Model):
     """IAF MD4: Track remote audit ICT-enabled activities."""
@@ -1023,9 +965,7 @@ class EvidenceFile(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     # GDPR/Retention policy (Board approved 7 years default)
-    retention_years = models.PositiveIntegerField(
-        default=7, help_text="Number of years to retain this evidence"
-    )
+    retention_years = models.PositiveIntegerField(default=7, help_text="Number of years to retain this evidence")
     purge_after = models.DateField(
         null=True,
         blank=True,
@@ -1057,9 +997,7 @@ class EvidenceFile(models.Model):
             max_size = 10 * 1024 * 1024  # 10MB in bytes
             if self.file.size > max_size:
                 raise ValidationError(
-                    {
-                        "file": f"File size must not exceed 10MB. Current size: {self.file.size / (1024 * 1024):.2f}MB"
-                    }
+                    {"file": f"File size must not exceed 10MB. Current size: {self.file.size / (1024 * 1024):.2f}MB"}
                 )
 
             # Validate file type
@@ -1117,12 +1055,8 @@ class RootCauseCategory(models.Model):
     """
 
     name = models.CharField(max_length=255, help_text="Category name (e.g., 'Resource inadequacy')")
-    code = models.CharField(
-        max_length=50, unique=True, help_text="Unique code for this category (e.g., 'RC-001')"
-    )
-    description = models.TextField(
-        blank=True, help_text="Detailed description of this root cause category"
-    )
+    code = models.CharField(max_length=50, unique=True, help_text="Unique code for this category (e.g., 'RC-001')")
+    description = models.TextField(blank=True, help_text="Detailed description of this root cause category")
     parent = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -1131,9 +1065,7 @@ class RootCauseCategory(models.Model):
         related_name="subcategories",
         help_text="Parent category for hierarchical organization",
     )
-    is_active = models.BooleanField(
-        default=True, help_text="Whether this category is currently in use"
-    )
+    is_active = models.BooleanField(default=True, help_text="Whether this category is currently in use")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1167,20 +1099,14 @@ class FindingRecurrence(models.Model):
         related_name="recurrence_data",
         help_text="The finding this recurrence data relates to",
     )
-    recurrence_count = models.PositiveIntegerField(
-        default=1, help_text="Number of times this issue has recurred"
-    )
+    recurrence_count = models.PositiveIntegerField(default=1, help_text="Number of times this issue has recurred")
     first_occurrence = models.DateField(help_text="Date of first occurrence of this finding")
     last_occurrence = models.DateField(help_text="Date of most recent occurrence")
-    previous_audits = models.TextField(
-        blank=True, help_text="References to previous audits where this issue was found"
-    )
+    previous_audits = models.TextField(blank=True, help_text="References to previous audits where this issue was found")
     corrective_actions_effective = models.BooleanField(
         default=False, help_text="Whether previous corrective actions were effective"
     )
-    resolution_notes = models.TextField(
-        blank=True, help_text="Notes on resolution attempts and outcomes"
-    )
+    resolution_notes = models.TextField(blank=True, help_text="Notes on resolution attempts and outcomes")
     escalation_required = models.BooleanField(
         default=False, help_text="Flag for findings requiring management attention"
     )
@@ -1237,9 +1163,7 @@ class AuditorCompetenceWarning(models.Model):
         related_name="competence_warnings_received",
         help_text="Auditor this warning is about",
     )
-    warning_type = models.CharField(
-        max_length=30, choices=WARNING_TYPE_CHOICES, help_text="Type of competence warning"
-    )
+    warning_type = models.CharField(max_length=30, choices=WARNING_TYPE_CHOICES, help_text="Type of competence warning")
     severity = models.CharField(
         max_length=20,
         choices=SEVERITY_CHOICES,
@@ -1254,9 +1178,7 @@ class AuditorCompetenceWarning(models.Model):
         related_name="competence_warnings_issued",
         help_text="CB staff member who issued this warning",
     )
-    resolved_at = models.DateTimeField(
-        null=True, blank=True, help_text="When this warning was resolved"
-    )
+    resolved_at = models.DateTimeField(null=True, blank=True, help_text="When this warning was resolved")
     resolution_notes = models.TextField(blank=True, help_text="How this warning was resolved")
     acknowledged_by_auditor = models.BooleanField(
         default=False, help_text="Whether the auditor has acknowledged this warning"

@@ -38,7 +38,7 @@ class AuditorCompetenceTests(TestCase):
             issuing_body="IRCA",
             certificate_number="12345",
             issue_date=date.today() - timedelta(days=100),
-            status="active"
+            status="active",
         )
         qual.standards.add(self.standard)
 
@@ -55,11 +55,9 @@ class AuditorCompetenceTests(TestCase):
             total_audit_date_from=date.today(),
             total_audit_date_to=date.today(),
             created_by=self.auditor,
-            lead_auditor=self.auditor
+            lead_auditor=self.auditor,
         )
-        cert = Certification.objects.create(
-            organization=self.org, standard=self.standard, certification_scope="Scope"
-        )
+        cert = Certification.objects.create(organization=self.org, standard=self.standard, certification_scope="Scope")
         audit.certifications.add(cert)
 
         # Auditor has NO qualifications yet -> Should fail
@@ -74,7 +72,7 @@ class AuditorCompetenceTests(TestCase):
             issuing_body="IRCA",
             certificate_number="12345",
             issue_date=date.today(),
-            status="active"
+            status="active",
         )
         qual.standards.add(self.standard)
 
@@ -91,7 +89,7 @@ class AuditorCompetenceTests(TestCase):
             organization=self.org,
             relationship_type="former_employee",
             description="Worked there 2 years ago",
-            impartiality_risk="high"
+            impartiality_risk="high",
         )
         self.assertEqual(coi.impartiality_risk, "high")
         self.assertTrue(coi.is_active)
@@ -110,7 +108,7 @@ class CertificateLifecycleTests(TestCase):
             certification_scope="Environmental Management",
             certificate_status="draft",
             issue_date=date.today(),
-            expiry_date=date.today() + timedelta(days=1095)
+            expiry_date=date.today() + timedelta(days=1095),
         )
         self.audit = Audit.objects.create(
             organization=self.org,
@@ -118,17 +116,14 @@ class CertificateLifecycleTests(TestCase):
             total_audit_date_from=date.today(),
             total_audit_date_to=date.today(),
             created_by=self.cb_admin,
-            lead_auditor=self.cb_admin
+            lead_auditor=self.cb_admin,
         )
         self.audit.certifications.add(self.cert)
 
     def test_certificate_history_creation(self):
         """Test that a certification decision creates a history entry."""
         decision = CertificationDecision.objects.create(
-            audit=self.audit,
-            decision_maker=self.cb_admin,
-            decision="grant",
-            decision_notes="All good"
+            audit=self.audit, decision_maker=self.cb_admin, decision="grant", decision_notes="All good"
         )
 
         # Simulate service call (usually triggered by signal or view)
@@ -142,10 +137,7 @@ class CertificateLifecycleTests(TestCase):
     def test_surveillance_schedule_generation(self):
         """Test that a surveillance schedule is automatically generated."""
         decision = CertificationDecision.objects.create(
-            audit=self.audit,
-            decision_maker=self.cb_admin,
-            decision="grant",
-            decision_notes="Granting certification"
+            audit=self.audit, decision_maker=self.cb_admin, decision="grant", decision_notes="Granting certification"
         )
 
         CertificateService.record_decision(decision)
@@ -173,7 +165,7 @@ class ComplaintsAndAppealsTests(TestCase):
             "complainant_email": "john@example.com",
             "organization": self.org,
             "complaint_type": "auditor_behavior",
-            "description": "Auditor was rude."
+            "description": "Auditor was rude.",
         }
 
         complaint = ComplaintService.create_complaint(data, self.user)
@@ -189,7 +181,7 @@ class ComplaintsAndAppealsTests(TestCase):
             complainant_name="Jane Doe",
             complaint_type="other",
             description="Test",
-            submitted_by=self.user
+            submitted_by=self.user,
         )
 
         updated_complaint = ComplaintService.update_complaint_status(
@@ -201,10 +193,7 @@ class ComplaintsAndAppealsTests(TestCase):
 
     def test_appeal_creation_service(self):
         """Test creating an appeal."""
-        data = {
-            "appellant_name": "John Doe",
-            "grounds": "Disagree with decision"
-        }
+        data = {"appellant_name": "John Doe", "grounds": "Disagree with decision"}
 
         appeal = ComplaintService.create_appeal(data, self.user)
 
@@ -214,10 +203,7 @@ class ComplaintsAndAppealsTests(TestCase):
     def test_appeal_decision(self):
         """Test recording an appeal decision."""
         appeal = Appeal.objects.create(
-            appeal_number="APP-TEST",
-            appellant_name="Jane Doe",
-            grounds="Test",
-            submitted_by=self.user
+            appeal_number="APP-TEST", appellant_name="Jane Doe", grounds="Test", submitted_by=self.user
         )
 
         decided_appeal = ComplaintService.decide_appeal(

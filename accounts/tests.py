@@ -14,9 +14,7 @@ class ProfileModelTest(TestCase):
     """Test Profile model methods and relationships."""
 
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", email="test@example.com", password="testpass123"
-        )
+        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
         self.org = Organization.objects.create(
             name="Test Org",
             registered_address="123 Test St",
@@ -130,9 +128,7 @@ class AuthenticationTest(TestCase):
 
     def test_login_missing_fields(self):
         """Test login with missing fields."""
-        response = self.client.post(
-            reverse("accounts:login"), {"username": "testuser"}, follow=True
-        )
+        response = self.client.post(reverse("accounts:login"), {"username": "testuser"}, follow=True)
         self.assertFalse(response.context["user"].is_authenticated)
 
     def test_logout(self):
@@ -250,14 +246,10 @@ class DashboardAccessTest(TestCase):
     def test_dashboard_requires_login(self):
         """Test that dashboards require authentication."""
         response = self.client.get(reverse("accounts:dashboard"))
-        self.assertRedirects(
-            response, f"{reverse('accounts:login')}?next={reverse('accounts:dashboard')}"
-        )
+        self.assertRedirects(response, f"{reverse('accounts:login')}?next={reverse('accounts:dashboard')}")
 
         response = self.client.get(reverse("accounts:dashboard_cb"))
-        self.assertRedirects(
-            response, f"{reverse('accounts:login')}?next={reverse('accounts:dashboard_cb')}"
-        )
+        self.assertRedirects(response, f"{reverse('accounts:login')}?next={reverse('accounts:dashboard_cb')}")
 
     def test_cb_dashboard_shows_stats(self):
         """Test CB dashboard shows organization and audit counts."""

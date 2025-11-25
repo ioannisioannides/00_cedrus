@@ -43,15 +43,9 @@ def dashboard(request):
     # Check groups in priority order
     if user.groups.filter(name="cb_admin").exists():
         return redirect("accounts:dashboard_cb")
-    if (
-        user.groups.filter(name="lead_auditor").exists()
-        or user.groups.filter(name="auditor").exists()
-    ):
+    if user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists():
         return redirect("accounts:dashboard_auditor")
-    if (
-        user.groups.filter(name="client_admin").exists()
-        or user.groups.filter(name="client_user").exists()
-    ):
+    if user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists():
         return redirect("accounts:dashboard_client")
 
     # No role assigned - show basic dashboard
@@ -86,8 +80,7 @@ def dashboard_cb(request):
 def dashboard_auditor(request):
     """Auditor dashboard."""
     if not (
-        request.user.groups.filter(name="lead_auditor").exists()
-        or request.user.groups.filter(name="auditor").exists()
+        request.user.groups.filter(name="lead_auditor").exists() or request.user.groups.filter(name="auditor").exists()
     ):
         return redirect("accounts:dashboard")
 
@@ -156,6 +149,7 @@ class CBAdminRequiredMixin(UserPassesTestMixin):
 # Auditor Qualification Views
 # ---------------------------------------------------------------------------
 
+
 class AuditorQualificationListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
     model = AuditorQualification
     template_name = "accounts/qualification_list.html"
@@ -180,6 +174,7 @@ class AuditorQualificationUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, U
 # ---------------------------------------------------------------------------
 # Auditor Training Views
 # ---------------------------------------------------------------------------
+
 
 class AuditorTrainingListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
     model = AuditorTrainingRecord
@@ -206,6 +201,7 @@ class AuditorTrainingUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, Update
 # Competence Evaluation Views
 # ---------------------------------------------------------------------------
 
+
 class CompetenceEvaluationListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
     model = AuditorCompetenceEvaluation
     template_name = "accounts/competence_list.html"
@@ -230,6 +226,7 @@ class CompetenceEvaluationUpdateView(LoginRequiredMixin, CBAdminRequiredMixin, U
 # ---------------------------------------------------------------------------
 # Conflict of Interest Views
 # ---------------------------------------------------------------------------
+
 
 class ConflictOfInterestListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
     model = ConflictOfInterest

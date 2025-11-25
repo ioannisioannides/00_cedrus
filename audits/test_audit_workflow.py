@@ -3,6 +3,7 @@ Test audit workflow state machine.
 
 Sprint 8, Task 8.4: Workflow validation tests
 """
+
 # pylint: disable=redefined-outer-name,unused-argument
 
 from django.core.exceptions import ValidationError
@@ -100,6 +101,7 @@ class TestAuditWorkflowTransitions:
     def test_invalid_transition_fails(self, audit_draft):
         """Test invalid transition is rejected."""
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
         user = User.objects.create_user(username="checker", password="test")
 

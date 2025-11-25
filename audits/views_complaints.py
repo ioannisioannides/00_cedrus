@@ -1,6 +1,7 @@
 """
 Views for Complaints and Appeals.
 """
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
@@ -21,6 +22,7 @@ class ComplaintListView(LoginRequiredMixin, ListView):
         # In a real app, filter by permissions
         return Complaint.objects.all().order_by("-submitted_at")
 
+
 class ComplaintCreateView(LoginRequiredMixin, CreateView):
     model = Complaint
     form_class = ComplaintForm
@@ -32,10 +34,12 @@ class ComplaintCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, "Complaint submitted successfully.")
         return redirect(self.get_success_url())
 
+
 class ComplaintDetailView(LoginRequiredMixin, DetailView):
     model = Complaint
     template_name = "audits/complaint_detail.html"
     context_object_name = "complaint"
+
 
 class AppealListView(LoginRequiredMixin, ListView):
     model = Appeal
@@ -44,6 +48,7 @@ class AppealListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Appeal.objects.all().order_by("-submitted_at")
+
 
 class AppealCreateView(LoginRequiredMixin, CreateView):
     model = Appeal
@@ -55,6 +60,7 @@ class AppealCreateView(LoginRequiredMixin, CreateView):
         self.object = ComplaintService.create_appeal(form.cleaned_data, self.request.user)
         messages.success(self.request, "Appeal submitted successfully.")
         return redirect(self.get_success_url())
+
 
 class AppealDetailView(LoginRequiredMixin, DetailView):
     model = Appeal

@@ -42,9 +42,7 @@ class AuditChangesForm(forms.ModelForm):
         other_description = cleaned_data.get("other_description", "").strip()
 
         if other_has_change and not other_description:
-            raise ValidationError(
-                {"other_description": 'Description is required when "Other changes" is selected.'}
-            )
+            raise ValidationError({"other_description": 'Description is required when "Other changes" is selected.'})
 
         return cleaned_data
 
@@ -67,9 +65,7 @@ class AuditPlanReviewForm(forms.ModelForm):
             "deviations_details": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "issues_affecting_yes_no": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "issues_affecting_details": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
-            "next_audit_date_from": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
+            "next_audit_date_from": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
             "next_audit_date_to": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
         }
 
@@ -83,14 +79,10 @@ class AuditPlanReviewForm(forms.ModelForm):
         next_audit_date_to = cleaned_data.get("next_audit_date_to")
 
         if deviations_yes_no and not deviations_details:
-            raise ValidationError(
-                {"deviations_details": "Details are required when deviations occurred."}
-            )
+            raise ValidationError({"deviations_details": "Details are required when deviations occurred."})
 
         if issues_affecting_yes_no and not issues_affecting_details:
-            raise ValidationError(
-                {"issues_affecting_details": "Details are required when issues affected the audit."}
-            )
+            raise ValidationError({"issues_affecting_details": "Details are required when issues affected the audit."})
 
         if next_audit_date_from and next_audit_date_to:
             if next_audit_date_to < next_audit_date_from:
@@ -131,9 +123,7 @@ class AuditSummaryForm(forms.ModelForm):
             "ms_meets_requirements": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "ms_comments": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
             "management_review_effective": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "management_review_comments": forms.Textarea(
-                attrs={"class": "form-control", "rows": 2}
-            ),
+            "management_review_comments": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
             "internal_audit_effective": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "internal_audit_comments": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
             "ms_effective": forms.CheckboxInput(attrs={"class": "form-check-input"}),

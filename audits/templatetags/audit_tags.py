@@ -2,6 +2,7 @@ from django import template
 
 register = template.Library()
 
+
 @register.simple_tag
 def get_audit_progress(audit):
     """
@@ -10,23 +11,23 @@ def get_audit_progress(audit):
     status = audit.status
 
     steps = [
-        {'id': 1, 'label': 'Planning', 'statuses': ['draft', 'scheduled']},
-        {'id': 2, 'label': 'Field Audit', 'statuses': ['in_progress']},
-        {'id': 3, 'label': 'Reporting', 'statuses': ['report_draft', 'client_review']},
-        {'id': 4, 'label': 'Tech Review', 'statuses': ['submitted', 'technical_review']},
-        {'id': 5, 'label': 'Decision', 'statuses': ['decision_pending', 'decided', 'closed']},
+        {"id": 1, "label": "Planning", "statuses": ["draft", "scheduled"]},
+        {"id": 2, "label": "Field Audit", "statuses": ["in_progress"]},
+        {"id": 3, "label": "Reporting", "statuses": ["report_draft", "client_review"]},
+        {"id": 4, "label": "Tech Review", "statuses": ["submitted", "technical_review"]},
+        {"id": 5, "label": "Decision", "statuses": ["decision_pending", "decided", "closed"]},
     ]
 
-    current_step_index = 1 # Default to 1
+    current_step_index = 1  # Default to 1
     found = False
 
     for step in steps:
-        if status in step['statuses']:
-            current_step_index = step['id']
+        if status in step["statuses"]:
+            current_step_index = step["id"]
             found = True
             break
 
-    if not found and status == 'cancelled':
+    if not found and status == "cancelled":
         current_step_index = -1
 
     # Calculate progress percentage (0 to 100)
@@ -38,9 +39,4 @@ def get_audit_progress(audit):
     else:
         progress_percent = 0
 
-    return {
-        'steps': steps,
-        'current_step': current_step_index,
-        'progress_percent': progress_percent,
-        'status': status
-    }
+    return {"steps": steps, "current_step": current_step_index, "progress_percent": progress_percent, "status": status}

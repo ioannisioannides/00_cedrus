@@ -67,9 +67,7 @@ class FindingRecurrenceTests(TestCase):
     def setUp(self):
         """Create test data."""
         self.user = User.objects.create_user(username="auditor", password="pass")
-        self.org = Organization.objects.create(
-            name="Test Org", customer_id="C001", total_employee_count=50
-        )
+        self.org = Organization.objects.create(name="Test Org", customer_id="C001", total_employee_count=50)
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management")
         self.cert = Certification.objects.create(
             organization=self.org, standard=self.standard, certification_scope="Manufacturing"
@@ -148,9 +146,7 @@ class AuditorCompetenceWarningTests(TestCase):
         """Create test data."""
         self.auditor = User.objects.create_user(username="auditor", password="pass")
         self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
-        self.org = Organization.objects.create(
-            name="Test Org", customer_id="C001", total_employee_count=50
-        )
+        self.org = Organization.objects.create(name="Test Org", customer_id="C001", total_employee_count=50)
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage2",
@@ -242,9 +238,7 @@ class IAFmd1SamplingTests(TestCase):
 
     def test_large_org_with_high_risk(self):
         """Test sampling for large org (100 sites) with high-risk sites."""
-        result = calculate_sample_size(
-            total_sites=100, high_risk_sites=10, is_initial_certification=False
-        )
+        result = calculate_sample_size(total_sites=100, high_risk_sites=10, is_initial_certification=False)
 
         # √100 - 0.5 = 9.5 → 10, + 2 for 10 high-risk sites
         self.assertEqual(result["minimum_sites"], 12)
@@ -254,9 +248,7 @@ class IAFmd1SamplingTests(TestCase):
 
     def test_previous_ncs_adjustment(self):
         """Test sampling adjustment for previous major NCs."""
-        result = calculate_sample_size(
-            total_sites=36, previous_findings_count=5, is_initial_certification=True
-        )
+        result = calculate_sample_size(total_sites=36, previous_findings_count=5, is_initial_certification=True)
 
         # √36 = 6, + 20% = 1.2 → 2 additional
         self.assertEqual(result["minimum_sites"], 8)
@@ -265,9 +257,7 @@ class IAFmd1SamplingTests(TestCase):
 
     def test_high_scope_variation(self):
         """Test sampling with high scope variation."""
-        result = calculate_sample_size(
-            total_sites=16, scope_variation="high", is_initial_certification=True
-        )
+        result = calculate_sample_size(total_sites=16, scope_variation="high", is_initial_certification=True)
 
         # √16 = 4, + 2 for high variation
         self.assertEqual(result["minimum_sites"], 6)
@@ -365,9 +355,7 @@ class IAFmd5DurationTests(TestCase):
 
     def test_duration_validation_compliant(self):
         """Test duration validation for compliant audit."""
-        result = validate_audit_duration(
-            planned_hours=21.0, employee_count=100, is_initial_certification=True
-        )
+        result = validate_audit_duration(planned_hours=21.0, employee_count=100, is_initial_certification=True)
 
         self.assertTrue(result["is_valid"])
         self.assertEqual(result["severity"], "compliant")
@@ -375,9 +363,7 @@ class IAFmd5DurationTests(TestCase):
 
     def test_duration_validation_insufficient(self):
         """Test duration validation for insufficient audit."""
-        result = validate_audit_duration(
-            planned_hours=15.0, employee_count=100, is_initial_certification=True
-        )
+        result = validate_audit_duration(planned_hours=15.0, employee_count=100, is_initial_certification=True)
 
         self.assertFalse(result["is_valid"])
         self.assertIn("critical", result["severity"].lower())
@@ -385,9 +371,7 @@ class IAFmd5DurationTests(TestCase):
 
     def test_surveillance_duration_reduction(self):
         """Test that surveillance audits have reduced duration."""
-        initial_result = validate_audit_duration(
-            planned_hours=21.0, employee_count=100, is_initial_certification=True
-        )
+        initial_result = validate_audit_duration(planned_hours=21.0, employee_count=100, is_initial_certification=True)
 
         surveillance_result = validate_audit_duration(
             planned_hours=14.0, employee_count=100, is_initial_certification=False

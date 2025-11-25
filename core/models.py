@@ -19,13 +19,9 @@ class Organization(models.Model):
     """
 
     name = models.CharField(max_length=255, help_text="Official company name")
-    registered_id = models.CharField(
-        max_length=100, blank=True, help_text="Company registration number"
-    )
+    registered_id = models.CharField(max_length=100, blank=True, help_text="Company registration number")
     registered_address = models.TextField(help_text="Registered business address")
-    customer_id = models.CharField(
-        max_length=50, unique=True, help_text="Internal customer reference number"
-    )
+    customer_id = models.CharField(max_length=50, unique=True, help_text="Internal customer reference number")
     total_employee_count = models.PositiveIntegerField(
         validators=[MinValueValidator(1)], help_text="Total number of employees across all sites"
     )
@@ -75,9 +71,7 @@ class Site(models.Model):
         validators=[MinValueValidator(1)],
         help_text="Number of employees at this site (optional)",
     )
-    site_scope_override = models.TextField(
-        blank=True, help_text="Optional scope description specific to this site"
-    )
+    site_scope_override = models.TextField(blank=True, help_text="Optional scope description specific to this site")
     active = models.BooleanField(default=True, help_text="Whether this site is currently active")
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -99,14 +93,10 @@ class Standard(models.Model):
     Standards are reference data - they define what certifications are based on.
     """
 
-    code = models.CharField(
-        max_length=100, unique=True, help_text="Standard code (e.g., 'ISO 9001:2015')"
-    )
+    code = models.CharField(max_length=100, unique=True, help_text="Standard code (e.g., 'ISO 9001:2015')")
     title = models.CharField(max_length=255, help_text="Full title of the standard")
     nace_code = models.CharField(max_length=50, blank=True, help_text="NACE classification code")
-    ea_code = models.CharField(
-        max_length=50, blank=True, help_text="EA (European Accreditation) code"
-    )
+    ea_code = models.CharField(max_length=50, blank=True, help_text="EA (European Accreditation) code")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -136,17 +126,11 @@ class Certification(models.Model):
         ("expired", "Expired"),
     ]
 
-    organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="certifications"
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="certifications")
     standard = models.ForeignKey(Standard, on_delete=models.PROTECT, related_name="certifications")
     certification_scope = models.TextField(help_text="Scope of the certification")
-    certificate_id = models.CharField(
-        max_length=100, blank=True, help_text="Certificate number/reference"
-    )
-    certificate_status = models.CharField(
-        max_length=20, choices=CERTIFICATE_STATUS_CHOICES, default="draft"
-    )
+    certificate_id = models.CharField(max_length=100, blank=True, help_text="Certificate number/reference")
+    certificate_status = models.CharField(max_length=20, choices=CERTIFICATE_STATUS_CHOICES, default="draft")
     issue_date = models.DateField(null=True, blank=True)
     expiry_date = models.DateField(null=True, blank=True)
 
@@ -167,6 +151,7 @@ class Certification(models.Model):
 # Phase 2A: Certificate Lifecycle Tracking (History & Surveillance Schedule)
 # ---------------------------------------------------------------------------
 
+
 class CertificateHistory(models.Model):
     """Immutable record of certificate lifecycle actions (issue, renew, suspend, etc.)."""
 
@@ -184,9 +169,7 @@ class CertificateHistory(models.Model):
         ("transfer_out", "Transferred Out"),
     ]
 
-    certification = models.ForeignKey(
-        Certification, on_delete=models.CASCADE, related_name="history"
-    )
+    certification = models.ForeignKey(Certification, on_delete=models.CASCADE, related_name="history")
     action = models.CharField(max_length=30, choices=ACTION_CHOICES)
     action_date = models.DateField()
     related_audit = models.ForeignKey(
@@ -233,9 +216,7 @@ class CertificateHistory(models.Model):
 class SurveillanceSchedule(models.Model):
     """Track 3-year certification cycle surveillance and recertification milestones."""
 
-    certification = models.OneToOneField(
-        Certification, on_delete=models.CASCADE, related_name="surveillance_schedule"
-    )
+    certification = models.OneToOneField(Certification, on_delete=models.CASCADE, related_name="surveillance_schedule")
     cycle_start = models.DateField(help_text="Certification cycle start (Stage 2 decision date)")
     cycle_end = models.DateField(help_text="Certification cycle end (3 years from start)")
     surveillance_1_due_date = models.DateField()

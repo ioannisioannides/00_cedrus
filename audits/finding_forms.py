@@ -31,9 +31,7 @@ class NonconformityForm(forms.ModelForm):
             "auditor_explanation",
         ]
         widgets = {
-            "clause": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}
-            ),
+            "clause": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}),
             "category": forms.Select(attrs={"class": "form-select"}),
             "objective_evidence": forms.Textarea(
                 attrs={
@@ -241,9 +239,7 @@ class ObservationForm(forms.ModelForm):
         model = Observation
         fields = ["standard", "clause", "site", "statement", "explanation"]
         widgets = {
-            "clause": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}
-            ),
+            "clause": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}),
             "statement": forms.Textarea(
                 attrs={
                     "class": "form-control",
@@ -311,9 +307,7 @@ class OpportunityForImprovementForm(forms.ModelForm):
         model = OpportunityForImprovement
         fields = ["standard", "clause", "site", "description"]
         widgets = {
-            "clause": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}
-            ),
+            "clause": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., 4.1, 7.5.1"}),
             "description": forms.Textarea(
                 attrs={
                     "class": "form-control",

@@ -47,9 +47,7 @@ class Profile(models.Model):
         ordering = ["user__last_name", "user__first_name"]
 
     def __str__(self):
-        return (
-            f"{self.user.get_full_name() or self.user.username} ({self.organization or 'No Org'})"
-        )
+        return f"{self.user.get_full_name() or self.user.username} ({self.organization or 'No Org'})"
 
     def is_cb_admin(self):
         """Check if user is in the cb_admin group."""
@@ -90,6 +88,7 @@ class Profile(models.Model):
 # Phase 2A: Auditor Competence & Impartiality (ISO 17021-1 Clause 7 & 5.2)
 # ---------------------------------------------------------------------------
 
+
 class AuditorQualification(models.Model):
     """Formal auditor qualification / certification record."""
 
@@ -111,9 +110,7 @@ class AuditorQualification(models.Model):
     nace_codes = models.CharField(
         max_length=255, blank=True, help_text="Comma-separated NACE codes for sector competence"
     )
-    ea_codes = models.CharField(
-        max_length=255, blank=True, help_text="Comma-separated EA codes for sector competence"
-    )
+    ea_codes = models.CharField(max_length=255, blank=True, help_text="Comma-separated EA codes for sector competence")
     certificate_file = models.FileField(upload_to="auditor_qualifications/", blank=True)
     status = models.CharField(
         max_length=20,
@@ -210,9 +207,7 @@ class ConflictOfInterest(models.Model):
     ]
 
     auditor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="conflicts_of_interest")
-    organization = models.ForeignKey(
-        "core.Organization", on_delete=models.CASCADE, related_name="conflicts_declared"
-    )
+    organization = models.ForeignKey("core.Organization", on_delete=models.CASCADE, related_name="conflicts_declared")
     relationship_type = models.CharField(max_length=40, choices=RELATIONSHIP_TYPE_CHOICES)
     description = models.TextField()
     declared_date = models.DateField(auto_now_add=True)

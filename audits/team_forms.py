@@ -33,9 +33,7 @@ class AuditTeamMemberForm(forms.ModelForm):
         max_length=255,
         required=False,
         help_text="Auto-filled from user if selected, or enter manually for external experts",
-        widget=forms.TextInput(
-            attrs={"placeholder": "Will auto-fill from user selection", "class": "form-control"}
-        ),
+        widget=forms.TextInput(attrs={"placeholder": "Will auto-fill from user selection", "class": "form-control"}),
     )
 
     title = forms.CharField(
@@ -99,9 +97,7 @@ class AuditTeamMemberForm(forms.ModelForm):
             # Auto-fill from user
             return user.get_full_name() or user.username
         if not name:
-            raise ValidationError(
-                "Name is required for external experts (when no user is selected)."
-            )
+            raise ValidationError("Name is required for external experts (when no user is selected).")
 
         return name
 
@@ -160,9 +156,9 @@ class AuditTeamMemberForm(forms.ModelForm):
                 AuditorCompetenceWarning.objects.create(
                     audit=self.audit,
                     auditor=user,
-                    warning_type="scope_mismatch", # Defaulting to scope mismatch or we could parse exception
-                    description=str(e.message) if hasattr(e, 'message') else str(e),
-                    issued_by=self.request_user
+                    warning_type="scope_mismatch",  # Defaulting to scope mismatch or we could parse exception
+                    description=str(e.message) if hasattr(e, "message") else str(e),
+                    issued_by=self.request_user,
                 )
 
         return cleaned_data
