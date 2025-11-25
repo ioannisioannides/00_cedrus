@@ -8,7 +8,6 @@ Reference: IAF MD5:2019 - Duration of Quality and Environmental
 Management Systems Audits
 """
 
-from datetime import timedelta
 from typing import Any, Dict, List, Tuple
 
 # IAF MD5 base duration tables (in hours)
