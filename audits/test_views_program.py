@@ -1,10 +1,13 @@
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.contrib.auth.models import User, Group
-from core.models import Organization
-from accounts.models import Profile
-from audits.models import AuditProgram, Audit
 from datetime import date
+
+from django.contrib.auth.models import Group, User
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from accounts.models import Profile
+from audits.models import Audit, AuditProgram
+from core.models import Organization
+
 
 class AuditProgramViewTest(TestCase):
     def setUp(self):

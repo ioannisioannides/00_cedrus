@@ -12,7 +12,6 @@ from django.urls import reverse
 
 from core.models import Certification, Organization, Site, Standard
 
-
 # ==============================================================================
 # HEALTH CHECK TESTS
 # ==============================================================================

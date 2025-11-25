@@ -15,7 +15,6 @@ from django.test import TestCase
 
 from accounts.models import Profile
 from core.models import Certification, Organization, Site, Standard
-
 from trunk.events import EventType, event_dispatcher
 from trunk.events.dispatcher import EventDispatcher
 from trunk.events.handlers import (
@@ -28,7 +27,6 @@ from trunk.events.handlers import (
 )
 from trunk.permissions.policies import PBACPolicy
 from trunk.permissions.predicates import PermissionPredicate
-
 
 # ==============================================================================
 # PERMISSION POLICIES TESTS

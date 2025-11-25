@@ -8,13 +8,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.urls import reverse
 
-from audits.models import (
-    Audit,
-    Nonconformity,
-    Observation,
-    OpportunityForImprovement,
-    AuditRecommendation,
-)
+from audits.models import Audit, AuditRecommendation, Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Site, Standard
 
 
@@ -697,8 +691,9 @@ class EvidenceFileViewTest(TestCase):
 
     def test_evidence_file_delete(self):
         """Test deleting evidence file."""
-        from audits.models import EvidenceFile
         from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from audits.models import EvidenceFile
         
         file = SimpleUploadedFile("test.pdf", b"content")
         evidence_file = EvidenceFile.objects.create(
@@ -718,8 +713,9 @@ class EvidenceFileViewTest(TestCase):
 
     def test_evidence_file_download(self):
         """Test downloading evidence file."""
-        from audits.models import EvidenceFile
         from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from audits.models import EvidenceFile
 
         file = SimpleUploadedFile("test.pdf", b"content")
         evidence_file = EvidenceFile.objects.create(
@@ -1027,7 +1023,7 @@ class TeamMemberViewTest(TestCase):
     def test_team_member_add_with_warning(self):
         """Test adding team member with competence warning."""
         from audits.models import AuditorCompetenceWarning
-        
+
         # Create warning
         AuditorCompetenceWarning.objects.create(
             audit=self.audit,
