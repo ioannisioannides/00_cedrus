@@ -9,7 +9,7 @@ Operated by an Organization with Multiple Sites
 """
 
 import math
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 def calculate_sample_size(
