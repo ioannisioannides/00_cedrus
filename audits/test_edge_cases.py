@@ -22,7 +22,7 @@ class DateValidationTest(TestCase):
     def setUp(self):
         """Set up test data."""
         cb_group = Group.objects.create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
         self.org = Organization.objects.create(
@@ -94,7 +94,7 @@ class DateValidationTest(TestCase):
         )
 
         lead_group = Group.objects.create(name="lead_auditor")
-        lead_auditor = User.objects.create_user(username="lead", password="pass")
+        lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
         lead_auditor.groups.add(lead_group)
 
         # NC with future due date
@@ -121,7 +121,7 @@ class StatusTransitionTest(TestCase):
     def setUp(self):
         """Set up test data."""
         cb_group = Group.objects.create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
         self.org = Organization.objects.create(
@@ -184,10 +184,10 @@ class FileUploadTest(TestCase):
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")
+        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
         self.lead_auditor.groups.add(lead_group)
 
         self.org = Organization.objects.create(
@@ -269,10 +269,10 @@ class NCCategoryTest(TestCase):
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")
+        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
         self.lead_auditor.groups.add(lead_group)
 
         self.org = Organization.objects.create(
@@ -348,10 +348,10 @@ class EmptyStringTest(TestCase):
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")
+        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
         self.lead_auditor.groups.add(lead_group)
 
         self.org = Organization.objects.create(

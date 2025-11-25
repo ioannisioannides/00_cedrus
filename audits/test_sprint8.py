@@ -38,7 +38,7 @@ class AuditTeamMemberFormTests(TestCase):
             total_employee_count=10,
         )
         self.user = User.objects.create_user(
-            username="auditor1", password="testpass123", first_name="John", last_name="Auditor"
+            username="auditor1", password="testpass123", first_name="John", last_name="Auditor"  # nosec B106
         )
 
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
@@ -125,20 +125,20 @@ class TeamMemberViewTests(TestCase):
         )
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="testpass123")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="testpass123")  # nosec B106
         self.cb_admin_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.lead_auditor = User.objects.create_user(
-            username="leadauditor", password="testpass123", first_name="Lead", last_name="Auditor"
+            username="leadauditor", password="testpass123", first_name="Lead", last_name="Auditor"  # nosec B106
         )
         self.lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(self.lead_auditor_group)
 
-        self.regular_user = User.objects.create_user(username="regularuser", password="testpass123")
+        self.regular_user = User.objects.create_user(username="regularuser", password="testpass123")  # nosec B106
 
         self.auditor_user = User.objects.create_user(
-            username="auditor1", password="testpass123", first_name="John", last_name="Auditor"
+            username="auditor1", password="testpass123", first_name="John", last_name="Auditor"  # nosec B106
         )
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor_user.groups.add(auditor_group)
@@ -155,28 +155,28 @@ class TeamMemberViewTests(TestCase):
 
     def test_team_member_add_as_cb_admin(self):
         """Test cb_admin can add team members."""
-        self.client.login(username="cbadmin", password="testpass123")
+        self.client.login(username="cbadmin", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_team_member_add_as_lead_auditor(self):
         """Test lead_auditor can add team members to their audit."""
-        self.client.login(username="leadauditor", password="testpass123")
+        self.client.login(username="leadauditor", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_team_member_add_permission_denied(self):
         """Test regular user cannot add team members."""
-        self.client.login(username="regularuser", password="testpass123")
+        self.client.login(username="regularuser", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)  # Redirect
 
     def test_team_member_add_post_internal_auditor(self):
         """Test adding internal auditor via POST."""
-        self.client.login(username="cbadmin", password="testpass123")
+        self.client.login(username="cbadmin", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk})
         data = {
             "user": self.auditor_user.id,
@@ -190,7 +190,7 @@ class TeamMemberViewTests(TestCase):
 
     def test_team_member_add_post_external_expert(self):
         """Test adding external expert via POST."""
-        self.client.login(username="cbadmin", password="testpass123")
+        self.client.login(username="cbadmin", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk})
         data = {
             "name": "Jane External",
@@ -212,7 +212,7 @@ class TeamMemberViewTests(TestCase):
             date_from=self.audit.total_audit_date_from,
             date_to=self.audit.total_audit_date_to,
         )
-        self.client.login(username="cbadmin", password="testpass123")
+        self.client.login(username="cbadmin", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_edit", kwargs={"pk": member.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -226,7 +226,7 @@ class TeamMemberViewTests(TestCase):
             date_from=self.audit.total_audit_date_from,
             date_to=self.audit.total_audit_date_to,
         )
-        self.client.login(username="regularuser", password="testpass123")
+        self.client.login(username="regularuser", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_edit", kwargs={"pk": member.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
@@ -240,7 +240,7 @@ class TeamMemberViewTests(TestCase):
             date_from=self.audit.total_audit_date_from,
             date_to=self.audit.total_audit_date_to,
         )
-        self.client.login(username="cbadmin", password="testpass123")
+        self.client.login(username="cbadmin", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_delete", kwargs={"pk": member.pk})
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
@@ -255,7 +255,7 @@ class TeamMemberViewTests(TestCase):
             date_from=self.audit.total_audit_date_from,
             date_to=self.audit.total_audit_date_to,
         )
-        self.client.login(username="regularuser", password="testpass123")
+        self.client.login(username="regularuser", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_delete", kwargs={"pk": member.pk})
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
@@ -275,12 +275,12 @@ class CompetenceWarningTests(TestCase):
             total_employee_count=10,
         )
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="testpass123")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="testpass123")  # nosec B106
         self.cb_admin_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor = User.objects.create_user(
-            username="auditor1", password="testpass123", first_name="John", last_name="Auditor"
+            username="auditor1", password="testpass123", first_name="John", last_name="Auditor"  # nosec B106
         )
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
@@ -305,7 +305,7 @@ class CompetenceWarningTests(TestCase):
             issued_by=self.cb_admin,
         )
 
-        self.client.login(username="cbadmin", password="testpass123")
+        self.client.login(username="cbadmin", password="testpass123")  # nosec B106
         url = reverse("audits:team_member_add", kwargs={"audit_pk": self.audit.pk})
 
         # Add team member with warning
@@ -359,10 +359,10 @@ class MultiSiteSamplingTests(TestCase):
             total_employee_count=100,
         )
 
-        user = User.objects.create_user(username="testuser", password="testpass123")
+        user = User.objects.create_user(username="testuser", password="testpass123")  # nosec B106
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         user.groups.add(auditor_group)
-        self.client.login(username="testuser", password="testpass123")
+        self.client.login(username="testuser", password="testpass123")  # nosec B106
 
         audit = Audit.objects.create(
             organization=org,
@@ -398,7 +398,7 @@ class DocumentationFormTests(TestCase):
             total_employee_count=10,
         )
 
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="testpass123")
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password="testpass123")  # nosec B106
         self.lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(self.lead_auditor_group)
 
@@ -413,7 +413,7 @@ class DocumentationFormTests(TestCase):
 
     def test_audit_changes_form_access(self):
         """Test access to organization changes form."""
-        self.client.login(username="leadauditor", password="testpass123")
+        self.client.login(username="leadauditor", password="testpass123")  # nosec B106
         url = reverse("audits:audit_changes_edit", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -421,7 +421,7 @@ class DocumentationFormTests(TestCase):
 
     def test_audit_plan_review_form_access(self):
         """Test access to audit plan review form."""
-        self.client.login(username="leadauditor", password="testpass123")
+        self.client.login(username="leadauditor", password="testpass123")  # nosec B106
         url = reverse("audits:audit_plan_review_edit", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -429,7 +429,7 @@ class DocumentationFormTests(TestCase):
 
     def test_audit_summary_form_access(self):
         """Test access to audit summary form."""
-        self.client.login(username="leadauditor", password="testpass123")
+        self.client.login(username="leadauditor", password="testpass123")  # nosec B106
         url = reverse("audits:audit_summary_edit", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -437,7 +437,7 @@ class DocumentationFormTests(TestCase):
 
     def test_audit_changes_form_save(self):
         """Test saving organization changes."""
-        self.client.login(username="leadauditor", password="testpass123")
+        self.client.login(username="leadauditor", password="testpass123")  # nosec B106
         url = reverse("audits:audit_changes_edit", kwargs={"audit_pk": self.audit.pk})
         data = {
             "changes_identified": True,
@@ -461,7 +461,7 @@ class AuditDetailContextTests(TestCase):
             customer_id="CUST-DETAIL-001",
             total_employee_count=10,
         )
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(username="testuser", password="testpass123")  # nosec B106
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.user.groups.add(auditor_group)
 
@@ -485,7 +485,7 @@ class AuditDetailContextTests(TestCase):
             date_to=self.audit.total_audit_date_to,
         )
 
-        self.client.login(username="testuser", password="testpass123")
+        self.client.login(username="testuser", password="testpass123")  # nosec B106
         url = reverse("audits:audit_detail", kwargs={"pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -511,7 +511,7 @@ class AuditDetailContextTests(TestCase):
             date_to=self.audit.total_audit_date_to,
         )
 
-        self.client.login(username="testuser", password="testpass123")
+        self.client.login(username="testuser", password="testpass123")  # nosec B106
         url = reverse("audits:audit_detail", kwargs={"pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)

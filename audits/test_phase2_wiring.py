@@ -14,7 +14,7 @@ from core.models import CertificateHistory, Certification, Organization, Standar
 class TestPhase2Wiring:
     @pytest.fixture
     def cb_admin(self):
-        user = User.objects.create_user(username="cb_admin", password="password")
+        user = User.objects.create_user(username="cb_admin", password="password")  # nosec B106
         group, _ = Group.objects.get_or_create(name="cb_admin")
         user.groups.add(group)
         # Profile is auto-created by signal
@@ -22,7 +22,7 @@ class TestPhase2Wiring:
 
     @pytest.fixture
     def auditor(self):
-        user = User.objects.create_user(username="auditor", password="password")
+        user = User.objects.create_user(username="auditor", password="password")  # nosec B106
         group, _ = Group.objects.get_or_create(name="auditor")
         user.groups.add(group)
         # Profile is auto-created by signal

@@ -66,7 +66,7 @@ class FindingRecurrenceTests(TestCase):
 
     def setUp(self):
         """Create test data."""
-        self.user = User.objects.create_user(username="auditor", password="pass")
+        self.user = User.objects.create_user(username="auditor", password="pass")  # nosec B106
         self.org = Organization.objects.create(name="Test Org", customer_id="C001", total_employee_count=50)
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management")
         self.cert = Certification.objects.create(
@@ -144,8 +144,8 @@ class AuditorCompetenceWarningTests(TestCase):
 
     def setUp(self):
         """Create test data."""
-        self.auditor = User.objects.create_user(username="auditor", password="pass")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
+        self.auditor = User.objects.create_user(username="auditor", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
         self.org = Organization.objects.create(name="Test Org", customer_id="C001", total_employee_count=50)
         self.audit = Audit.objects.create(
             organization=self.org,
@@ -402,8 +402,8 @@ class Phase2IntegrationTests(TestCase):
 
     def setUp(self):
         """Create comprehensive test scenario."""
-        self.auditor = User.objects.create_user(username="auditor", password="pass")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
+        self.auditor = User.objects.create_user(username="auditor", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
 
         self.org = Organization.objects.create(
             name="Multi-Site Manufacturing Corp", customer_id="C001", total_employee_count=500

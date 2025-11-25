@@ -40,7 +40,7 @@ def organization(db):
 @pytest.fixture
 def cb_admin_user(db, organization):
     """Create CB admin user."""
-    user = User.objects.create_user(username="cbadmin", email="admin@cb.com", password="testpass")
+    user = User.objects.create_user(username="cbadmin", email="admin@cb.com", password="testpass")  # nosec B106
     user.groups.create(name="CB Admin")
     Profile.objects.create(user=user, role="cb_admin", organization=organization)
     return user
@@ -51,7 +51,7 @@ def auditor_user(db, organization):
     """Create auditor user."""
     from django.contrib.auth.models import Group
 
-    user = User.objects.create_user(username="auditor", email="auditor@cb.com", password="testpass")
+    user = User.objects.create_user(username="auditor", email="auditor@cb.com", password="testpass")  # nosec B106
     auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
     user.groups.add(auditor_group)
     # Profile is auto-created via signal, just update it
@@ -64,7 +64,7 @@ def client_user(db, organization):
     """Create client user."""
     from django.contrib.auth.models import Group
 
-    user = User.objects.create_user(username="client", email="client@org.com", password="testpass")
+    user = User.objects.create_user(username="client", email="client@org.com", password="testpass")  # nosec B106
     client_group, _ = Group.objects.get_or_create(name="client_user")
     user.groups.add(client_group)
     # Profile is auto-created via signal, just update it
