@@ -4,8 +4,7 @@ Views for Audit Program management (ISO 19011).
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Q
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
@@ -29,11 +28,11 @@ class AuditProgramListView(LoginRequiredMixin, ListView):
 
         if PermissionPredicate.is_cb_admin(user):
             return queryset
-        
+
         if PermissionPredicate.is_client_user(user):
             if hasattr(user, "profile") and user.profile.organization:
                 return queryset.filter(organization=user.profile.organization)
-        
+
         # Auditors can see programs they are involved in (via audits)
         if PermissionPredicate.is_auditor(user):
             return queryset.filter(audits__lead_auditor=user).distinct()
@@ -59,11 +58,11 @@ class AuditProgramCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView
         user = self.request.user
         program = form.save(commit=False)
         program.created_by = user
-        
+
         if PermissionPredicate.is_client_user(user):
             program.organization = user.profile.organization
         elif PermissionPredicate.is_cb_admin(user):
-            # For CB Admin, we might need to select organization. 
+            # For CB Admin, we might need to select organization.
             # But the form doesn't have organization field.
             # For now, let's assume CB Admin creates for their own org or we need to add org field for CB Admin.
             # Ideally, CB Admin should be able to select organization.
@@ -76,7 +75,7 @@ class AuditProgramCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView
         # Let's assume for now this is primarily for Clients to manage their internal audits.
         # If CB Admin uses it, they might be managing the CB's own internal audits.
         # I'll check if user has profile.organization.
-        
+
         if hasattr(user, "profile") and user.profile.organization:
             program.organization = user.profile.organization
         else:
@@ -84,12 +83,12 @@ class AuditProgramCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView
             # If CB Admin doesn't have organization in profile, this might fail.
             # But CB Admin usually belongs to the CB Organization.
             pass
-            
+
         self.object = program.save()
         # save() returns None, so we need to set self.object to program
         program.save()
         self.object = program
-        
+
         messages.success(self.request, "Audit Program created successfully.")
         return redirect(self.get_success_url())
 
@@ -109,17 +108,17 @@ class AuditProgramDetailView(LoginRequiredMixin, DetailView):
         # Reuse list view logic or similar
         user = self.request.user
         queryset = AuditProgram.objects.select_related("organization")
-        
+
         if PermissionPredicate.is_cb_admin(user):
             return queryset
-            
+
         if PermissionPredicate.is_client_user(user):
             if hasattr(user, "profile") and user.profile.organization:
                 return queryset.filter(organization=user.profile.organization)
-                
+
         if PermissionPredicate.is_auditor(user):
             return queryset.filter(audits__lead_auditor=user).distinct()
-            
+
         return queryset.none()
 
     def get_context_data(self, **kwargs):
@@ -139,14 +138,14 @@ class AuditProgramUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         """Only creator or admins can edit."""
         program = self.get_object()
         user = self.request.user
-        
+
         if PermissionPredicate.is_cb_admin(user):
             return True
-            
+
         is_client_admin = user.groups.filter(name="client_admin").exists()
         if is_client_admin and program.organization == user.profile.organization:
             return True
-            
+
         return False
 
     def get_success_url(self):
@@ -164,12 +163,12 @@ class AuditProgramDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
         """Only admins can delete."""
         program = self.get_object()
         user = self.request.user
-        
+
         if PermissionPredicate.is_cb_admin(user):
             return True
-            
+
         is_client_admin = user.groups.filter(name="client_admin").exists()
         if is_client_admin and program.organization == user.profile.organization:
             return True
-            
+
         return False
