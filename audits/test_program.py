@@ -2,11 +2,13 @@
 Tests for Audit Program management.
 """
 
-from django.contrib.auth.models import User, Group
-from django.test import TestCase, Client
+from django.contrib.auth.models import Group, User
+from django.test import Client, TestCase
 from django.urls import reverse
-from core.models import Organization
+
 from audits.models import AuditProgram
+from core.models import Organization
+
 
 class AuditProgramTests(TestCase):
     """Test Audit Program CRUD."""
@@ -30,6 +32,7 @@ class AuditProgramTests(TestCase):
         self.client_admin.groups.add(client_group)
         # Link to profile
         from accounts.models import Profile
+
         # Profile might be created by signal
         profile, _ = Profile.objects.get_or_create(user=self.client_admin)
         profile.organization = self.org
