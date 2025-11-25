@@ -1,0 +1,419 @@
+/* ============================================
+   CEDRUS UI - Enterprise Design System
+   ============================================ */
+
+/* --------------------------------------------
+   1. DESIGN TOKENS (Merged from cedrus-brand.css)
+   -------------------------------------------- */
+:root {
+    /* Brand Colors - Cedar (Primary) */
+    --cedar-50: #F0F7F4;
+    --cedar-100: #D4E8E0;
+    --cedar-200: #A8D1C1;
+    --cedar-300: #7CBAA2;
+    --cedar-400: #50A383;
+    --cedar-500: #248C64;  /* PRIMARY BRAND */
+    --cedar-600: #1D7050;
+    --cedar-700: #16543C;
+    --cedar-800: #0F3828;
+    --cedar-900: #081C14;
+
+    /* Brand Colors - Stone (Neutral) */
+    --stone-50: #FAFAF9;
+    --stone-100: #F5F5F3;
+    --stone-200: #E7E7E4;
+    --stone-300: #D9D9D5;
+    --stone-400: #CBCBC6;
+    --stone-500: #BDBDB7;
+    --stone-600: #9E9E97;
+    --stone-700: #808078;
+    --stone-800: #616159;
+    --stone-900: #42423A;
+
+    /* Brand Colors - Sea (Secondary/Info) */
+    --sea-50: #F0F5F9;
+    --sea-100: #D1E3F2;
+    --sea-200: #A3C7E5;
+    --sea-500: #1973BE;
+    --sea-700: #0F4572;
+
+    /* Brand Colors - Terracotta (Accent/Warning) */
+    --terracotta-50: #FDF5F3;
+    --terracotta-100: #FAE6E0;
+    --terracotta-500: #E68264;
+
+    /* Semantic Mapping */
+    --color-primary: var(--cedar-500);
+    --color-primary-hover: var(--cedar-600);
+    --color-primary-subtle: var(--cedar-50);
+    
+    --color-bg-body: var(--stone-50);
+    --color-bg-surface: #FFFFFF;
+    --color-bg-subtle: var(--stone-100);
+    
+    --color-text-main: var(--stone-900);
+    --color-text-muted: var(--stone-600);
+    --color-text-light: var(--stone-500);
+    
+    --color-border: var(--stone-200);
+    --color-border-hover: var(--stone-300);
+
+    /* Spacing System (4px grid) */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    /* Shadows (Soft, diffused) */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -1px rgba(0,0,0,0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
+
+    /* Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+}
+
+/* --------------------------------------------
+   2. RESET & BASE
+   -------------------------------------------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg-body);
+    color: var(--color-text-main);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--cedar-900);
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--space-4);
+    letter-spacing: -0.02em;
+}
+
+h1 { font-size: 2.5rem; font-weight: 700; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--color-primary-hover);
+}
+
+/* --------------------------------------------
+   3. LAYOUT COMPONENTS
+   -------------------------------------------- */
+.navbar {
+    background-color: var(--color-bg-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-4) 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--cedar-800) !important;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.nav-link {
+    color: var(--stone-600) !important;
+    font-weight: 500;
+    padding: var(--space-2) var(--space-4) !important;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--cedar-700) !important;
+    background-color: var(--cedar-50);
+}
+
+.main-content {
+    padding: var(--space-8) 0;
+    min-height: 80vh;
+}
+
+/* --------------------------------------------
+   4. CARDS & SURFACES
+   -------------------------------------------- */
+.card {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    margin-bottom: var(--space-6);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--stone-300);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-6);
+    font-weight: 600;
+    color: var(--cedar-900);
+}
+
+.card-body {
+    padding: var(--space-6);
+}
+
+.card-footer {
+    background: var(--stone-50);
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-4) var(--space-6);
+}
+
+/* --------------------------------------------
+   5. BUTTONS
+   -------------------------------------------- */
+.btn {
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+    letter-spacing: -0.01em;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background-color: var(--cedar-500);
+    border-color: var(--cedar-500);
+    color: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.btn-primary:hover {
+    background-color: var(--cedar-600);
+    border-color: var(--cedar-600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+    background-color: white;
+    border-color: var(--stone-300);
+    color: var(--stone-700);
+}
+
+.btn-secondary:hover {
+    background-color: var(--stone-50);
+    border-color: var(--stone-400);
+    color: var(--stone-900);
+}
+
+.btn-outline-primary {
+    color: var(--cedar-600);
+    border-color: var(--cedar-200);
+    background: var(--cedar-50);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--cedar-100);
+    border-color: var(--cedar-300);
+    color: var(--cedar-800);
+}
+
+/* --------------------------------------------
+   6. TABLES
+   -------------------------------------------- */
+.table-container {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table {
+    margin-bottom: 0;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    background: var(--stone-50);
+    color: var(--stone-600);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.table td {
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--stone-800);
+    vertical-align: middle;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tr:hover td {
+    background-color: var(--stone-50);
+}
+
+/* --------------------------------------------
+   7. FORMS
+   -------------------------------------------- */
+.form-label {
+    font-weight: 500;
+    color: var(--stone-700);
+    margin-bottom: var(--space-2);
+    font-size: 0.875rem;
+}
+
+.form-control, .form-select {
+    border: 1px solid var(--stone-300);
+    border-radius: var(--radius-md);
+    padding: 0.625rem 1rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--cedar-500);
+    box-shadow: 0 0 0 3px var(--cedar-100);
+    outline: none;
+}
+
+/* --------------------------------------------
+   8. BADGES & STATUS
+   -------------------------------------------- */
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.02em;
+}
+
+.bg-success { background-color: var(--cedar-100) !important; color: var(--cedar-800); }
+.bg-warning { background-color: var(--terracotta-100) !important; color: var(--terracotta-800); }
+.bg-info { background-color: var(--sea-100) !important; color: var(--sea-700); }
+.bg-secondary { background-color: var(--stone-100) !important; color: var(--stone-700); }
+
+/* --------------------------------------------
+   9. UTILITIES
+   -------------------------------------------- */
+.text-muted { color: var(--stone-500) !important; }
+.fw-bold { font-weight: 700 !important; }
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+.page-header {
+    margin-bottom: var(--space-8);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-6);
+}
+
+.page-title {
+    font-size: 2rem;
+    color: var(--cedar-900);
+    margin-bottom: var(--space-2);
+}
+
+.page-subtitle {
+    color: var(--stone-500);
+    font-size: 1.125rem;
+}
+
+/* Dashboard Stats */
+.stat-card {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, var(--cedar-600) 0%, var(--cedar-800) 100%);
+    color: white;
+    border: none;
+}
+
+.stat-card .stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    margin: var(--space-2) 0;
+}
+
+.stat-card .stat-label {
+    color: var(--cedar-100);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-card h5 {
+    color: var(--cedar-100);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-2);
+}
+
+.stat-card h2 {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+}
+
+.stat-card-secondary {
+    background: linear-gradient(135deg, var(--sea-500) 0%, var(--sea-700) 100%);
+}
+
+.stat-card-secondary h5, .stat-card-secondary .stat-label {
+    color: var(--sea-100);
+}
+
+.stat-card-success {
+    background: linear-gradient(135deg, var(--cedar-400) 0%, var(--cedar-600) 100%);
+}
+
+.stat-card-success h5, .stat-card-success .stat-label {
+    color: var(--cedar-50);
+}

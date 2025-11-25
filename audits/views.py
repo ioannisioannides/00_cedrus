@@ -223,6 +223,7 @@ class AuditCreateView(LoginRequiredMixin, CBAdminRequiredMixin, CreateView):
     template_name = "audits/audit_form.html"
     fields = [
         "organization",
+        "program",
         "certifications",
         "sites",
         "audit_type",
@@ -377,6 +378,7 @@ class AuditUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = "audits/audit_form.html"
     fields = [
         "organization",
+        "program",
         "certifications",
         "sites",
         "audit_type",

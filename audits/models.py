@@ -17,6 +17,47 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 
+class AuditProgram(models.Model):
+    """
+    Annual audit program (ISO 19011 Clause 5).
+
+    Defines the schedule, objectives, and risks for a set of audits
+    (internal or external) over a specific period (usually a year).
+    """
+
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("active", "Active"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    organization = models.ForeignKey(
+        "core.Organization", on_delete=models.CASCADE, related_name="audit_programs"
+    )
+    title = models.CharField(max_length=255, help_text="Program title (e.g., '2025 Internal Audit Program')")
+    year = models.PositiveIntegerField(help_text="Program year")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    
+    objectives = models.TextField(help_text="Audit program objectives (ISO 19011 5.2)")
+    risks_opportunities = models.TextField(
+        help_text="Risks and opportunities associated with the audit program (ISO 19011 5.3)"
+    )
+    
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="audit_programs_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Audit Program"
+        verbose_name_plural = "Audit Programs"
+        ordering = ["-year", "title"]
+        unique_together = ["organization", "year", "title"]
+
+    def __str__(self):
+        return f"{self.title} ({self.organization.name})"
+
+
 class Audit(models.Model):
     """
     Main audit record.
@@ -32,6 +73,7 @@ class Audit(models.Model):
         ("recertification", "Recertification"),
         ("transfer", "Transfer"),
         ("special", "Special"),
+        ("internal", "Internal Audit"),
     ]
 
     STATUS_CHOICES = [
@@ -48,6 +90,14 @@ class Audit(models.Model):
         ("cancelled", "Cancelled"),
     ]
 
+    program = models.ForeignKey(
+        AuditProgram,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audits",
+        help_text="Audit program this audit belongs to",
+    )
     organization = models.ForeignKey(
         "core.Organization", on_delete=models.CASCADE, related_name="audits"
     )

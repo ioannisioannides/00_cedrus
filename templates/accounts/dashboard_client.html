@@ -67,7 +67,14 @@
                                 </td>
                                 <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
                                 <td>
-                                    <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-primary">View</a>
+                                        {% if audit.status == 'decided' or audit.status == 'closed' %}
+                                            <a href="{% url 'reporting:certificate_pdf' audit.pk %}" class="btn btn-outline-success" title="Download Certificate" target="_blank">
+                                                <i class="bi bi-award"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

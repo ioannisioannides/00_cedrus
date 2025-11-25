@@ -1,0 +1,141 @@
+{% extends "reporting/base_pdf.html" %}
+
+{% block title %}Audit Report - {{ audit.organization.name }}{% endblock %}
+
+{% block content %}
+    <h1>Audit Report</h1>
+    
+    <table class="meta-table">
+        <tr>
+            <th>Organization:</th>
+            <td>{{ audit.organization.name }}</td>
+        </tr>
+        <tr>
+            <th>Audit Type:</th>
+            <td>{{ audit.get_audit_type_display }}</td>
+        </tr>
+        <tr>
+            <th>Standard(s):</th>
+            <td>
+                {% for cert in audit.certifications.all %}
+                    {{ cert.standard.code }} - {{ cert.standard.title }}<br>
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>Dates:</th>
+            <td>{{ audit.total_audit_date_from }} to {{ audit.total_audit_date_to }}</td>
+        </tr>
+        <tr>
+            <th>Lead Auditor:</th>
+            <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
+        </tr>
+        <tr>
+            <th>Report Status:</th>
+            <td>{{ audit.get_status_display }}</td>
+        </tr>
+    </table>
+
+    <h2>1. Audit Scope & Objectives</h2>
+    <p><strong>Scope of Certification:</strong></p>
+    <ul>
+        {% for cert in audit.certifications.all %}
+            <li>{{ cert.certification_scope }}</li>
+        {% endfor %}
+    </ul>
+    
+    <p><strong>Sites Audited:</strong></p>
+    <ul>
+        {% for site in audit.sites.all %}
+            <li>{{ site.site_name }} - {{ site.site_address }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>2. Executive Summary</h2>
+    {% if summary %}
+        <p>{{ summary.general_commentary|default:"No executive summary provided."|linebreaks }}</p>
+        
+        <h3>Key Metrics</h3>
+        <ul>
+            <li>Objectives Met: {{ summary.objectives_met|yesno:"Yes,No" }}</li>
+            <li>Management System Effective: {{ summary.ms_effective|yesno:"Yes,No" }}</li>
+        </ul>
+    {% else %}
+        <p><em>Executive summary has not been completed yet.</em></p>
+    {% endif %}
+
+    <h2>3. Audit Findings</h2>
+    
+    {% if nonconformities %}
+        <h3>Non-Conformities</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%">ID</th>
+                    <th style="width: 15%">Type</th>
+                    <th style="width: 15%">Clause</th>
+                    <th>Description</th>
+                    <th style="width: 15%">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nc in nonconformities %}
+                <tr>
+                    <td>NC-{{ nc.id }}</td>
+                    <td>
+                        <span class="status-badge {% if nc.category == 'major' %}status-major{% else %}status-minor{% endif %}">
+                            {{ nc.get_category_display }}
+                        </span>
+                    </td>
+                    <td>{{ nc.clause }}</td>
+                    <td>{{ nc.statement_of_nc }}</td>
+                    <td>{{ nc.get_verification_status_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No non-conformities were raised during this audit.</p>
+    {% endif %}
+
+    {% if ofis %}
+        <h3>Opportunities for Improvement</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%">ID</th>
+                    <th style="width: 15%">Clause</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ofi in ofis %}
+                <tr>
+                    <td>OFI-{{ ofi.id }}</td>
+                    <td>{{ ofi.clause }}</td>
+                    <td>{{ ofi.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <h2>4. Conclusion & Recommendation</h2>
+    {% if recommendation %}
+        <p><strong>Recommendation:</strong></p>
+        {% if recommendation.special_audit_required %}
+            <p>A special audit is recommended.</p>
+        {% elif recommendation.suspension_recommended %}
+            <p>Suspension of certification is recommended.</p>
+        {% else %}
+            <p>Continued certification is recommended.</p>
+        {% endif %}
+        
+        {% if recommendation.decision_notes %}
+            <p><strong>Notes:</strong> {{ recommendation.decision_notes }}</p>
+        {% endif %}
+    {% else %}
+        <p><em>Final recommendation pending.</em></p>
+    {% endif %}
+
+{% endblock %}

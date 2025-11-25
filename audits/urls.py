@@ -4,11 +4,18 @@ URL configuration for audits app.
 
 from django.urls import path
 
-from . import views, views_complaints
+from . import views, views_complaints, views_program
 
 app_name = "audits"
 
 urlpatterns = [
+    # Audit Program views (ISO 19011)
+    path("programs/", views_program.AuditProgramListView.as_view(), name="program_list"),
+    path("programs/create/", views_program.AuditProgramCreateView.as_view(), name="program_create"),
+    path("programs/<int:pk>/", views_program.AuditProgramDetailView.as_view(), name="program_detail"),
+    path("programs/<int:pk>/edit/", views_program.AuditProgramUpdateView.as_view(), name="program_update"),
+    path("programs/<int:pk>/delete/", views_program.AuditProgramDeleteView.as_view(), name="program_delete"),
+
     # Audit views
     path("", views.AuditListView.as_view(), name="audit_list"),
     path("create/", views.AuditCreateView.as_view(), name="audit_create"),

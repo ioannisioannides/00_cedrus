@@ -25,10 +25,26 @@
                 {% endif %}
             {% endfor %}
         {% endif %}
+        
+        <!-- Reporting Actions -->
+        <div class="btn-group me-2">
+            <a href="{% url 'reporting:audit_report_pdf' audit.pk %}" class="btn btn-outline-secondary" target="_blank">
+                <i class="bi bi-file-earmark-pdf"></i> PDF Report
+            </a>
+            {% if audit.status == 'decided' or audit.status == 'closed' %}
+                <a href="{% url 'reporting:certificate_pdf' audit.pk %}" class="btn btn-outline-success" target="_blank">
+                    <i class="bi bi-award"></i> Certificate
+                </a>
+            {% endif %}
+        </div>
+
         <a href="{% url 'audits:audit_print' audit.pk %}" class="btn btn-outline-secondary">Print</a>
         <a href="{% url 'audits:audit_list' %}" class="btn btn-outline-secondary">Back to List</a>
     </div>
 </div>
+
+<!-- Progress Tracker -->
+{% include "audits/includes/progress_tracker.html" %}
 
 <!-- Basic Information -->
 <div class="row g-4">
