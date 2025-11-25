@@ -57,7 +57,12 @@
                                     to {{ audit.total_audit_date_to|date:"M d, Y" }}</small>
                                 </td>
                                 <td>
-                                    <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-primary">View</a>
+                                        <a href="{% url 'reporting:audit_report_pdf' audit.pk %}" class="btn btn-outline-secondary" title="Download Report" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

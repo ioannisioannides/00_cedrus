@@ -198,11 +198,20 @@ class NonconformityVerificationForm(forms.ModelForm):
     with verification notes.
     """
 
+    verification_action = forms.ChoiceField(
+        choices=[
+            ("accept", "Accept Response"),
+            ("request_changes", "Request Changes"),
+            ("close", "Close Nonconformity"),
+        ],
+        widget=forms.Select(attrs={"class": "form-select"}),
+        help_text="Select the action to take on this nonconformity response.",
+    )
+
     class Meta:
         model = Nonconformity
-        fields = ["verification_status", "verification_notes"]
+        fields = ["verification_notes"]
         widgets = {
-            "verification_status": forms.Select(attrs={"class": "form-select"}),
             "verification_notes": forms.Textarea(
                 attrs={
                     "class": "form-control",
@@ -212,17 +221,11 @@ class NonconformityVerificationForm(forms.ModelForm):
             ),
         }
         help_texts = {
-            "verification_status": "Accept or close the nonconformity based on client response",
             "verification_notes": "Document your assessment of the client response",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Limit status choices to verification-relevant options
-        self.fields["verification_status"].choices = [
-            ("accepted", "Accepted - Corrective action approved"),
-            ("closed", "Closed - Verified effective"),
-        ]
         self.fields["verification_notes"].required = True
 
 
