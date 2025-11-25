@@ -2,7 +2,7 @@
 URL configuration for accounts app.
 """
 
-from django.urls import path
+from django.urls import path  # pylint: disable=no-name-in-module
 
 from . import views
 
