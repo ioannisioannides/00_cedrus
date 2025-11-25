@@ -365,24 +365,31 @@ class AuditRecommendationTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_decision_view_requires_submitted_status(self):
-        """Test decision can only be made when status is submitted_to_cb."""
+    def test_decision_view_requires_decision_pending_status(self):
+        """Test decision can only be made when status is decision_pending."""
         self.audit.status = "draft"
         self.audit.save()
 
         self.client.login(username="cbadmin", password="pass123")
-        response = self.client.get(reverse("audits:audit_make_decision", args=[self.audit.pk]))
-        # Should redirect with error message
-        self.assertEqual(response.status_code, 302)
+        response = self.client.get(
+            reverse("audits:certification_decision_create", args=[self.audit.pk])
+        )
+        # Should return 403 Forbidden (UserPassesTestMixin returns False)
+        self.assertEqual(response.status_code, 403)
 
     def test_decision_view_cb_admin_only(self):
         """Test only CB admin can make decisions."""
+        self.audit.status = "decision_pending"
+        self.audit.save()
+
         self.client.login(username="lead", password="pass123")
-        response = self.client.get(reverse("audits:audit_make_decision", args=[self.audit.pk]))
-        self.assertEqual(response.status_code, 302)  # Redirect with error
+        response = self.client.get(
+            reverse("audits:certification_decision_create", args=[self.audit.pk])
+        )
+        self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_make_decision_changes_status(self):
-        """Test making decision changes audit status to decided."""
+        """Test making decision changes audit status to closed."""
         from audits.models import CertificationDecision, TechnicalReview
 
         self.client.login(username="cbadmin", password="pass123")
@@ -390,6 +397,20 @@ class AuditRecommendationTest(TestCase):
         # Move audit to client_review
         self.audit.status = "client_review"
         self.audit.save()
+
+        # Move to submitted
+        self.client.post(
+            reverse("audits:audit_transition_status", args=[self.audit.pk, "submitted"])
+        )
+        self.audit.refresh_from_db()
+        self.assertEqual(self.audit.status, "submitted")
+
+        # Move to technical_review
+        self.client.post(
+            reverse("audits:audit_transition_status", args=[self.audit.pk, "technical_review"])
+        )
+        self.audit.refresh_from_db()
+        self.assertEqual(self.audit.status, "technical_review")
 
         # Create approved technical review (required)
         TechnicalReview.objects.create(
@@ -402,27 +423,26 @@ class AuditRecommendationTest(TestCase):
             status="approved",
         )
 
-        # Move to submitted
+        # Move to decision_pending
         self.client.post(
-            reverse("audits:audit_transition_status", args=[self.audit.pk, "submitted"])
+            reverse("audits:audit_transition_status", args=[self.audit.pk, "decision_pending"])
         )
         self.audit.refresh_from_db()
-        self.assertEqual(self.audit.status, "submitted")
+        self.assertEqual(self.audit.status, "decision_pending")
 
-        # Create certification decision
-        CertificationDecision.objects.create(
-            audit=self.audit,
-            decision_maker=self.cb_admin,
-            decision="grant",
-            decision_notes="Certification granted",
+        # Create certification decision via view
+        data = {
+            "decision": "grant",
+            "decision_notes": "Certification granted",
+            "certifications_affected": [self.cert.pk],
+        }
+        self.client.post(
+            reverse("audits:certification_decision_create", args=[self.audit.pk]), data
         )
 
-        # Transition to decided
-        self.client.post(reverse("audits:audit_transition_status", args=[self.audit.pk, "decided"]))
-
-        # Verify status is decided
+        # Verify status is closed
         self.audit.refresh_from_db()
-        self.assertEqual(self.audit.status, "decided")
+        self.assertEqual(self.audit.status, "closed")
 
 
 class EvidenceFileManagementTest(TestCase):
