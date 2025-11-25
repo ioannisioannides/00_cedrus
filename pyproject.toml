@@ -84,6 +84,50 @@ exclude_dirs = [
 # - LOW: 0 (after B101 skip) ✅
 # ==============================================================================
 
+[tool.coverage.run]
+# Coverage configuration for pytest-cov
+branch = true
+source = ["accounts", "audits", "core", "trunk", "reporting", "cedrus"]
+omit = [
+    # Django management scripts
+    "manage.py",
+    # ASGI/WSGI server configs (run by gunicorn/uvicorn)
+    "*/asgi.py",
+    "*/wsgi.py",
+    # Production settings (environment-specific)
+    "*/settings_production.py",
+    # Database migrations (auto-generated)
+    "*/migrations/*",
+    # Management commands (run via manage.py)
+    "*/management/*",
+    # Test files (test themselves, not tested)
+    "*/test_*.py",
+    "*/tests.py",
+    # Cache directories
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+# Exclude lines from coverage analysis
+exclude_lines = [
+    # Skip defensive assertions
+    "pragma: no cover",
+    # Skip debug-only code
+    "def __repr__",
+    # Skip abstract methods
+    "raise NotImplementedError",
+    # Skip TYPE_CHECKING blocks
+    "if TYPE_CHECKING:",
+    # Skip protocol definitions
+    "@abstractmethod",
+]
+# Fail if coverage is below threshold
+fail_under = 95
+# Show missing lines
+show_missing = true
+# Skip empty files
+skip_empty = true
+
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
 disable_error_code = ["misc"]

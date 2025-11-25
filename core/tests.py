@@ -3,12 +3,148 @@ Comprehensive tests for core app: organizations, sites, standards, certification
 """
 
 from datetime import date, timedelta
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import Group, User
-from django.test import Client, TestCase
+from django.core.cache import cache
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from core.models import Certification, Organization, Site, Standard
+
+
+# ==============================================================================
+# HEALTH CHECK TESTS
+# ==============================================================================
+
+
+class HealthCheckTest(TestCase):
+    """Test health check endpoints."""
+
+    def test_health_check_returns_200(self):
+        """Test basic health check returns healthy status."""
+        response = self.client.get("/health/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "healthy")
+        self.assertIn("timestamp", data)
+        self.assertIn("version", data)
+
+    def test_health_check_only_get_allowed(self):
+        """Test health check rejects POST requests."""
+        response = self.client.post("/health/")
+        self.assertEqual(response.status_code, 405)
+
+    def test_readiness_check_healthy(self):
+        """Test readiness check when all services are healthy."""
+        response = self.client.get("/health/ready/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "ready")
+        self.assertEqual(data["checks"]["database"], "healthy")
+        self.assertEqual(data["checks"]["models"], "healthy")
+
+    def test_readiness_check_database_healthy(self):
+        """Test readiness check properly checks database."""
+        response = self.client.get("/health/ready/")
+        data = response.json()
+        self.assertIn("database", data["checks"])
+        self.assertEqual(data["checks"]["database"], "healthy")
+
+    @patch("core.health.cache")
+    def test_readiness_check_cache_failure(self, mock_cache):
+        """Test readiness check when cache fails."""
+        mock_cache.set.side_effect = Exception("Redis connection failed")
+        response = self.client.get("/health/ready/")
+        self.assertEqual(response.status_code, 503)
+        data = response.json()
+        self.assertEqual(data["status"], "not_ready")
+        self.assertEqual(data["checks"]["cache"], "unhealthy")
+        self.assertTrue(any("Cache connection failed" in e for e in data["errors"]))
+
+    @patch("core.health.cache")
+    def test_readiness_check_cache_mismatch(self, mock_cache):
+        """Test readiness check when cache returns wrong value."""
+        mock_cache.set.return_value = None
+        mock_cache.get.return_value = "wrong_value"
+        response = self.client.get("/health/ready/")
+        self.assertEqual(response.status_code, 503)
+        data = response.json()
+        self.assertEqual(data["checks"]["cache"], "unhealthy")
+
+    @patch("core.health.connection")
+    def test_readiness_check_database_failure(self, mock_connection):
+        """Test readiness check when database fails."""
+        mock_cursor = MagicMock()
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        mock_cursor.execute.side_effect = Exception("Database connection failed")
+        mock_connection.cursor.return_value = mock_cursor
+        response = self.client.get("/health/ready/")
+        self.assertEqual(response.status_code, 503)
+
+    def test_liveness_check_returns_alive(self):
+        """Test liveness check returns alive status."""
+        response = self.client.get("/health/live/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "alive")
+        self.assertIn("python_version", data)
+        self.assertIn("timestamp", data)
+
+    @override_settings(DEBUG=True)
+    def test_detailed_status_debug_mode(self):
+        """Test detailed status is accessible in debug mode."""
+        response = self.client.get(reverse("core:detailed_status"))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "healthy")
+        self.assertIn("application", data)
+        self.assertIn("database", data)
+        self.assertIn("cache", data)
+        self.assertIn("system", data)
+
+    @override_settings(DEBUG=False)
+    def test_detailed_status_production_forbidden(self):
+        """Test detailed status is forbidden for anonymous users in production."""
+        response = self.client.get(reverse("core:detailed_status"))
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(DEBUG=False)
+    def test_detailed_status_production_superuser(self):
+        """Test detailed status is accessible for superusers in production."""
+        superuser = User.objects.create_superuser(
+            username="admin", email="admin@test.com", password="adminpass"
+        )
+        self.client.login(username="admin", password="adminpass")
+        response = self.client.get(reverse("core:detailed_status"))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "healthy")
+
+    @override_settings(DEBUG=True)
+    @patch("core.health.connection")
+    def test_detailed_status_database_error(self, mock_connection):
+        """Test detailed status handles database errors gracefully."""
+        mock_cursor = MagicMock()
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        mock_cursor.execute.side_effect = Exception("DB Error")
+        mock_connection.cursor.return_value = mock_cursor
+        response = self.client.get(reverse("core:detailed_status"))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["database"]["status"], "error")
+
+    @override_settings(DEBUG=True)
+    @patch("core.health.cache")
+    def test_detailed_status_cache_error(self, mock_cache):
+        """Test detailed status handles cache errors gracefully."""
+        mock_cache.set.side_effect = Exception("Cache Error")
+        response = self.client.get(reverse("core:detailed_status"))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["cache"]["status"], "error")
 
 
 class OrganizationModelTest(TestCase):

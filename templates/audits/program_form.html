@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 
 {% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Audit Program - Cedrus{% endblock %}
 
@@ -20,7 +19,7 @@
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
-                    {{ form|crispy }}
+                    {{ form.as_p }}
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                         <a href="{% url 'audits:program_list' %}" class="btn btn-outline-secondary me-md-2">Cancel</a>

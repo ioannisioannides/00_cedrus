@@ -26,6 +26,7 @@ class AuditService:
         # Remove M2M fields if they are in audit_data
         create_data.pop("certifications", None)
         create_data.pop("sites", None)
+        create_data.pop("organization", None)
 
         # Ensure lead_auditor is set
         if "lead_auditor" not in create_data:
