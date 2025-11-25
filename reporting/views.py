@@ -1,14 +1,17 @@
 import base64
 from io import BytesIO
-import qrcode
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
-from django.template.loader import render_to_string
+
 from django.contrib.auth.decorators import login_required, permission_required
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
+
+import qrcode
 from weasyprint import HTML
 
 from audits.models import Audit
+
 
 @login_required
 @permission_required('audits.view_audit', raise_exception=True)

@@ -1,9 +1,11 @@
-from django.test import TestCase, Client
+from django.contrib.auth.models import Group, Permission, User
+from django.test import Client, TestCase
 from django.urls import reverse
-from django.contrib.auth.models import User, Group, Permission
 from django.utils import timezone
+
 from audits.models import Audit
-from core.models import Organization, Standard, Certification, Site
+from core.models import Certification, Organization, Site, Standard
+
 
 class ReportingViewTests(TestCase):
     def setUp(self):
