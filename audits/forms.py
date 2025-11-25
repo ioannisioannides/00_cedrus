@@ -180,7 +180,7 @@ class NonconformityResponseForm(forms.ModelForm):
 class NonconformityVerificationForm(forms.ModelForm):
     """Form for auditors to verify nonconformity responses."""
 
-    verification_action = forms.ChoiceField(
+    verification_action: forms.ChoiceField = forms.ChoiceField(
         choices=[
             ("accept", "Accept Response"),
             ("request_changes", "Request Changes"),
@@ -191,7 +191,7 @@ class NonconformityVerificationForm(forms.ModelForm):
         help_text="Choose the verification action",
     )
 
-    verification_notes = forms.CharField(
+    verification_notes: forms.CharField = forms.CharField(
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         required=False,
         help_text="Optional notes about the verification",

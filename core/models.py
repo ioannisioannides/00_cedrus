@@ -18,32 +18,32 @@ class Organization(models.Model):
     an organization.
     """
 
-    name = models.CharField(max_length=255, help_text="Official company name")
-    registered_id = models.CharField(max_length=100, blank=True, help_text="Company registration number")
-    registered_address = models.TextField(help_text="Registered business address")
-    customer_id = models.CharField(max_length=50, unique=True, help_text="Internal customer reference number")
-    total_employee_count = models.PositiveIntegerField(
+    name: models.CharField = models.CharField(max_length=255, help_text="Official company name")
+    registered_id: models.CharField = models.CharField(max_length=100, blank=True, help_text="Company registration number")
+    registered_address: models.TextField = models.TextField(help_text="Registered business address")
+    customer_id: models.CharField = models.CharField(max_length=50, unique=True, help_text="Internal customer reference number")
+    total_employee_count: models.PositiveIntegerField = models.PositiveIntegerField(
         validators=[MinValueValidator(1)], help_text="Total number of employees across all sites"
     )
 
     # Contact information
-    contact_telephone = models.CharField(max_length=50, blank=True)
-    contact_fax = models.CharField(max_length=50, blank=True)
-    contact_email = models.EmailField(blank=True)
-    contact_website = models.URLField(blank=True)
+    contact_telephone: models.CharField = models.CharField(max_length=50, blank=True)
+    contact_fax: models.CharField = models.CharField(max_length=50, blank=True)
+    contact_email: models.EmailField = models.EmailField(blank=True)
+    contact_website: models.URLField = models.URLField(blank=True)
 
     # Signatory (person authorized to sign contracts/certificates)
-    signatory_name = models.CharField(max_length=255, blank=True)
-    signatory_title = models.CharField(max_length=255, blank=True)
+    signatory_name: models.CharField = models.CharField(max_length=255, blank=True)
+    signatory_title: models.CharField = models.CharField(max_length=255, blank=True)
 
     # Management System Representative
-    ms_representative_name = models.CharField(
+    ms_representative_name: models.CharField = models.CharField(
         max_length=255, blank=True, help_text="Management System Representative name"
     )
-    ms_representative_title = models.CharField(max_length=255, blank=True)
+    ms_representative_title: models.CharField = models.CharField(max_length=255, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    updated_at: models.DateTimeField = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Organization"
@@ -62,20 +62,20 @@ class Site(models.Model):
     scopes or employee counts. Sites are linked to audits.
     """
 
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="sites")
-    site_name = models.CharField(max_length=255, help_text="Name of the site/location")
-    site_address = models.TextField(help_text="Physical address of the site")
-    site_employee_count = models.PositiveIntegerField(
+    organization: models.ForeignKey = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="sites")
+    site_name: models.CharField = models.CharField(max_length=255, help_text="Name of the site/location")
+    site_address: models.TextField = models.TextField(help_text="Physical address of the site")
+    site_employee_count: models.PositiveIntegerField = models.PositiveIntegerField(
         null=True,
         blank=True,
         validators=[MinValueValidator(1)],
         help_text="Number of employees at this site (optional)",
     )
-    site_scope_override = models.TextField(blank=True, help_text="Optional scope description specific to this site")
-    active = models.BooleanField(default=True, help_text="Whether this site is currently active")
+    site_scope_override: models.TextField = models.TextField(blank=True, help_text="Optional scope description specific to this site")
+    active: models.BooleanField = models.BooleanField(default=True, help_text="Whether this site is currently active")
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    updated_at: models.DateTimeField = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Site"
@@ -93,13 +93,13 @@ class Standard(models.Model):
     Standards are reference data - they define what certifications are based on.
     """
 
-    code = models.CharField(max_length=100, unique=True, help_text="Standard code (e.g., 'ISO 9001:2015')")
-    title = models.CharField(max_length=255, help_text="Full title of the standard")
-    nace_code = models.CharField(max_length=50, blank=True, help_text="NACE classification code")
-    ea_code = models.CharField(max_length=50, blank=True, help_text="EA (European Accreditation) code")
+    code: models.CharField = models.CharField(max_length=100, unique=True, help_text="Standard code (e.g., 'ISO 9001:2015')")
+    title: models.CharField = models.CharField(max_length=255, help_text="Full title of the standard")
+    nace_code: models.CharField = models.CharField(max_length=50, blank=True, help_text="NACE classification code")
+    ea_code: models.CharField = models.CharField(max_length=50, blank=True, help_text="EA (European Accreditation) code")
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    updated_at: models.DateTimeField = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Standard"
@@ -126,16 +126,16 @@ class Certification(models.Model):
         ("expired", "Expired"),
     ]
 
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="certifications")
-    standard = models.ForeignKey(Standard, on_delete=models.PROTECT, related_name="certifications")
-    certification_scope = models.TextField(help_text="Scope of the certification")
-    certificate_id = models.CharField(max_length=100, blank=True, help_text="Certificate number/reference")
-    certificate_status = models.CharField(max_length=20, choices=CERTIFICATE_STATUS_CHOICES, default="draft")
-    issue_date = models.DateField(null=True, blank=True)
-    expiry_date = models.DateField(null=True, blank=True)
+    organization: models.ForeignKey = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="certifications")
+    standard: models.ForeignKey = models.ForeignKey(Standard, on_delete=models.PROTECT, related_name="certifications")
+    certification_scope: models.TextField = models.TextField(help_text="Scope of the certification")
+    certificate_id: models.CharField = models.CharField(max_length=100, blank=True, help_text="Certificate number/reference")
+    certificate_status: models.CharField = models.CharField(max_length=20, choices=CERTIFICATE_STATUS_CHOICES, default="draft")
+    issue_date: models.DateField = models.DateField(null=True, blank=True)
+    expiry_date: models.DateField = models.DateField(null=True, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    updated_at: models.DateTimeField = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Certification"
@@ -169,36 +169,36 @@ class CertificateHistory(models.Model):
         ("transfer_out", "Transferred Out"),
     ]
 
-    certification = models.ForeignKey(Certification, on_delete=models.CASCADE, related_name="history")
-    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
-    action_date = models.DateField()
-    related_audit = models.ForeignKey(
+    certification: models.ForeignKey = models.ForeignKey(Certification, on_delete=models.CASCADE, related_name="history")
+    action: models.CharField = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    action_date: models.DateField = models.DateField()
+    related_audit: models.ForeignKey = models.ForeignKey(
         "audits.Audit",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="certificate_history_entries",
     )
-    related_decision = models.ForeignKey(
+    related_decision: models.ForeignKey = models.ForeignKey(
         "audits.CertificationDecision",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="certificate_history_entries",
     )
-    certificate_number_snapshot = models.CharField(max_length=100, blank=True)
-    certification_scope_snapshot = models.TextField(blank=True)
-    valid_from = models.DateField(null=True, blank=True)
-    valid_to = models.DateField(null=True, blank=True)
-    action_by = models.ForeignKey(
+    certificate_number_snapshot: models.CharField = models.CharField(max_length=100, blank=True)
+    certification_scope_snapshot: models.TextField = models.TextField(blank=True)
+    valid_from: models.DateField = models.DateField(null=True, blank=True)
+    valid_to: models.DateField = models.DateField(null=True, blank=True)
+    action_by: models.ForeignKey = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         related_name="certificate_history_actions",
     )
-    action_reason = models.TextField(blank=True)
-    internal_notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    action_reason: models.TextField = models.TextField(blank=True)
+    internal_notes: models.TextField = models.TextField(blank=True)
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Certificate History"
@@ -216,27 +216,27 @@ class CertificateHistory(models.Model):
 class SurveillanceSchedule(models.Model):
     """Track 3-year certification cycle surveillance and recertification milestones."""
 
-    certification = models.OneToOneField(Certification, on_delete=models.CASCADE, related_name="surveillance_schedule")
-    cycle_start = models.DateField(help_text="Certification cycle start (Stage 2 decision date)")
-    cycle_end = models.DateField(help_text="Certification cycle end (3 years from start)")
-    surveillance_1_due_date = models.DateField()
-    surveillance_2_due_date = models.DateField()
-    recertification_due_date = models.DateField()
-    surveillance_1_audit = models.ForeignKey(
+    certification: models.OneToOneField = models.OneToOneField(Certification, on_delete=models.CASCADE, related_name="surveillance_schedule")
+    cycle_start: models.DateField = models.DateField(help_text="Certification cycle start (Stage 2 decision date)")
+    cycle_end: models.DateField = models.DateField(help_text="Certification cycle end (3 years from start)")
+    surveillance_1_due_date: models.DateField = models.DateField()
+    surveillance_2_due_date: models.DateField = models.DateField()
+    recertification_due_date: models.DateField = models.DateField()
+    surveillance_1_audit: models.ForeignKey = models.ForeignKey(
         "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_1_for"
     )
-    surveillance_2_audit = models.ForeignKey(
+    surveillance_2_audit: models.ForeignKey = models.ForeignKey(
         "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_2_for"
     )
-    recertification_audit = models.ForeignKey(
+    recertification_audit: models.ForeignKey = models.ForeignKey(
         "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="recertification_for"
     )
-    surveillance_1_completed = models.BooleanField(default=False)
-    surveillance_2_completed = models.BooleanField(default=False)
-    recertification_completed = models.BooleanField(default=False)
-    overdue_alert_sent = models.BooleanField(default=False)
-    expiry_warning_sent = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    surveillance_1_completed: models.BooleanField = models.BooleanField(default=False)
+    surveillance_2_completed: models.BooleanField = models.BooleanField(default=False)
+    recertification_completed: models.BooleanField = models.BooleanField(default=False)
+    overdue_alert_sent: models.BooleanField = models.BooleanField(default=False)
+    expiry_warning_sent: models.BooleanField = models.BooleanField(default=False)
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Surveillance Schedule"
