@@ -31,21 +31,21 @@ def on_audit_status_changed(payload):
             EventType.AUDIT_SUBMITTED_TO_CLIENT,
             {"audit": audit, "changed_by": changed_by},
         )
-        logger.info(f"Audit {audit.id} submitted to client for review")
+        logger.info("Audit %s submitted to client for review", audit.id)
 
     elif new_status == "submitted":
         event_dispatcher.emit(
             EventType.AUDIT_SUBMITTED_TO_CB,
             {"audit": audit, "changed_by": changed_by},
         )
-        logger.info(f"Audit {audit.id} submitted to CB for decision")
+        logger.info("Audit %s submitted to CB for decision", audit.id)
 
     elif new_status == "decided":
         event_dispatcher.emit(
             EventType.AUDIT_DECIDED,
             {"audit": audit, "changed_by": changed_by},
         )
-        logger.info(f"Audit {audit.id} decision made by {changed_by}")
+        logger.info("Audit %s decision made by %s", audit.id, changed_by)
 
 
 def on_nc_verified(payload):
@@ -65,39 +65,39 @@ def on_nc_verified(payload):
             EventType.NC_VERIFIED_ACCEPTED,
             {"nc": nc},
         )
-        logger.info(f"NC {nc.id} (Clause {nc.clause}) verified and accepted")
+        logger.info("NC %s (Clause %s) verified and accepted", nc.id, nc.clause)
 
     elif verification_status == "rejected":
         event_dispatcher.emit(
             EventType.NC_VERIFIED_REJECTED,
             {"nc": nc},
         )
-        logger.info(f"NC {nc.id} (Clause {nc.clause}) verification rejected")
+        logger.info("NC %s (Clause %s) verification rejected", nc.id, nc.clause)
 
     elif verification_status == "closed":
         event_dispatcher.emit(
             EventType.NC_CLOSED,
             {"nc": nc},
         )
-        logger.info(f"NC {nc.id} (Clause {nc.clause}) closed")
+        logger.info("NC %s (Clause %s) closed", nc.id, nc.clause)
 
 
 def on_complaint_received(payload):
     """Handler for complaint received events."""
     complaint = payload.get("complaint")
-    logger.info(f"Complaint {complaint.complaint_number} received from {complaint.complainant_name}")
+    logger.info("Complaint %s received from %s", complaint.complaint_number, complaint.complainant_name)
 
 
 def on_appeal_received(payload):
     """Handler for appeal received events."""
     appeal = payload.get("appeal")
-    logger.info(f"Appeal {appeal.appeal_number} received from {appeal.appellant_name}")
+    logger.info("Appeal %s received from %s", appeal.appeal_number, appeal.appellant_name)
 
 
 def on_certificate_history_created(payload):
     """Handler for certificate history creation."""
     history = payload.get("history")
-    logger.info(f"Certificate history created: {history.action} for {history.certification.certificate_id}")
+    logger.info("Certificate history created: %s for %s", history.action, history.certification.certificate_id)
 
 
 def register_event_handlers():

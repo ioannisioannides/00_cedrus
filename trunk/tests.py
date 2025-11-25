@@ -8,7 +8,7 @@ Tests for:
 """
 
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
@@ -26,7 +26,6 @@ from trunk.events.handlers import (
     register_event_handlers,
 )
 from trunk.permissions.policies import PBACPolicy
-from trunk.permissions.predicates import PermissionPredicate
 
 # ==============================================================================
 # PERMISSION POLICIES TESTS
@@ -322,7 +321,7 @@ class EventHandlersTest(TestCase):
     def test_on_audit_status_changed_to_client_review(self):
         """Test handler for status change to client_review."""
         events = []
-        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, lambda p: events.append(p))
+        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, events.append)
 
         on_audit_status_changed({"audit": self.audit, "new_status": "client_review", "changed_by": self.user})
 
@@ -332,7 +331,7 @@ class EventHandlersTest(TestCase):
     def test_on_audit_status_changed_to_submitted(self):
         """Test handler for status change to submitted."""
         events = []
-        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CB, lambda p: events.append(p))
+        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CB, events.append)
 
         on_audit_status_changed({"audit": self.audit, "new_status": "submitted", "changed_by": self.user})
 
@@ -342,7 +341,7 @@ class EventHandlersTest(TestCase):
     def test_on_audit_status_changed_to_decided(self):
         """Test handler for status change to decided."""
         events = []
-        event_dispatcher.register(EventType.AUDIT_DECIDED, lambda p: events.append(p))
+        event_dispatcher.register(EventType.AUDIT_DECIDED, events.append)
 
         on_audit_status_changed({"audit": self.audit, "new_status": "decided", "changed_by": self.user})
 
@@ -351,7 +350,7 @@ class EventHandlersTest(TestCase):
     def test_on_audit_status_changed_missing_audit(self):
         """Test handler with missing audit returns early."""
         events = []
-        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, lambda p: events.append(p))
+        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, events.append)
 
         on_audit_status_changed({"new_status": "client_review", "changed_by": self.user})
 
@@ -360,7 +359,7 @@ class EventHandlersTest(TestCase):
     def test_on_audit_status_changed_missing_status(self):
         """Test handler with missing status returns early."""
         events = []
-        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, lambda p: events.append(p))
+        event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, events.append)
 
         on_audit_status_changed({"audit": self.audit, "changed_by": self.user})
 
@@ -369,7 +368,7 @@ class EventHandlersTest(TestCase):
     def test_on_nc_verified_accepted(self):
         """Test handler for NC verification accepted."""
         events = []
-        event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, lambda p: events.append(p))
+        event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, events.append)
 
         from audits.models import Nonconformity
 
@@ -391,7 +390,7 @@ class EventHandlersTest(TestCase):
     def test_on_nc_verified_rejected(self):
         """Test handler for NC verification rejected."""
         events = []
-        event_dispatcher.register(EventType.NC_VERIFIED_REJECTED, lambda p: events.append(p))
+        event_dispatcher.register(EventType.NC_VERIFIED_REJECTED, events.append)
 
         from audits.models import Nonconformity
 
@@ -412,7 +411,7 @@ class EventHandlersTest(TestCase):
     def test_on_nc_verified_closed(self):
         """Test handler for NC closed."""
         events = []
-        event_dispatcher.register(EventType.NC_CLOSED, lambda p: events.append(p))
+        event_dispatcher.register(EventType.NC_CLOSED, events.append)
 
         from audits.models import Nonconformity
 
@@ -433,7 +432,7 @@ class EventHandlersTest(TestCase):
     def test_on_nc_verified_missing_nc(self):
         """Test handler with missing NC returns early."""
         events = []
-        event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, lambda p: events.append(p))
+        event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, events.append)
 
         on_nc_verified({"verification_status": "accepted"})
 
@@ -442,7 +441,7 @@ class EventHandlersTest(TestCase):
     def test_on_nc_verified_missing_status(self):
         """Test handler with missing status returns early."""
         events = []
-        event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, lambda p: events.append(p))
+        event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, events.append)
 
         from audits.models import Nonconformity
 

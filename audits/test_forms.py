@@ -4,7 +4,7 @@ Tests for audits forms.
 
 from datetime import date, timedelta
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.test import TestCase
 
 from audits.forms import (
@@ -14,7 +14,7 @@ from audits.forms import (
     ObservationForm,
     OpportunityForImprovementForm,
 )
-from audits.models import Audit, Nonconformity
+from audits.models import Audit
 from core.models import Certification, Organization, Standard
 
 

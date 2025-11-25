@@ -432,7 +432,7 @@ All delete views check `status == "decided"`:
 
 ### Created
 
-4. **templates/audits/observation_detail.html** (70 lines)
+1. **templates/audits/observation_detail.html** (70 lines)
 2. **templates/audits/ofi_detail.html** (70 lines)
 3. **audits/test_findings_crud.py** (450+ lines, 18 tests)
 4. **pytest.ini** (6 lines)

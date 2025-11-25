@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.urls import reverse
 
-from audits.models import Audit, AuditRecommendation, Nonconformity, Observation, OpportunityForImprovement
+from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Site, Standard
 
 

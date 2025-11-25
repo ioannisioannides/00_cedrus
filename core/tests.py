@@ -6,7 +6,6 @@ from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import Group, User
-from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -112,7 +111,7 @@ class HealthCheckTest(TestCase):
     @override_settings(DEBUG=False)
     def test_detailed_status_production_superuser(self):
         """Test detailed status is accessible for superusers in production."""
-        superuser = User.objects.create_superuser(username="admin", email="admin@test.com", password="adminpass")
+        User.objects.create_superuser(username="admin", email="admin@test.com", password="adminpass")
         self.client.login(username="admin", password="adminpass")
         response = self.client.get(reverse("core:detailed_status"))
         self.assertEqual(response.status_code, 200)

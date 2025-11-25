@@ -43,7 +43,7 @@ IAF_MD5_QMS_BASE_DURATIONS = {
 }
 
 
-def get_base_duration(employee_count: int, standard_code: str = "ISO 9001") -> float:
+def get_base_duration(employee_count: int, standard_code: str = "ISO 9001") -> float:  # pylint: disable=unused-argument
     """
     Get base audit duration from IAF MD5 tables.
 

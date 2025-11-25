@@ -1,11 +1,8 @@
-from datetime import date
-
 from django.contrib.auth.models import Group, User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from accounts.models import Profile
-from audits.models import Audit, AuditProgram
+from audits.models import AuditProgram
 from core.models import Organization
 
 
@@ -80,7 +77,6 @@ class AuditProgramViewTest(TestCase):
         #     "risks_opportunities": "New Risks",
         # }
         # TODO: Fix view to handle CB Admin creation without profile organization
-        pass
 
     def test_program_create_client_admin(self):
         """Client Admin can create program for their org."""
