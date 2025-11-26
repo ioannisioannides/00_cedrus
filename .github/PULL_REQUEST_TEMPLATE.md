@@ -1,3 +1,24 @@
+## Summary
+
+Describe the change and the motivation for this pull request.
+
+## Related issues
+
+- Fixes: #
+
+## Changes
+
+- Summary of changes made
+
+## Checklist
+
+- [ ] Tests added/updated
+- [ ] Lint passes locally
+- [ ] Documentation updated (if applicable)
+
+## Deployment notes
+
+- Any special steps required for deployment
 # Pull Request
 
 ## Description

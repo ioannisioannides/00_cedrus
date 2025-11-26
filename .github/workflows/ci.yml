@@ -47,156 +47,156 @@ jobs:
       - name: Run pylint
         run: |
           # Run pylint across the repo; allow it to fail the job if issues are found
-          pylint --exit-zero --recursive=y . || true
+          name: CI — tests, lint, security
 
-      - name: Run flake8
-        run: |
-          flake8 || true
+          on:
+            pull_request:
+              branches: [ main ]
+            push:
+              branches: [ main ]
 
-  bandit:
-    name: Security scan (Bandit)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+          jobs:
+            test:
+              name: Run tests & coverage
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+                - name: Set up Python
+                  uses: actions/setup-python@v4
+                  with:
+                    python-version: '3.11'
 
-      - name: Install Bandit
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit
+                - name: Cache pip
+                  uses: actions/cache@v4
+                  with:
+                    path: ~/.cache/pip
+                    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+                    restore-keys: |
+                      ${{ runner.os }}-pip-
 
-      - name: Run Bandit
-        run: |
-          bandit -r . -lll
-name: Cedrus CI/CD Pipeline
-# Enterprise Excellence Initiative - Week 1, Day 3-4
-# Implemented by: Dr. Thomas Berg (Caltech PhD, DevOps Architect, 23 years)
-# Supported by: Dr. Priya Sharma (Harvard PhD, QA Director, 22 years)
+                - name: Install dependencies
+                  run: |
+                    python -m pip install --upgrade pip
+                    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                    pip install pytest pytest-cov coverage
 
-on:
-  push:
-    branches: [ main, develop, staging ]
-  pull_request:
-    branches: [ main, develop ]
+                - name: Run pytest with coverage
+                  run: |
+                    pytest --cov=. --cov-report=term --cov-report=xml:coverage.xml -q
 
-# Workflow-level permissions (least privilege principle)
-permissions:
-  contents: read  # Required for checkout
-  issues: write   # Required for creating issues on failure
-  pull-requests: write  # Required for PR comments
+                - name: Generate coverage percent
+                  id: coverage
+                  run: |
+                    # Extract TOTAL percentage from coverage report
+                    coverage report | tail -n 1 | awk '{print $NF}' > coverage_percent.txt || true
+                    echo "coverage=$(cat coverage_percent.txt || echo '0%')" >> $GITHUB_OUTPUT
 
-env:
-  PYTHON_VERSION: '3.13'
-  POSTGRES_DB: cedrus_test
-  POSTGRES_USER: cedrus_test
-  POSTGRES_PASSWORD: test_password
+                - name: Upload coverage artifact
+                  uses: actions/upload-artifact@v4
+                  with:
+                    name: coverage-xml
+                    path: coverage.xml
 
-jobs:
-  # ============================================================================
-  # JOB 1: Code Quality & Security Checks
-  # ============================================================================
-  code-quality:
-    name: Code Quality & Security
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0  # Full history for better analysis
-    
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install flake8 black isort mypy bandit safety pip-audit
-    
-    - name: Check code formatting (Black)
-      run: |
-        black --check --diff accounts audits core cedrus
-    
-    - name: Check import sorting (isort)
-      run: |
-        isort --check-only --diff accounts audits core cedrus
-    
-    - name: Lint with flake8
-      run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 accounts audits core cedrus --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Exit-zero treats all errors as warnings
-        flake8 accounts audits core cedrus --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
-    
-    - name: Type checking (mypy)
-      continue-on-error: true
-      run: |
-        mypy accounts audits core cedrus --ignore-missing-imports --no-strict-optional
-    
-    - name: Security scan (Bandit)
-      run: |
-        # Use .bandit config to exclude test files and skip B101 (assert) warnings
-        bandit -r accounts audits core cedrus trunk -c .bandit -f json -o bandit-report.json
-        bandit -r accounts audits core cedrus trunk -c .bandit -ll  # Medium and above (B101 skipped)
-    
-    - name: Dependency vulnerability scan (pip-audit)
-      run: |
-        pip-audit --desc
-    
-    - name: Upload security reports
-      if: always()
-      uses: actions/upload-artifact@v5
-      with:
-        name: security-reports
-        path: |
-          bandit-report.json
-          security_*.json
-        retention-days: 30
+                - name: Comment coverage on PR
+                  if: github.event_name == 'pull_request'
+                  uses: actions/github-script@v6
+                  with:
+                    github-token: ${{ secrets.GITHUB_TOKEN }}
+                    script: |
+                      const coverage = (await require('fs').promises.readFile('coverage_percent.txt', 'utf8')).trim();
+                      const pr = context.payload.pull_request.number;
+                      const body = `Automated coverage report: **${coverage}**\n\n(coverage.xml uploaded as an artifact)`;
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: pr,
+                        body,
+                      });
 
-  # ============================================================================
-  # JOB 2: Unit & Integration Tests
-  # ============================================================================
-  test:
-    name: Test Suite (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.13']
-    
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 1  # Shallow clone for speed
-    
-    - name: Set up Python ${{ matrix.python-version }}
+            pylint:
+              name: Lint — pylint
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+
+                - name: Set up Python
+                  uses: actions/setup-python@v4
+                  with:
+                    python-version: '3.11'
+
+                - name: Cache pip
+                  uses: actions/cache@v4
+                  with:
+                    path: ~/.cache/pip
+                    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+                    restore-keys: |
+                      ${{ runner.os }}-pip-
+
+                - name: Install pylint
+                  run: |
+                    python -m pip install --upgrade pip
+                    pip install pylint
+
+                - name: Run pylint (strict)
+                  run: |
+                    pylint --recursive=y .
+
+            flake8:
+              name: Lint — flake8
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+
+                - name: Set up Python
+                  uses: actions/setup-python@v4
+                  with:
+                    python-version: '3.11'
+
+                - name: Cache pip
+                  uses: actions/cache@v4
+                  with:
+                    path: ~/.cache/pip
+                    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+                    restore-keys: |
+                      ${{ runner.os }}-pip-
+
+                - name: Install flake8
+                  run: |
+                    python -m pip install --upgrade pip
+                    pip install flake8
+
+                - name: Run flake8 (strict)
+                  run: |
+                    flake8
+
+            bandit:
+              name: Security scan (Bandit)
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+
+                - name: Set up Python
+                  uses: actions/setup-python@v4
+                  with:
+                    python-version: '3.11'
+
+                - name: Cache pip
+                  uses: actions/cache@v4
+                  with:
+                    path: ~/.cache/pip
+                    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+                    restore-keys: |
+                      ${{ runner.os }}-pip-
+
+                - name: Install Bandit
+                  run: |
+                    python -m pip install --upgrade pip
+                    pip install bandit
+
+                - name: Run Bandit (strict)
+                  run: |
+                    bandit -r . -lll
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}

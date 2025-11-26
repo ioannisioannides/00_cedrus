@@ -1,0 +1,38 @@
+name: Configure Branch Protection (manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  protect-main:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      administration: write
+    steps:
+      - name: Configure branch protection for `main`
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const branch = 'main';
+            const required_status_checks = {
+              strict: true,
+              contexts: [
+                'test',
+                'pylint',
+                'flake8',
+                'bandit',
+                'deploy-check',
+                'verify-secrets'
+              ]
+            };
+            await github.rest.repos.updateBranchProtection({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch,
+              required_status_checks,
+              enforce_admins: true,
+              required_pull_request_reviews: { required_approving_review_count: 1 },
+              restrictions: null,
+            });
