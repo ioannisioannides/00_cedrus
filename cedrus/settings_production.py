@@ -56,7 +56,15 @@ if env_file.exists():
 # =============================================================================
 
 # 🔴 CRITICAL: Load from environment (NEVER commit real keys to git)
-SECRET_KEY = env("DJANGO_SECRET_KEY")
+# Read the secret but fail with a clear message if it's missing to avoid
+# confusing errors later in production.
+SECRET_KEY = env("DJANGO_SECRET_KEY", default=None)
+if not SECRET_KEY:
+    raise RuntimeError(
+        "DJANGO_SECRET_KEY environment variable is not set. "
+        "Set it in the environment (e.g. GitHub Secrets for CI/production). "
+        "Do NOT commit secrets to the repository."
+    )
 
 # 🔴 CRITICAL: Disable debug in production
 DEBUG = env.bool("DEBUG", default=False)
