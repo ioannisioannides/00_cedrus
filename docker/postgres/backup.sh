@@ -53,7 +53,7 @@ find "${BACKUP_DIR}" -name 'cedrus_backup_*.sql.gz' -mtime +"${RETENTION_DAYS}" 
 
 # List current backups
 echo "[INFO] Current backups:"
-if ! find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' -exec ls -lh {} + 2>/dev/null; then
+if ! find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' -ls 2>/dev/null; then
     echo "No backups found"
 fi
 
