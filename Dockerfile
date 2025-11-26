@@ -1,3 +1,35 @@
+FROM python:3.11-slim
+
+# Set environment
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements early for caching
+COPY requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r /app/requirements.txt
+
+# Copy application code
+COPY . /app
+
+# Create a logs dir
+RUN mkdir -p /app/logs
+
+# Collect static (optional; may be run during build or at deploy)
+RUN python manage.py collectstatic --noinput || true
+
+EXPOSE 8000
+
+# Default command (use gunicorn for production)
+CMD ["gunicorn", "cedrus.wsgi:application", "-b", "0.0.0.0:8000", "--workers", "3"]
 # ==============================================================================
 # CEDRUS DOCKERFILE - ENTERPRISE GRADE, SELF-HOSTED
 # ==============================================================================

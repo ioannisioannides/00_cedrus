@@ -1,3 +1,22 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+build/
+dist/
+.eggs/
+.git/
+*.egg-info/
+htmlcov/
+.pytest_cache/
+*.sqlite3
+media/
+staticfiles/
+logs/
+.env
 # ==============================================================================
 # CEDRUS .dockerignore
 # ==============================================================================
