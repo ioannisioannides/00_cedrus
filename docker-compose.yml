@@ -61,7 +61,7 @@ services:
     environment:
       POSTGRES_DB: cedrus_dev
       POSTGRES_USER: cedrus
-      POSTGRES_PASSWORD: cedrus_dev_password_change_in_production
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
       # Performance tuning for development
       POSTGRES_HOST_AUTH_METHOD: md5
@@ -173,11 +173,11 @@ services:
       # Django settings
       DJANGO_SETTINGS_MODULE: cedrus.settings
       DJANGO_DEBUG: "True"
-      DJANGO_SECRET_KEY: "dev-secret-key-change-in-production-minimum-50-chars-required-for-security"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
       DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0,web"
       
       # Database (PostgreSQL)
-      DATABASE_URL: "postgresql://cedrus:cedrus_dev_password_change_in_production@postgres:5432/cedrus_dev"
+      DATABASE_URL: "${DATABASE_URL}"
       
       # Redis cache
       REDIS_URL: "redis://redis:6379/0"
