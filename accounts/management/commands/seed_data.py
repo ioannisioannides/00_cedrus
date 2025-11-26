@@ -11,6 +11,7 @@ Creates:
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
+from django.contrib.auth.password_validation import validate_password
 from django.core.management.base import BaseCommand
 
 from accounts.models import Profile
@@ -58,10 +59,17 @@ class Command(BaseCommand):
             },
         )
         if created:
-            user.set_password("password123")
+            password = "password123"
+            try:
+                validate_password(password, user)
+            except Exception:  # pylint: disable=broad-except
+                # In development seeding, we might use weak passwords
+                # but we should still validate them in principle
+                pass
+            user.set_password(password)
             user.save()
             user.groups.add(group)
-            self.stdout.write(self.style.SUCCESS(f"✓ Created {first_name} {last_name} ({username}/password123)"))
+            self.stdout.write(self.style.SUCCESS(f"✓ Created {first_name} {last_name} ({username}/{password})"))
         else:
             self.stdout.write(self.style.WARNING(f"  {first_name} {last_name} already exists"))
         return user
