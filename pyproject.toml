@@ -1,3 +1,12 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "00_cedrus"
+version = "0.1.0"
+requires-python = ">=3.13"
+
 [tool.black]
 line-length = 120
 target-version = ['py313']
