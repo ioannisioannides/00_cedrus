@@ -69,10 +69,12 @@ jobs:
     
     - name: Determine rollback target
       id: determine-target
+      env:
+        INPUT_COMMIT_SHA: ${{ inputs.commit_sha }}
       run: |
-        if [ -n "${{ inputs.commit_sha }}" ]; then
+        if [ -n "$INPUT_COMMIT_SHA" ]; then
           # Use specified commit
-          TARGET_COMMIT="${{ inputs.commit_sha }}"
+          TARGET_COMMIT="$INPUT_COMMIT_SHA"
           echo "🎯 Using specified commit: $TARGET_COMMIT"
         else
           # Find last successful deployment
@@ -99,18 +101,24 @@ jobs:
         echo "tag=$TARGET_TAG" >> $GITHUB_OUTPUT
     
     - name: Display rollback summary
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        INPUT_REASON: ${{ inputs.reason }}
+        CURRENT_COMMIT: ${{ steps.current.outputs.commit }}
+        TARGET_COMMIT: ${{ steps.determine-target.outputs.commit }}
+        TARGET_TAG: ${{ steps.determine-target.outputs.tag }}
       run: |
         echo "## 🔄 Rollback Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Reason:** ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Current Commit:** ${{ steps.current.outputs.commit }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Target Commit:** ${{ steps.determine-target.outputs.commit }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Target Tag:** ${{ steps.determine-target.outputs.tag || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** $INPUT_ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+        echo "**Reason:** $INPUT_REASON" >> $GITHUB_STEP_SUMMARY
+        echo "**Current Commit:** $CURRENT_COMMIT" >> $GITHUB_STEP_SUMMARY
+        echo "**Target Commit:** $TARGET_COMMIT" >> $GITHUB_STEP_SUMMARY
+        echo "**Target Tag:** ${TARGET_TAG:-'N/A'}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Changes to be rolled back:" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        git log --oneline ${{ steps.determine-target.outputs.commit }}..${{ steps.current.outputs.commit }} >> $GITHUB_STEP_SUMMARY || echo "No commits to rollback" >> $GITHUB_STEP_SUMMARY
+        git log --oneline $TARGET_COMMIT..$CURRENT_COMMIT >> $GITHUB_STEP_SUMMARY || echo "No commits to rollback" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
@@ -134,8 +142,10 @@ jobs:
     
     - name: Get environment URL
       id: get-url
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
       run: |
-        if [ "${{ inputs.environment }}" = "production" ]; then
+        if [ "$INPUT_ENVIRONMENT" = "production" ]; then
           echo "url=https://cedrus.yourdomain.com" >> $GITHUB_OUTPUT
         else
           echo "url=https://staging.cedrus.yourdomain.com" >> $GITHUB_OUTPUT
