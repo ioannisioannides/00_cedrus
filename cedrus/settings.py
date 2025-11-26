@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party apps
     "debug_toolbar",  # Django Debug Toolbar (development only)
+    "rest_framework",
+    "drf_spectacular",
     # Local apps
     "accounts",
     "core",
@@ -148,3 +150,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+# Django REST Framework
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
+# OpenAPI Documentation
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Cedrus API",
+    "DESCRIPTION": "API for Cedrus Audit & Compliance Platform",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}

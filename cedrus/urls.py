@@ -23,6 +23,11 @@ from django.views.generic import RedirectView
 
 # Health check imports
 from core.health import health_check, liveness_check, readiness_check
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -35,6 +40,10 @@ urlpatterns = [
     path("core/", include("core.urls")),
     path("audits/", include("audits.urls")),
     path("reporting/", include("reporting.urls")),
+    # API Documentation
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]
 
 # Serve media files in development
