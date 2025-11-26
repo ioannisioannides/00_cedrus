@@ -2,6 +2,8 @@ version: '3.8'
 services:
   db:
     image: postgres:15
+    security_opt:
+      - no-new-privileges:true
     environment:
       POSTGRES_DB: ${DB_NAME:-cedrus_production}
       POSTGRES_USER: ${DB_USER:-cedrus}
@@ -19,6 +21,11 @@ services:
       DATABASE_URL: ${DATABASE_URL}
     ports:
       - "8000:8000"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
     depends_on:
       - db
 

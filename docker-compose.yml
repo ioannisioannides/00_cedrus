@@ -84,6 +84,10 @@ services:
       retries: 5
       start_period: 10s
     
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    
     # Resource limits (prevent runaway processes)
     deploy:
       resources:
@@ -126,6 +130,10 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+    
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
     
     deploy:
       resources:
@@ -224,6 +232,10 @@ services:
       retries: 3
       start_period: 40s
     
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    
     deploy:
       resources:
         limits:
@@ -253,6 +265,10 @@ services:
     
     depends_on:
       - postgres
+    
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
     
     deploy:
       resources:
