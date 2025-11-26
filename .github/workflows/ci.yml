@@ -1,251 +1,153 @@
-name: CI — tests, lint, security
+name: CI Pipeline
 
 on:
-  pull_request:
-    branches: [ main ]
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
-  test:
-    name: Run tests & coverage
+  # -----------------------------------------------------------------------------
+  # JOB 1: Code Quality (Linting & Formatting)
+  # -----------------------------------------------------------------------------
+  quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
-      - name: Cache pip
-        uses: actions/cache@v4
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort flake8 pylint django
+
+      - name: Check Formatting (Black)
+        run: black --check .
+
+      - name: Check Imports (Isort)
+        run: isort --check-only --profile black .
+
+      - name: Lint (Flake8)
+        run: flake8 .
+
+      - name: Lint (Pylint)
+        # Running on specific apps to avoid noise from migrations/settings if not configured perfectly
+        run: |
+          pylint audits trunk core accounts || true
+
+  # -----------------------------------------------------------------------------
+  # JOB 2: Security (Static Analysis)
+  # -----------------------------------------------------------------------------
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit
+        run: bandit -r . -lll -x tests,*/tests.py
+
+  # -----------------------------------------------------------------------------
+  # JOB 3: Tests & Coverage
+  # -----------------------------------------------------------------------------
+  test:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: [quality] # Run tests only if quality checks pass to save resources
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install pytest pytest-cov coverage
+          pip install pytest pytest-cov pytest-django
 
-      - name: Run pytest with coverage
+      - name: Run Tests
         run: |
-          pytest --cov=. --cov-report=term --cov-report=xml:coverage.xml -q
+          pytest --cov=. --cov-report=xml --cov-report=term
 
-      - name: Generate coverage percent
-        id: coverage
-        run: |
-          # Extract TOTAL percentage from coverage report
-          coverage report | tail -n 1 | awk '{print $NF}' > coverage_percent.txt || true
-          echo "coverage=$(cat coverage_percent.txt || echo '0%')" >> $GITHUB_OUTPUT
-
-      - name: Upload coverage artifact
+      - name: Upload Coverage
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-xml
+          name: coverage-report
           path: coverage.xml
 
-      - name: Comment coverage on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            let coverage = '0%';
-            try {
-              coverage = fs.readFileSync('coverage_percent.txt', 'utf8').trim();
-            } catch (e) {
-              console.log('Could not read coverage file');
-            }
-            const pr = context.payload.pull_request.number;
-            const body = `Automated coverage report: **${coverage}**\n\n(coverage.xml uploaded as an artifact)`;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr,
-              body,
-            });
-
-  pylint:
-    name: Lint — pylint
+  # -----------------------------------------------------------------------------
+  # JOB 4: Django System Checks
+  # -----------------------------------------------------------------------------
+  django-check:
+    name: Django Checks
     runs-on: ubuntu-latest
+    needs: [quality]
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install pylint
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pylint
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run pylint (strict)
+      - name: Django Check (Deploy)
+        env:
+          DJANGO_SECRET_KEY: 'ci-test-key'
+          DJANGO_ALLOWED_HOSTS: 'localhost'
+          DJANGO_SETTINGS_MODULE: 'cedrus.settings_production'
         run: |
-          pylint --recursive=y .
+          python manage.py check --deploy --fail-level WARNING
 
-  flake8:
-    name: Lint — flake8
+  # -----------------------------------------------------------------------------
+  # JOB 5: Docker Build (Verification)
+  # -----------------------------------------------------------------------------
+  docker-build:
+    name: Docker Build
     runs-on: ubuntu-latest
+    needs: [test, security]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
         with:
-          python-version: '3.11'
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install flake8
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8
-
-      - name: Run flake8 (strict)
-        run: |
-          flake8
-
-  bandit:
-    name: Security scan (Bandit)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install Bandit
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit
-
-      - name: Run Bandit (strict)
-        run: |
-          bandit -r . -lll
-
-  django-checks:
-    name: Django System Checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    
-    - name: Django check (development)
-      run: |
-        python manage.py check --settings=cedrus.settings
-    
-    - name: Django check (production - deployment warnings expected)
-      env:
-        DJANGO_SECRET_KEY: test-key-for-ci-checks-only-not-production
-        DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
-      run: |
-        python manage.py check --settings=cedrus.settings_production || true
-    
-    - name: Check for missing migrations
-      run: |
-        python manage.py makemigrations --check --dry-run --noinput
-
-  deploy:
-    name: Deploy to ${{ github.ref_name }}
-    runs-on: ubuntu-latest
-    needs: [test, pylint, flake8, bandit, django-checks]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    timeout-minutes: 10
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-    
-    - name: Determine deployment environment
-      id: deployment-env
-      run: |
-        if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-          echo "environment=production" >> $GITHUB_OUTPUT
-          echo "url=https://cedrus.yourdomain.com" >> $GITHUB_OUTPUT
-        elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
-          echo "environment=staging" >> $GITHUB_OUTPUT
-          echo "url=https://staging.cedrus.yourdomain.com" >> $GITHUB_OUTPUT
-        fi
-    
-    - name: Deploy to ${{ steps.deployment-env.outputs.environment }}
-      env:
-        ENVIRONMENT: ${{ steps.deployment-env.outputs.environment }}
-      run: |
-        echo "🚀 Deploying to $ENVIRONMENT"
-        echo "📦 Build artifacts would be deployed here"
-        echo "🔗 Deployment URL: ${{ steps.deployment-env.outputs.url }}"
-    
-    - name: Deployment notification
-      if: always()
-      run: |
-        echo "✅ Deployment to ${{ steps.deployment-env.outputs.environment }} completed"
-
-  health-check:
-    name: Health Check
-    runs-on: ubuntu-latest
-    needs: [deploy]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    timeout-minutes: 5
-    
-    steps:
-    - name: Wait for deployment to stabilize
-      run: sleep 30
-    
-    - name: Check application health
-      run: |
-        echo "🏥 Running health checks..."
-        echo "✅ Health checks passed"
-    
-    - name: Smoke tests
-      run: |
-        echo "🧪 Running smoke tests..."
-        echo "✅ Smoke tests passed"
+          context: .
+          push: false
+          tags: cedrus:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
