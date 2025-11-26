@@ -169,7 +169,8 @@ class AuditWorkflow:
         technical_review = self.audit.technical_review
         if technical_review.status != "approved":
             raise ValidationError(
-                f"Cannot move to decision pending: Technical review status is '{technical_review.get_status_display()}', must be 'Approved'"
+                f"Cannot move to decision pending: Technical review status is "
+                f"'{technical_review.get_status_display()}', must be 'Approved'"
             )
 
     def _validate_closed(self):
@@ -178,7 +179,9 @@ class AuditWorkflow:
         if self.audit.audit_type == "stage2":
             previous_stage1 = (
                 self.audit.__class__.objects.filter(
-                    organization=self.audit.organization, audit_type="stage1", status="closed"
+                    organization=self.audit.organization,
+                    audit_type="stage1",
+                    status="closed",
                 )
                 .exclude(pk=self.audit.pk)
                 .exists()
@@ -187,7 +190,9 @@ class AuditWorkflow:
                 # Check for legacy "decided" status too
                 previous_stage1_legacy = (
                     self.audit.__class__.objects.filter(
-                        organization=self.audit.organization, audit_type="stage1", status="decided"
+                        organization=self.audit.organization,
+                        audit_type="stage1",
+                        status="decided",
                     )
                     .exclude(pk=self.audit.pk)
                     .exists()
@@ -297,5 +302,5 @@ class AuditWorkflow:
                 "label": status.replace("_", " ").title(),
                 "description": cls.STATUS_DESCRIPTIONS.get(status, ""),
             }
-            for status in cls.TRANSITIONS.keys()
+            for status in cls.TRANSITIONS
         ]

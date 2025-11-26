@@ -5,8 +5,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 
-from accounts.models import Profile
-from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement, TechnicalReview
+from audits.models import Audit, Nonconformity, Observation, TechnicalReview
 from core.models import Certification, Organization, Standard
 from trunk.workflows.audit_workflow import AuditWorkflow
 
@@ -14,27 +13,23 @@ from trunk.workflows.audit_workflow import AuditWorkflow
 class AuditWorkflowCoverageTest(TestCase):
     def setUp(self):
         # Create basic requirements
-        self.organization = Organization.objects.create(
-            name="Test Org", 
-            customer_id="CUST001",
-            total_employee_count=10
-        )
+        self.organization = Organization.objects.create(name="Test Org", customer_id="CUST001", total_employee_count=10)
         self.standard = Standard.objects.create(title="ISO 9001", code="9001")
         self.certification = Certification.objects.create(
             organization=self.organization,
             standard=self.standard,
             certificate_status="active",
-            expiry_date=timezone.now().date() + timedelta(days=365)
+            expiry_date=timezone.now().date() + timedelta(days=365),
         )
-        
+
         # Create users
         self.user = User.objects.create_user(username="auditor", password="password")
         self.profile = self.user.profile
-        
+
         # Assign role via Group
         lead_auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
         self.user.groups.add(lead_auditor_group)
-        
+
         # Create audit
         self.audit = Audit.objects.create(
             organization=self.organization,
@@ -43,10 +38,10 @@ class AuditWorkflowCoverageTest(TestCase):
             total_audit_date_from=timezone.now().date(),
             total_audit_date_to=timezone.now().date() + timedelta(days=2),
             created_by=self.user,
-            lead_auditor=self.user
+            lead_auditor=self.user,
         )
         self.audit.certifications.add(self.certification)
-        
+
         self.workflow = AuditWorkflow(self.audit)
 
     def test_init(self):
@@ -55,7 +50,7 @@ class AuditWorkflowCoverageTest(TestCase):
     def test_get_all_statuses(self):
         statuses = AuditWorkflow.get_all_statuses()
         self.assertTrue(len(statuses) > 0)
-        self.assertEqual(statuses[0]['code'], 'draft')
+        self.assertEqual(statuses[0]["code"], "draft")
 
     def test_can_transition_to(self):
         self.assertTrue(self.workflow.can_transition_to("scheduled"))
@@ -80,11 +75,11 @@ class AuditWorkflowCoverageTest(TestCase):
         self.assertIn("Cannot schedule audit without audit dates", str(cm.exception))
 
     def test_validate_scheduled_failure_no_lead_auditor(self):
-        # We can't set lead_auditor to None because it's required by the model, 
+        # We can't set lead_auditor to None because it's required by the model,
         # but we can try to validate if it WAS None (though model validation would fail first)
         # However, the workflow validation checks for it.
-        # To test this, we might need to bypass model validation or use a mock, 
-        # but since it's a ForeignKey with on_delete=PROTECT and not null=True, 
+        # To test this, we might need to bypass model validation or use a mock,
+        # but since it's a ForeignKey with on_delete=PROTECT and not null=True,
         # we can't save it as None.
         # But the workflow check `if not self.audit.lead_auditor:` handles it.
         # Let's skip this test or try to trick it if possible, but given the model constraint,
@@ -105,11 +100,7 @@ class AuditWorkflowCoverageTest(TestCase):
         self.audit.save()
         # Add a finding
         Observation.objects.create(
-            audit=self.audit,
-            standard=self.standard,
-            clause="4.1",
-            statement="Test observation",
-            created_by=self.user
+            audit=self.audit, standard=self.standard, clause="4.1", statement="Test observation", created_by=self.user
         )
         self.workflow.validate_transition("report_draft")
 
@@ -141,7 +132,7 @@ class AuditWorkflowCoverageTest(TestCase):
             objective_evidence="Evidence",
             auditor_explanation="Explanation",
             category="major",
-            created_by=self.user
+            created_by=self.user,
         )
         with self.assertRaises(ValidationError) as cm:
             self.workflow.validate_transition("submitted")
@@ -156,10 +147,7 @@ class AuditWorkflowCoverageTest(TestCase):
         self.audit.status = "technical_review"
         self.audit.save()
         TechnicalReview.objects.create(
-            audit=self.audit,
-            reviewer=self.user,
-            status="approved",
-            reviewer_notes="Approved"
+            audit=self.audit, reviewer=self.user, status="approved", reviewer_notes="Approved"
         )
         # Refresh audit to get reverse relation
         self.audit.refresh_from_db()
@@ -176,10 +164,7 @@ class AuditWorkflowCoverageTest(TestCase):
         self.audit.status = "technical_review"
         self.audit.save()
         TechnicalReview.objects.create(
-            audit=self.audit,
-            reviewer=self.user,
-            status="rejected",
-            reviewer_notes="Rejected"
+            audit=self.audit, reviewer=self.user, status="rejected", reviewer_notes="Rejected"
         )
         self.audit.refresh_from_db()
         with self.assertRaises(ValidationError) as cm:
@@ -195,9 +180,9 @@ class AuditWorkflowCoverageTest(TestCase):
             total_audit_date_from=timezone.now().date() - timedelta(days=30),
             total_audit_date_to=timezone.now().date() - timedelta(days=29),
             created_by=self.user,
-            lead_auditor=self.user
+            lead_auditor=self.user,
         )
-        
+
         self.audit.audit_type = "stage2"
         self.audit.status = "decision_pending"
         self.audit.save()
@@ -238,7 +223,7 @@ class AuditWorkflowCoverageTest(TestCase):
             auditor_explanation="Explanation",
             category="major",
             verification_status="open",
-            created_by=self.user
+            created_by=self.user,
         )
         with self.assertRaises(ValidationError) as cm:
             self.workflow.validate_transition("closed")
@@ -254,7 +239,7 @@ class AuditWorkflowCoverageTest(TestCase):
             auditor_explanation="Explanation",
             category="minor",
             verification_status="open",
-            created_by=self.user
+            created_by=self.user,
         )
         with self.assertRaises(ValidationError) as cm:
             self.workflow._validate_decided()
@@ -270,10 +255,10 @@ class AuditWorkflowCoverageTest(TestCase):
         # Draft state
         transitions = self.workflow.get_available_transitions()
         # Should have scheduled and cancelled
-        codes = [t['code'] for t in transitions]
-        self.assertIn('scheduled', codes)
-        self.assertIn('cancelled', codes)
-        
+        codes = [t["code"] for t in transitions]
+        self.assertIn("scheduled", codes)
+        self.assertIn("cancelled", codes)
+
         # Scheduled should be available because lead_auditor is assigned
-        scheduled = next(t for t in transitions if t['code'] == 'scheduled')
-        self.assertTrue(scheduled['available'])
+        scheduled = next(t for t in transitions if t["code"] == "scheduled")
+        self.assertTrue(scheduled["available"])

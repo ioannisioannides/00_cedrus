@@ -120,9 +120,9 @@ def readiness_check(request):
 
     # Model access check (verify ORM is working)
     try:
-        User = get_user_model()
+        user_model = get_user_model()
         # Don't create queries, just check model is accessible
-        _ = User._meta.model_name
+        _ = user_model._meta.model_name
         checks["models"] = "healthy"
     except Exception as e:
         checks["models"] = "unhealthy"

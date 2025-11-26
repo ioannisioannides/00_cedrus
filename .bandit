@@ -1,6 +1,0 @@
-[bandit]
-exclude_dirs = tests, trunk/tests, audits/tests.py, accounts/tests.py, core/tests.py
-tests = B101,B102,B301
-
-[bandit_advanced]
-# optional: plugin specific configuration

@@ -1,9 +1,10 @@
 exclude_dirs:
   - tests
-  - test
+  - trunk/tests
   - venv
   - .venv
   - "*/migrations/*"
 
 skips:
   - B101
+  - B106

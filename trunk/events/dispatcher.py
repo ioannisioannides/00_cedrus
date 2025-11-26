@@ -31,7 +31,7 @@ class EventDispatcher:
             handler: Callable that will be invoked when event is emitted
         """
         self._handlers[event_type].append(handler)
-        logger.debug(f"Registered handler for event type: {event_type}")
+        logger.debug("Registered handler for event type: %s", event_type)
 
     def unregister(self, event_type, handler):
         """
@@ -44,7 +44,7 @@ class EventDispatcher:
         if event_type in self._handlers:
             try:
                 self._handlers[event_type].remove(handler)
-                logger.debug(f"Unregistered handler for event type: {event_type}")
+                logger.debug("Unregistered handler for event type: %s", event_type)
             except ValueError:
                 pass
 
@@ -56,13 +56,13 @@ class EventDispatcher:
             event_type: The event type (string)
             payload: The event payload (can be any object)
         """
-        logger.info(f"Emitting event: {event_type}")
+        logger.info("Emitting event: %s", event_type)
 
         for handler in self._handlers.get(event_type, []):
             try:
                 handler(payload)
             except Exception as e:
-                logger.error(f"Error in event handler for {event_type}: {e}", exc_info=True)
+                logger.error("Error in event handler for %s: %s", event_type, e, exc_info=True)
 
     def clear(self, event_type=None):
         """

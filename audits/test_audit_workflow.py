@@ -37,8 +37,8 @@ def audit_draft(db, organization):
     """Create draft audit."""
     from django.contrib.auth import get_user_model
 
-    User = get_user_model()
-    creator = User.objects.create_user(username="creator", password="test")  # nosec B106
+    user_model = get_user_model()
+    creator = user_model.objects.create_user(username="creator", password="test")  # nosec B106
 
     return Audit.objects.create(
         organization=organization,
@@ -60,8 +60,8 @@ class TestAuditWorkflowTransitions:
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
 
-        User = get_user_model()
-        auditor = User.objects.create_user(username="auditor", password="test")  # nosec B106
+        user_model = get_user_model()
+        auditor = user_model.objects.create_user(username="auditor", password="test")  # nosec B106
         lead_group = Group.objects.create(name="lead_auditor")
         auditor.groups.add(lead_group)
 
@@ -78,14 +78,14 @@ class TestAuditWorkflowTransitions:
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
 
-        User = get_user_model()
+        user_model = get_user_model()
         # Create a user who is a lead auditor but NOT assigned to this audit
-        other_auditor = User.objects.create_user(username="other", password="test")  # nosec B106
+        other_auditor = user_model.objects.create_user(username="other", password="test")  # nosec B106
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         other_auditor.groups.add(lead_group)
 
         # Assign a different auditor
-        assigned_auditor = User.objects.create_user(username="assigned", password="test")  # nosec B106
+        assigned_auditor = user_model.objects.create_user(username="assigned", password="test")  # nosec B106
         assigned_auditor.groups.add(lead_group)
 
         audit_draft.lead_auditor = assigned_auditor
@@ -102,8 +102,8 @@ class TestAuditWorkflowTransitions:
         """Test invalid transition is rejected."""
         from django.contrib.auth import get_user_model
 
-        User = get_user_model()
-        user = User.objects.create_user(username="checker", password="test")  # nosec B106
+        user_model = get_user_model()
+        user = user_model.objects.create_user(username="checker", password="test")  # nosec B106
 
         workflow = AuditStateMachine(audit_draft)
         with pytest.raises(ValidationError):
@@ -114,8 +114,8 @@ class TestAuditWorkflowTransitions:
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
 
-        User = get_user_model()
-        auditor = User.objects.create_user(username="auditor", password="test")  # nosec B106
+        user_model = get_user_model()
+        auditor = user_model.objects.create_user(username="auditor", password="test")  # nosec B106
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
 
@@ -134,8 +134,8 @@ class TestAuditWorkflowTransitions:
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
 
-        User = get_user_model()
-        auditor = User.objects.create_user(username="auditor", password="test")  # nosec B106
+        user_model = get_user_model()
+        auditor = user_model.objects.create_user(username="auditor", password="test")  # nosec B106
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
 
@@ -165,8 +165,8 @@ class TestAuditWorkflowTransitions:
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
 
-        User = get_user_model()
-        auditor = User.objects.create_user(username="auditor", password="test")  # nosec B106
+        user_model = get_user_model()
+        auditor = user_model.objects.create_user(username="auditor", password="test")  # nosec B106
         # Make auditor a CB admin to allow closing
         cb_group = Group.objects.create(name="cb_admin")
         auditor.groups.add(cb_group)
@@ -196,9 +196,9 @@ class TestAuditWorkflowTransitions:
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
 
-        User = get_user_model()
+        user_model = get_user_model()
         # Need a user with permissions (e.g. Lead Auditor)
-        auditor = User.objects.create_user(username="auditor", password="test")  # nosec B106
+        auditor = user_model.objects.create_user(username="auditor", password="test")  # nosec B106
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
 
@@ -219,8 +219,8 @@ class TestAuditWorkflowTransitions:
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group
 
-        User = get_user_model()
-        auditor = User.objects.create_user(username="auditor", password="test")  # nosec B106
+        user_model = get_user_model()
+        auditor = user_model.objects.create_user(username="auditor", password="test")  # nosec B106
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         auditor.groups.add(lead_group)
 
