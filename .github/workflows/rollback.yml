@@ -276,12 +276,16 @@ jobs:
     
     - name: Rollback summary
       if: always()
+      env:
+        INPUT_ENVIRONMENT: ${{ inputs.environment }}
+        TARGET_COMMIT: ${{ needs.validate.outputs.target_commit }}
+        JOB_STATUS: ${{ job.status }}
       run: |
         echo "## ✅ Rollback Complete" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Target Commit:** ${{ needs.validate.outputs.target_commit }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** $INPUT_ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+        echo "**Target Commit:** $TARGET_COMMIT" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** $JOB_STATUS" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
         echo "1. Investigate root cause of original deployment failure" >> $GITHUB_STEP_SUMMARY

@@ -93,6 +93,10 @@ services:
     
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /run/postgresql
+      - /tmp
     
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cedrus_prod} -d ${POSTGRES_DB:-cedrus_prod}"]
@@ -148,6 +152,9 @@ services:
     
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
     
     healthcheck:
       test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
@@ -383,6 +390,9 @@ services:
     
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
     
     # Run backup script
     entrypoint: ["/bin/sh", "/backup.sh"]

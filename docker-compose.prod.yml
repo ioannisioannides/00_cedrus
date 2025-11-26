@@ -4,6 +4,10 @@ services:
     image: postgres:15
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /run/postgresql
+      - /tmp
     environment:
       POSTGRES_DB: ${DB_NAME:-cedrus_production}
       POSTGRES_USER: ${DB_USER:-cedrus}

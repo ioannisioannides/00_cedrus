@@ -87,6 +87,10 @@ services:
     # Security hardening
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /run/postgresql
+      - /tmp
     
     # Resource limits (prevent runaway processes)
     deploy:
@@ -134,6 +138,9 @@ services:
     # Security hardening
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
     
     deploy:
       resources:
@@ -269,6 +276,10 @@ services:
     # Security hardening
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/lib/php/sessions
     
     deploy:
       resources:
