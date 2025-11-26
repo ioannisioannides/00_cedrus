@@ -16,12 +16,12 @@ name: Codacy Security Scan
 # Patched to handle multiple SARIF runs by assigning unique categories.
 on:
   workflow_dispatch:  # Manual trigger only
-  # push:
-  #   branches: [ "main" ]
-  # pull_request:
-  #   branches: [ "main" ]
-  # schedule:
-  #   - cron: '0 0 10 * * ? *'
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 10 * * *'
 
 permissions:
   contents: read
