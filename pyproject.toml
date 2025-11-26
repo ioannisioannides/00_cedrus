@@ -141,5 +141,13 @@ skip_empty = true
 plugins = ["mypy_django_plugin.main"]
 disable_error_code = ["misc"]
 
+[[tool.mypy.overrides]]
+module = [
+    "weasyprint.*",
+    "environ.*",
+    "debug_toolbar.*"
+]
+ignore_missing_imports = true
+
 [tool.django-stubs]
 django_settings_module = "cedrus.settings"
