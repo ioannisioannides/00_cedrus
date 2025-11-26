@@ -37,7 +37,7 @@ jobs:
     steps:
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
@@ -89,7 +89,9 @@ jobs:
           else
             # Extract and upload each run separately
             for i in $(seq 0 $((RUN_COUNT - 1))); do
-              TOOL_NAME=$(jq -r ".runs[$i].tool.driver.name // \"tool-$i\"" results.sarif | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
+              # Get tool name and append index to ensure uniqueness (required by GitHub Code Scanning)
+              BASE_TOOL_NAME=$(jq -r ".runs[$i].tool.driver.name // \"tool\"" results.sarif | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
+              TOOL_NAME="${BASE_TOOL_NAME}-${i}"
               
               echo "Processing run $i: $TOOL_NAME"
               
@@ -112,7 +114,7 @@ jobs:
                 -f "commit_sha=${{ github.sha }}" \
                 -f "ref=${{ github.ref }}" \
                 -f "sarif=$SARIF_CONTENT" \
-                -f "tool_name=codacy-${TOOL_NAME}" || echo "Warning: Failed to upload run $i"
+                -f "tool_name=${TOOL_NAME}" || echo "Warning: Failed to upload run $i"
               
               rm -f "run-${i}.sarif"
             done
