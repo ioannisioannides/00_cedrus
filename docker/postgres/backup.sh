@@ -12,8 +12,8 @@ set -euo pipefail
 
 # Configuration
 BACKUP_DIR="/backups"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
+TIMESTAMP="$(date +"%Y%m%d_%H%M%S")"
+RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-30}"
 BACKUP_FILE="${BACKUP_DIR}/cedrus_backup_${TIMESTAMP}.sql.gz"
 
 echo "======================================================================"
@@ -53,13 +53,16 @@ find "${BACKUP_DIR}" -name 'cedrus_backup_*.sql.gz' -mtime +"${RETENTION_DAYS}" 
 
 # List current backups
 echo "[INFO] Current backups:"
-if ! find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' -ls 2>/dev/null; then
+backup_count=$(find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' | wc -l)
+if [ "${backup_count}" -eq 0 ]; then
     echo "No backups found"
+else
+    find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' -exec ls -lh {} +
 fi
 
 # Backup statistics
-BACKUP_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' | wc -l || true)
-TOTAL_SIZE=$(du -sh "${BACKUP_DIR}" | cut -f1)
+BACKUP_COUNT="$(find "${BACKUP_DIR}" -maxdepth 1 -type f -name 'cedrus_backup_*.sql.gz' | wc -l || true)"
+TOTAL_SIZE="$(du -sh "${BACKUP_DIR}" | cut -f1)"
 
 echo "======================================================================"
 echo "Backup Summary:"
