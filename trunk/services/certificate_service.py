@@ -24,6 +24,8 @@ class CertificateService:
             return
         # For simplicity assume first certification (single-standard audits typical in MVP)
         certification = certification_qs.first()
+        if not certification:
+            return
 
         history = CertificateHistory.objects.create(
             certification=certification,
