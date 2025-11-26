@@ -61,3 +61,28 @@ class CertificateService:
             event_dispatcher.emit(
                 EventType.SURVEILLANCE_SCHEDULE_CREATED, {"schedule": schedule, "certification": certification}
             )
+
+    @staticmethod
+    def update_certifications_from_recommendation(audit, recommendation):
+        """Update certification statuses based on recommendations."""
+        if recommendation.suspension_recommended:
+            # Update certifications to suspended
+            for cert in audit.certifications.all():
+                cert.certificate_status = "suspended"
+                cert.save()
+
+                event_dispatcher.emit(
+                    EventType.CERTIFICATION_SUSPENDED,
+                    {"certification": cert, "audit": audit},
+                )
+
+        if recommendation.revocation_recommended:
+            # Update certifications to withdrawn
+            for cert in audit.certifications.all():
+                cert.certificate_status = "withdrawn"
+                cert.save()
+
+                event_dispatcher.emit(
+                    EventType.CERTIFICATION_REVOKED,
+                    {"certification": cert, "audit": audit},
+                )

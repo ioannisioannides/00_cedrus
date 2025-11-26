@@ -116,3 +116,85 @@ class FindingService:
 
         nc.save()
         return nc
+
+    @staticmethod
+    def update_nonconformity(nc, data, user=None):
+        """
+        Update an existing nonconformity.
+
+        Args:
+            nc: Nonconformity instance
+            data: Dictionary of fields to update
+            user: User performing the update (optional)
+        """
+        for field, value in data.items():
+            setattr(nc, field, value)
+        nc.save()
+
+        # Emit finding updated event
+        event_dispatcher.emit(
+            EventType.FINDING_UPDATED,
+            {"finding": nc, "finding_type": "nonconformity", "audit": nc.audit, "updated_by": user},
+        )
+        return nc
+
+    @staticmethod
+    def update_observation(observation, data, user=None):
+        """
+        Update an existing observation.
+
+        Args:
+            observation: Observation instance
+            data: Dictionary of fields to update
+            user: User performing the update (optional)
+        """
+        for field, value in data.items():
+            setattr(observation, field, value)
+        observation.save()
+
+        # Emit finding updated event
+        event_dispatcher.emit(
+            EventType.FINDING_UPDATED,
+            {"finding": observation, "finding_type": "observation", "audit": observation.audit, "updated_by": user},
+        )
+        return observation
+
+    @staticmethod
+    def update_ofi(ofi, data, user=None):
+        """
+        Update an existing opportunity for improvement.
+
+        Args:
+            ofi: OpportunityForImprovement instance
+            data: Dictionary of fields to update
+            user: User performing the update (optional)
+        """
+        for field, value in data.items():
+            setattr(ofi, field, value)
+        ofi.save()
+
+        # Emit finding updated event
+        event_dispatcher.emit(
+            EventType.FINDING_UPDATED,
+            {"finding": ofi, "finding_type": "ofi", "audit": ofi.audit, "updated_by": user},
+        )
+        return ofi
+
+    @staticmethod
+    def delete_finding(finding, user=None):
+        """
+        Delete a finding.
+
+        Args:
+            finding: The finding instance (NC, Observation, or OFI)
+            user: User performing the deletion (optional)
+        """
+        audit = finding.audit
+        finding_type = finding.__class__.__name__.lower()
+
+        finding.delete()
+
+        event_dispatcher.emit(
+            EventType.FINDING_DELETED,
+            {"finding_type": finding_type, "audit": audit, "deleted_by": user},
+        )

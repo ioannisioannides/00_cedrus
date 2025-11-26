@@ -16,6 +16,21 @@ class EventType:
     AUDIT_SUBMITTED_TO_CLIENT = "audit.submitted_to_client"
     AUDIT_SUBMITTED_TO_CB = "audit.submitted_to_cb"
     AUDIT_DECIDED = "audit.decided"
+    AUDIT_DOCUMENTATION_UPDATED = "audit.documentation_updated"
+
+    # Team events
+    TEAM_MEMBER_ADDED = "team.member_added"
+    TEAM_MEMBER_REMOVED = "team.member_removed"
+
+    # Evidence events
+    EVIDENCE_UPLOADED = "evidence.uploaded"
+    EVIDENCE_DELETED = "evidence.deleted"
+
+    # Review & Decision events
+    TECHNICAL_REVIEW_COMPLETED = "review.technical_completed"
+    TECHNICAL_REVIEW_UPDATED = "review.technical_updated"
+    CERTIFICATION_DECISION_MADE = "decision.made"
+    CERTIFICATION_DECISION_UPDATED = "decision.updated"
 
     # Complaints & Appeals
     COMPLAINT_RECEIVED = "complaint.received"

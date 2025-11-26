@@ -130,6 +130,8 @@ class Audit(models.Model):
     lead_auditor = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name="audits_led",
         help_text="Lead auditor responsible for this audit",
     )

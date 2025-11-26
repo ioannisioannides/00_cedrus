@@ -16,7 +16,6 @@ from django.core.exceptions import ValidationError
 from django.db import models as django_models
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from core.models import Organization
@@ -24,7 +23,11 @@ from trunk.permissions.mixins import CBAdminRequiredMixin
 from trunk.permissions.predicates import PermissionPredicate
 from trunk.services.audit_service import AuditService
 from trunk.services.certificate_service import CertificateService
+from trunk.services.documentation_service import DocumentationService
+from trunk.services.evidence_service import EvidenceService
 from trunk.services.finding_service import FindingService
+from trunk.services.review_service import ReviewService
+from trunk.services.team_service import TeamService
 
 from .documentation_forms import AuditChangesForm, AuditPlanReviewForm, AuditSummaryForm
 from .file_forms import EvidenceFileForm
@@ -50,7 +53,6 @@ from .models import (
     TechnicalReview,
 )
 from .recommendation_forms import AuditRecommendationForm
-from .workflows import AuditWorkflow
 
 # ============================================================================
 # PERMISSION HELPER FUNCTIONS
@@ -486,7 +488,7 @@ def audit_changes_edit(request, audit_pk):
     if request.method == "POST":
         form = AuditChangesForm(request.POST, instance=changes)
         if form.is_valid():
-            form.save()
+            DocumentationService.update_audit_changes(audit=audit, data=form.cleaned_data, user=request.user)
             messages.success(request, "Organization changes updated successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
@@ -518,7 +520,7 @@ def audit_plan_review_edit(request, audit_pk):
     if request.method == "POST":
         form = AuditPlanReviewForm(request.POST, instance=plan_review)
         if form.is_valid():
-            form.save()
+            DocumentationService.update_audit_plan_review(audit=audit, data=form.cleaned_data, user=request.user)
             messages.success(request, "Audit plan review updated successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
@@ -550,7 +552,7 @@ def audit_summary_edit(request, audit_pk):
     if request.method == "POST":
         form = AuditSummaryForm(request.POST, instance=summary)
         if form.is_valid():
-            form.save()
+            DocumentationService.update_audit_summary(audit=audit, data=form.cleaned_data, user=request.user)
             messages.success(request, "Audit summary updated successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
@@ -587,7 +589,7 @@ def audit_recommendation_edit(request, audit_pk):
     if request.method == "POST":
         form = AuditRecommendationForm(request.POST, instance=recommendation)
         if form.is_valid():
-            form.save()
+            DocumentationService.update_audit_recommendation(audit=audit, data=form.cleaned_data, user=request.user)
             messages.success(request, "Recommendations updated successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
@@ -598,21 +600,6 @@ def audit_recommendation_edit(request, audit_pk):
         "audits/audit_recommendation_form.html",
         {"form": form, "audit": audit, "recommendation": recommendation},
     )
-
-
-def _update_certifications_based_on_recommendation(audit, recommendation):
-    """Update certification statuses based on recommendations."""
-    if recommendation.suspension_recommended:
-        # Update certifications to suspended
-        for cert in audit.certifications.all():
-            cert.certificate_status = "suspended"
-            cert.save()
-
-    if recommendation.revocation_recommended:
-        # Update certifications to withdrawn
-        for cert in audit.certifications.all():
-            cert.certificate_status = "withdrawn"
-            cert.save()
 
 
 @login_required
@@ -636,12 +623,12 @@ def audit_make_decision(request, audit_pk):
         # Update recommendation if provided
         form = AuditRecommendationForm(request.POST, instance=recommendation)
         if form.is_valid():
-            form.save()
+            DocumentationService.update_audit_recommendation(audit=audit, data=form.cleaned_data, user=request.user)
 
             # Transition to decided status
             try:
                 AuditService.transition_status(audit, "decided", request.user)
-                _update_certifications_based_on_recommendation(audit, recommendation)
+                CertificateService.update_certifications_from_recommendation(audit, recommendation)
 
                 messages.success(request, "Certification decision has been made and audit is now decided.")
                 return redirect("audits:audit_detail", pk=audit_pk)
@@ -686,10 +673,7 @@ def evidence_file_upload(request, audit_pk):
     if request.method == "POST":
         form = EvidenceFileForm(request.POST, request.FILES, audit=audit)
         if form.is_valid():
-            evidence_file = form.save(commit=False)
-            evidence_file.audit = audit
-            evidence_file.uploaded_by = user
-            evidence_file.save()
+            EvidenceService.upload_evidence(audit=audit, user=user, file_data=form.cleaned_data)
             messages.success(request, "File uploaded successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
@@ -748,8 +732,7 @@ def evidence_file_delete(request, file_pk):
 
     if request.method == "POST":
         audit_pk = audit.pk
-        evidence_file.file.delete()  # Delete file from storage
-        evidence_file.delete()  # Delete database record
+        EvidenceService.delete_evidence(evidence_file, user=request.user)
         messages.success(request, "File deleted successfully.")
         return redirect("audits:audit_detail", pk=audit_pk)
 
@@ -879,8 +862,9 @@ class NonconformityUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
 
     def form_valid(self, form):
         """Process valid form submission."""
+        FindingService.update_nonconformity(nc=self.object, data=form.cleaned_data, user=self.request.user)
         messages.success(self.request, "Nonconformity updated successfully.")
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
@@ -934,28 +918,21 @@ class NonconformityVerifyView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
         """Process valid form submission."""
         # Get verification action from form
         action = form.cleaned_data["verification_action"]
+        notes = form.cleaned_data.get("verification_notes")
 
-        # Set verification metadata
-        nc = form.save(commit=False)
-        nc.verified_by = self.request.user
-        nc.verified_at = timezone.now()
+        try:
+            FindingService.verify_nonconformity(nc=self.object, user=self.request.user, action=action, notes=notes)
 
-        # Map verification action to status
-        if action == "accept":
-            nc.verification_status = "accepted"
-            messages.success(self.request, "Response accepted.")
-        elif action == "request_changes":
-            nc.verification_status = "open"
-            messages.info(self.request, "Changes requested. Nonconformity remains open.")
-        elif action == "close":
-            nc.verification_status = "closed"
-            messages.success(self.request, "Nonconformity closed and verified effective.")
+            if action == "accept":
+                messages.success(self.request, "Response accepted.")
+            elif action == "request_changes":
+                messages.info(self.request, "Changes requested. Nonconformity remains open.")
+            elif action == "close":
+                messages.success(self.request, "Nonconformity closed and verified effective.")
 
-        # Save verification notes if provided
-        if form.cleaned_data.get("verification_notes"):
-            nc.verification_notes = form.cleaned_data["verification_notes"]
-
-        nc.save()
+        except ValidationError as e:
+            messages.error(self.request, str(e))
+            return self.form_invalid(form)
 
         return redirect(self.get_success_url())
 
@@ -1068,8 +1045,9 @@ class ObservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
 
     def form_valid(self, form):
         """Process valid form submission."""
+        FindingService.update_observation(observation=self.object, data=form.cleaned_data, user=self.request.user)
         messages.success(self.request, "Observation updated successfully.")
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
@@ -1187,8 +1165,9 @@ class OpportunityForImprovementUpdateView(LoginRequiredMixin, UserPassesTestMixi
 
     def form_valid(self, form):
         """Process valid form submission."""
+        FindingService.update_ofi(ofi=self.object, data=form.cleaned_data, user=self.request.user)
         messages.success(self.request, "Opportunity for Improvement updated successfully.")
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
@@ -1315,30 +1294,19 @@ class TechnicalReviewView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         """Process valid form submission."""
         audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
 
-        # Check if technical review already exists
-        if hasattr(audit, "technicalreview"):
-            messages.error(self.request, "Technical review already exists for this audit.")
-            return redirect("audits:audit_detail", pk=audit.pk)
+        try:
+            self.object = ReviewService.conduct_technical_review(
+                audit=audit, reviewer=self.request.user, data=form.cleaned_data
+            )
 
-        # Create technical review
-        form.instance.audit = audit
-        form.instance.reviewer = self.request.user
-        self.object = form.save()
-
-        # If approved, transition to decision_pending
-        if self.object.status == "approved":
-            try:
-                workflow = AuditWorkflow(audit)
-                workflow.transition(
-                    "decision_pending",
-                    self.request.user,
-                    notes=f"Technical review approved by {self.request.user.get_full_name()}",
-                )
+            if self.object.status == "approved":
                 messages.success(self.request, "Technical review completed. Audit moved to decision pending.")
-            except ValidationError as e:
-                messages.error(self.request, f"Error transitioning audit: {e}")
-        else:
-            messages.success(self.request, "Technical review saved. Audit remains in technical review status.")
+            else:
+                messages.success(self.request, "Technical review saved. Audit remains in technical review status.")
+
+        except ValidationError as e:
+            messages.error(self.request, str(e))
+            return self.form_invalid(form)
 
         return redirect(self.get_success_url())
 
@@ -1368,22 +1336,19 @@ class TechnicalReviewUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
 
     def form_valid(self, form):
         """Process valid form submission."""
-        self.object = form.save()
+        try:
+            self.object = ReviewService.conduct_technical_review(
+                audit=self.object.audit, reviewer=self.request.user, data=form.cleaned_data
+            )
 
-        # If approved and audit still in technical_review, transition
-        if self.object.status == "approved" and self.object.audit.status == "technical_review":
-            try:
-                workflow = AuditWorkflow(self.object.audit)
-                workflow.transition(
-                    "decision_pending",
-                    self.request.user,
-                    notes=f"Technical review approved by {self.request.user.get_full_name()}",
-                )
+            if self.object.status == "approved":
                 messages.success(self.request, "Technical review approved. Audit moved to decision pending.")
-            except ValidationError as e:
-                messages.error(self.request, f"Error transitioning audit: {e}")
-        else:
-            messages.success(self.request, "Technical review updated.")
+            else:
+                messages.success(self.request, "Technical review updated.")
+
+        except ValidationError as e:
+            messages.error(self.request, str(e))
+            return self.form_invalid(form)
 
         return redirect(self.get_success_url())
 
@@ -1431,34 +1396,17 @@ class CertificationDecisionView(LoginRequiredMixin, UserPassesTestMixin, CreateV
         """Process valid form submission."""
         audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
 
-        # Check if decision already exists
-        if hasattr(audit, "certificationdecision"):
-            messages.error(self.request, "Certification decision already exists for this audit.")
-            return redirect("audits:audit_detail", pk=audit.pk)
-
-        # Create certification decision
-        form.instance.audit = audit
-        form.instance.decision_maker = self.request.user
-        self.object = form.save()
-
-        # Transition to closed
         try:
-            workflow = AuditWorkflow(audit)
-            workflow.transition(
-                "closed",
-                self.request.user,
-                notes=f"Decision: {self.object.get_decision_display()} by {self.request.user.get_full_name()}",
+            self.object = ReviewService.make_certification_decision(
+                audit=audit, decision_maker=self.request.user, data=form.cleaned_data
             )
-
-            # Record certificate history and schedule surveillance
-            CertificateService.record_decision(self.object)
-
             messages.success(
                 self.request,
                 f"Certification decision made: {self.object.get_decision_display()}. Audit closed.",
             )
         except ValidationError as e:
-            messages.error(self.request, f"Error transitioning audit: {e}")
+            messages.error(self.request, str(e))
+            return self.form_invalid(form)
 
         return redirect(self.get_success_url())
 
@@ -1486,7 +1434,9 @@ class CertificationDecisionUpdateView(LoginRequiredMixin, UserPassesTestMixin, U
 
     def form_valid(self, form):
         """Process valid form submission."""
-        self.object = form.save()
+        self.object = ReviewService.update_certification_decision(
+            decision=self.object, decision_maker=self.request.user, data=form.cleaned_data
+        )
         messages.success(self.request, "Certification decision updated.")
         return redirect(self.get_success_url())
 
@@ -1528,7 +1478,7 @@ def team_member_add(request, audit_pk):
     if request.method == "POST":
         form = AuditTeamMemberForm(request.POST, audit=audit, user=request.user)
         if form.is_valid():
-            team_member = form.save()
+            team_member = TeamService.add_team_member(audit=audit, data=form.cleaned_data, user=request.user)
 
             # Check for competence warnings (only if user is selected)
             if team_member.user:
@@ -1584,7 +1534,9 @@ def team_member_edit(request, pk):
     if request.method == "POST":
         form = AuditTeamMemberForm(request.POST, instance=team_member, audit=audit, user=request.user)
         if form.is_valid():
-            team_member = form.save()
+            team_member = TeamService.update_team_member(
+                team_member=team_member, data=form.cleaned_data, user=request.user
+            )
             messages.success(request, f"Team member {team_member.name} updated successfully.")
             return redirect("audits:audit_detail", pk=audit.pk)
     else:
@@ -1621,7 +1573,7 @@ def team_member_delete(request, pk):
 
     if request.method == "POST":
         member_name = team_member.name
-        team_member.delete()
+        TeamService.remove_team_member(team_member, user=request.user)
         messages.success(request, f"Team member {member_name} removed from audit.")
         return redirect("audits:audit_detail", pk=audit.pk)
 
@@ -1659,13 +1611,8 @@ def nonconformity_add(request, audit_pk):
     if request.method == "POST":
         form = NonconformityForm(request.POST, audit=audit)
         if form.is_valid():
-            nc = form.save(commit=False)
-            nc.audit = audit
-            nc.created_by = user
-            nc.save()
-            form.save_m2m()
-
-            messages.success(request, f"{nc.get_category_display()} nonconformity added to clause {nc.clause}.")
+            FindingService.create_nonconformity(audit=audit, user=user, data=form.cleaned_data)
+            messages.success(request, "Nonconformity added successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
         form = NonconformityForm(audit=audit)
@@ -1700,13 +1647,8 @@ def observation_add(request, audit_pk):
     if request.method == "POST":
         form = ObservationForm(request.POST, audit=audit)
         if form.is_valid():
-            obs = form.save(commit=False)
-            obs.audit = audit
-            obs.created_by = user
-            obs.save()
-            form.save_m2m()
-
-            messages.success(request, f"Observation added to clause {obs.clause}.")
+            FindingService.create_observation(audit=audit, user=user, data=form.cleaned_data)
+            messages.success(request, "Observation added successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
         form = ObservationForm(audit=audit)
@@ -1741,13 +1683,8 @@ def ofi_add(request, audit_pk):
     if request.method == "POST":
         form = OpportunityForImprovementForm(request.POST, audit=audit)
         if form.is_valid():
-            ofi = form.save(commit=False)
-            ofi.audit = audit
-            ofi.created_by = user
-            ofi.save()
-            form.save_m2m()
-
-            messages.success(request, f"Opportunity for improvement added to clause {ofi.clause}.")
+            FindingService.create_ofi(audit=audit, user=user, data=form.cleaned_data)
+            messages.success(request, "Opportunity for improvement added successfully.")
             return redirect("audits:audit_detail", pk=audit_pk)
     else:
         form = OpportunityForImprovementForm(audit=audit)
@@ -1792,7 +1729,7 @@ def nonconformity_edit(request, pk):
     if request.method == "POST":
         form = NonconformityForm(request.POST, instance=nc, audit=audit)
         if form.is_valid():
-            nc = form.save()
+            FindingService.update_nonconformity(nc=nc, data=form.cleaned_data, user=request.user)
             messages.success(request, "Nonconformity updated successfully.")
             return redirect("audits:audit_detail", pk=audit.pk)
     else:
@@ -1827,7 +1764,7 @@ def observation_edit(request, pk):
     if request.method == "POST":
         form = ObservationForm(request.POST, instance=obs, audit=audit)
         if form.is_valid():
-            obs = form.save()
+            FindingService.update_observation(observation=obs, data=form.cleaned_data, user=request.user)
             messages.success(request, "Observation updated successfully.")
             return redirect("audits:audit_detail", pk=audit.pk)
     else:
@@ -1862,7 +1799,7 @@ def ofi_edit(request, pk):
     if request.method == "POST":
         form = OpportunityForImprovementForm(request.POST, instance=ofi, audit=audit)
         if form.is_valid():
-            ofi = form.save()
+            FindingService.update_ofi(ofi=ofi, data=form.cleaned_data, user=request.user)
             messages.success(request, "Opportunity for improvement updated successfully.")
             return redirect("audits:audit_detail", pk=audit.pk)
     else:
@@ -1921,7 +1858,7 @@ def finding_delete(request, finding_type, pk):
         return redirect("audits:audit_detail", pk=audit.pk)
 
     if request.method == "POST":
-        finding.delete()
+        FindingService.delete_finding(finding, user=request.user)
         messages.success(request, f"{type_name} deleted successfully.")
         return redirect("audits:audit_detail", pk=audit.pk)
 
@@ -1964,9 +1901,7 @@ def nonconformity_respond(request, pk):
     if request.method == "POST":
         form = NonconformityResponseForm(request.POST, instance=nc)
         if form.is_valid():
-            nc = form.save(commit=False)
-            nc.verification_status = "client_responded"
-            nc.save()
+            FindingService.respond_to_nonconformity(nc=nc, response_data=form.cleaned_data)
 
             messages.success(
                 request,
@@ -2010,16 +1945,18 @@ def nonconformity_verify(request, pk):
     if request.method == "POST":
         form = NonconformityVerificationForm(request.POST, instance=nc)
         if form.is_valid():
-            nc = form.save(commit=False)
-            nc.verified_by = user
-            nc.verified_at = timezone.now()
-            nc.save()
+            action = form.cleaned_data["verification_action"]
+            notes = form.cleaned_data.get("verification_notes")
 
-            messages.success(
-                request,
-                f"Nonconformity verification completed - status: {nc.get_verification_status_display()}.",
-            )
-            return redirect("audits:audit_detail", pk=audit.pk)
+            try:
+                FindingService.verify_nonconformity(nc=nc, user=user, action=action, notes=notes)
+                messages.success(
+                    request,
+                    f"Nonconformity verification completed - status: {nc.get_verification_status_display()}.",
+                )
+                return redirect("audits:audit_detail", pk=audit.pk)
+            except ValidationError as e:
+                messages.error(request, str(e))
     else:
         form = NonconformityVerificationForm(instance=nc)
 
