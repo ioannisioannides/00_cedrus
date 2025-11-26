@@ -76,6 +76,7 @@ class AuditStateMachine:
         return dict(self.audit.STATUS_CHOICES).get(status_code, status_code)
 
     def _permission_checker(self, user, from_state: str, to_state: str) -> bool:
+        # pylint: disable=too-many-return-statements,too-many-branches
         from trunk.permissions.policies import PBACPolicy
         from trunk.permissions.predicates import PermissionPredicate
 

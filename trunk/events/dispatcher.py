@@ -61,7 +61,7 @@ class EventDispatcher:
         for handler in self._handlers.get(event_type, []):
             try:
                 handler(payload)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 logger.error("Error in event handler for %s: %s", event_type, e, exc_info=True)
 
     def clear(self, event_type=None):

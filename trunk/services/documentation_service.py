@@ -46,7 +46,7 @@ class DocumentationService:
                 },
             )
 
-            logger.info(f"Audit changes updated for audit {audit.pk} by user {user.pk}")
+            logger.info("Audit changes updated for audit %s by user %s", audit.pk, user.pk)
             return changes
 
     @staticmethod
@@ -79,7 +79,7 @@ class DocumentationService:
                 },
             )
 
-            logger.info(f"Audit plan review updated for audit {audit.pk} by user {user.pk}")
+            logger.info("Audit plan review updated for audit %s by user %s", audit.pk, user.pk)
             return plan_review
 
     @staticmethod
@@ -112,7 +112,7 @@ class DocumentationService:
                 },
             )
 
-            logger.info(f"Audit summary updated for audit {audit.pk} by user {user.pk}")
+            logger.info("Audit summary updated for audit %s by user %s", audit.pk, user.pk)
             return summary
 
     @staticmethod
@@ -145,5 +145,5 @@ class DocumentationService:
                 },
             )
 
-            logger.info(f"Audit recommendation updated for audit {audit.pk} by user {user.pk}")
+            logger.info("Audit recommendation updated for audit %s by user %s", audit.pk, user.pk)
             return recommendation

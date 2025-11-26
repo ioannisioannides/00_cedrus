@@ -76,7 +76,7 @@ def get_base_duration(employee_count: int, standard_code: str = "ISO 9001") -> f
     raise ValueError(f"No base duration found for {employee_count} employees")
 
 
-def calculate_complexity_factor(
+def calculate_complexity_factor(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
     number_of_sites: int = 1,
     scope_variation: str = "uniform",  # uniform, moderate, high
     process_complexity: str = "standard",  # simple, standard, complex
@@ -162,7 +162,7 @@ def calculate_complexity_factor(
     return adjustment, reasons
 
 
-def validate_audit_duration(
+def validate_audit_duration(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
     planned_hours: float,
     employee_count: int,
     standard_code: str = "ISO 9001",

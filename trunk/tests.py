@@ -32,7 +32,7 @@ from trunk.permissions.policies import PBACPolicy
 # ==============================================================================
 
 
-class PBACPolicyTest(TestCase):
+class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
     """Test Policy-Based Access Control policies."""
 
     def setUp(self):
@@ -46,45 +46,43 @@ class PBACPolicyTest(TestCase):
         self.decision_maker_group = Group.objects.create(name="decision_maker")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
-        self.cb_admin.groups.add(self.cb_group)
+        self.cb_admin = self._create_user("cbadmin", self.cb_group)
+        self.lead_auditor = self._create_user("lead", self.lead_group)
+        self.auditor = self._create_user("auditor", self.auditor_group)
+        self.client_user = self._create_user("client", self.client_user_group)
+        self.tech_reviewer = self._create_user("tech", self.tech_reviewer_group)
+        self.decision_maker = self._create_user("decision", self.decision_maker_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
-        self.lead_auditor.groups.add(self.lead_group)
-
-        self.auditor = User.objects.create_user(username="auditor", password="pass")  # nosec B106
-        self.auditor.groups.add(self.auditor_group)
-
-        self.client_user = User.objects.create_user(username="client", password="pass")  # nosec B106
-        self.client_user.groups.add(self.client_user_group)
-
-        self.tech_reviewer = User.objects.create_user(username="tech", password="pass")  # nosec B106
-        self.tech_reviewer.groups.add(self.tech_reviewer_group)
-
-        self.decision_maker = User.objects.create_user(username="decision", password="pass")  # nosec B106
-        self.decision_maker.groups.add(self.decision_maker_group)
-
-        # Create organization
+        # Create organization and related objects
         self.org = Organization.objects.create(
             name="Test Org",
             registered_address="123 St",
             customer_id="ORG001",
             total_employee_count=10,
         )
-
         self.standard = Standard.objects.create(code="ISO 9001", title="QMS")
-
         self.cert = Certification.objects.create(
             organization=self.org,
             standard=self.standard,
             certification_scope="Test",
             certificate_status="active",
         )
-
         self.site = Site.objects.create(organization=self.org, site_name="Site 1", site_address="123 St")
 
-        # Create profile for client user
-        # Profile is created by signal, so we just need to update it
+        # Setup client profile
+        self._setup_client_profile()
+
+        # Create audit
+        self.audit = self._create_audit()
+
+    def _create_user(self, username, group):
+        """Helper to create user and assign group."""
+        user = User.objects.create_user(username=username, password="pass")  # nosec B106
+        user.groups.add(group)
+        return user
+
+    def _setup_client_profile(self):
+        """Helper to setup client profile."""
         self.client_user.refresh_from_db()
         if hasattr(self.client_user, "profile"):
             self.client_user.profile.organization = self.org
@@ -92,10 +90,11 @@ class PBACPolicyTest(TestCase):
         else:
             Profile.objects.create(user=self.client_user, organization=self.org)
 
-        # Import and create audit
+    def _create_audit(self):
+        """Helper to create audit."""
         from audits.models import Audit
 
-        self.audit = Audit.objects.create(
+        audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage2",
             total_audit_date_from=date.today(),
@@ -105,8 +104,9 @@ class PBACPolicyTest(TestCase):
             lead_auditor=self.lead_auditor,
             created_by=self.cb_admin,
         )
-        self.audit.certifications.add(self.cert)
-        self.audit.sites.add(self.site)
+        audit.certifications.add(self.cert)
+        audit.sites.add(self.site)
+        return audit
 
     def test_is_independent_for_decision_cb_admin_bypass(self):
         """Test CB Admin can always make decisions."""
