@@ -8,12 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      administration: write
     steps:
       - name: Configure branch protection for `main`
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_PAT }} # GITHUB_TOKEN cannot modify branch protection; use a PAT
           script: |
             const branch = 'main';
             const required_status_checks = {
