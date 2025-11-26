@@ -1,21 +1,25 @@
 # Board Meeting Minutes — Cedrus
+
 Date: 26 November 2025
 Attendees: Project Owner, DevOps Lead, Product Owner, Security Lead, QA Lead, Accreditation Lead, Release Manager, UI/UX Lead, Orchestrator (PM)
 Location: Remote
 Facilitator: Orchestrator
 
 ## 1. Objectives
+
 - Review current project status (tests, coverage, recent fixes)
 - Prioritize critical production-readiness work
 - Assign owners and target dates for top actions
 - Agree next meeting and cadence
 
 ## 2. Executive Summary
+
 - Test suite: 483 passing tests; coverage 80.5%.
 - Recent work: Pylint fixes, logging improvements, markdown fixes, passed full test suite and pushed to `main`.
 - Key gaps: Production hardening, CI/CD, monitoring, backup strategy, workflow unit tests, accreditation modules.
 
 ## 3. Decisions & Assignments
+
 Below are the agreed owners and target dates for each action item (owners are suggested from prior planning and available team roles):
 
 1. Apply Production Settings & Secrets
@@ -147,21 +151,25 @@ Below are the agreed owners and target dates for each action item (owners are su
     - Completed: 2025-11-26
 
 ## 4. Action Items (Immediate / Next 48 hours)
+
 - DevOps: Apply production settings and run `python manage.py check --deploy` (Due 2025-11-28).
 - Release Manager: Open PR with CI skeleton (tests + lint) and block merges until passing (Due 2025-12-03).
 - QA & Engineering: Identify top 10 coverage gaps and assign tickets (Due 2025-11-28).
 - Security: Run Bandit and prepare pen-test checklist (Due 2025-12-04).
 
 ## 5. Risks Reviewed
+
 - Production secrets and settings not applied — HIGH priority.
 - No monitoring / backups yet — HIGH priority.
 - Accreditation deliverables require feature additions — MEDIUM priority.
 
 ## 6. Next Meeting
+
 - Date: 03 December 2025
 - Focus: CI rollout, production settings verification, and coverage progress.
 
 ## 7. Minutes prepared by
+
 Orchestrator (Project Manager)
 
 ---

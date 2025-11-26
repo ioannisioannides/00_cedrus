@@ -7,15 +7,18 @@ This guide explains, in very simple terms, what environment variables and reposi
 ---
 
 ## 1) What is an "environment variable"?
+
 - Imagine your app is a robot that needs a key to enter the castle (the database).
 - An environment variable is a tiny note the robot reads when it wakes up that says where the key is and the secret password.
 - We keep that note in a safe place (not in the robot's toolbox which is the git repo).
 
 ## 2) Why can't we put secrets in the code?
+
 - If you put the secret note in the toolbox (the git repo), anyone who sees the toolbox (public or pushed repo) also sees the secret.
 - That means bad people could get into your castle (database, cloud) and cause trouble.
 
 ## 3) Local development: using a `.env` file (safe for local only)
+
 - Create a file named `.env` in the project root (same folder as `manage.py`).
 - Put secret lines like this (example):
 
@@ -30,6 +33,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 - Make sure `.env` is listed in `.gitignore` so it is never added to git. If your repo already has `.env` in `.gitignore`, you're good.
 
 ## 4) How to load `.env` in Django (what the code should do)
+
 - Use a small helper package like `python-dotenv` or `django-environ`.
 - Example (simple): in `cedrus/settings.py` near the top:
 
@@ -48,12 +52,14 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 - The code reads those notes when Django starts and never stores them in git.
 
 ## 5) GitHub: What are Repository Secrets and why we need them
+
 - On GitHub, repository secrets are a safe place to store secrets for CI/CD.
 - They are encrypted and only exposed to Actions at run-time.
 - Use them to store `DJANGO_SECRET_KEY`, `DATABASE_URL` (production), `SENTRY_DSN`, and `CLOUD_*` keys.
 
 ## 6) How to add a Repository Secret on GitHub (manual steps)
-1. Go to your repo on GitHub: `https://github.com/<your-org>/<your-repo>`
+
+1. Go to your repo on GitHub: `<https://github.com/<your-org>/<your-repo>>`
 2. Click `Settings` → `Secrets and variables` → `Actions` → `New repository secret`
 3. Add a `Name` (e.g., `DJANGO_SECRET_KEY`) and the `Value` (the secret string).
 4. Click `Add secret`.
@@ -61,6 +67,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 Repeat for each secret you need.
 
 ## 7) How to use these secrets in GitHub Actions workflows
+
 - In your workflow YAML, pass secrets to jobs like this:
 
 ```yaml
@@ -78,11 +85,13 @@ steps:
 - Secrets are not printed in workflow logs. If you accidentally `echo` them, GitHub will mask them, but don't rely on that.
 
 ## 8) Organization-level secrets (when you have multiple repos)
+
 - GitHub allows org-level secrets that can be shared with selected repos.
 - Use them for company-wide tokens and rotate carefully.
 
 ## 9) Using `gh` CLI to set secrets (optional)
-- Install GitHub CLI: https://cli.github.com/
+
+- Install GitHub CLI: <https://cli.github.com/>
 - Login: `gh auth login`
 - Set repo secret using:
 
@@ -91,10 +100,11 @@ gh secret set DJANGO_SECRET_KEY -b"my-secret-value" --repo my-org/00_cedrus
 ```
 
 ## 10) What about environment variables on production servers?
+
 - On a server (e.g., a VM or container), set env vars in the service config or the container runtime, not in the repo.
 - Example for systemd (on server):
 
-```
+```ini
 # /etc/systemd/system/cedrus.service
 [Service]
 Environment=DJANGO_SECRET_KEY=supersecretvalue
@@ -104,15 +114,18 @@ Environment=DATABASE_URL=postgres://user:pass@db:5432/prod_db
 - For Docker, pass envs in `docker-compose.yml` or use an env file referenced by `docker-compose` but keep that file out of git.
 
 ## 11) Rotating and revoking secrets
+
 - If a secret may have been exposed, rotate it immediately: create a new secret value, update the service and GitHub secret, then revoke the old one.
 - Example: rotate DB password, update `DATABASE_URL` secret, restart services.
 
 ## 12) What to do if you accidentally commit a secret
+
 1. Remove the secret from history: `git rm --cached path/to/file` and commit removal.
 2. Purge history if necessary (dangerous): `git filter-branch` or `git filter-repo` to remove earlier commits.
 3. **Immediately rotate** the secret (assume compromised).
 
 ## 13) Minimal `.env.example` to include in repo (safe to commit)
+
 - Create a file `.env.example` with placeholder keys (no secrets):
 
 ```env
@@ -126,6 +139,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 This helps new developers know what to set, without exposing secrets.
 
 ## 14) Quick Checklist (Do this now)
+
 - [ ] Create `.env` locally and add real secrets to it (do not commit).
 - [ ] Ensure `.gitignore` contains `.env`.
 - [ ] Add repository secrets in GitHub for production values.
@@ -133,6 +147,7 @@ This helps new developers know what to set, without exposing secrets.
 - [ ] Rotate any secrets that may have been committed accidentally.
 
 ## 15) Helpful Commands
+
 ```bash
 # Mask a file locally (do not commit):
 echo '.env' >> .gitignore
@@ -148,6 +163,7 @@ gh secret set DJANGO_SECRET_KEY -b"$(python -c 'from secrets import token_urlsaf
 ---
 
 If you want, I can:
+
 - Create an example `.env.example` file in the repo (safe to commit).
 - Scaffold a minimal GitHub Actions workflow that reads from secrets and runs tests (will create PR if you want).
 
