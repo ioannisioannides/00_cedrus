@@ -14,7 +14,7 @@
 # STAGE 1: BUILDER
 # ==============================================================================
 # Build Python dependencies in isolated builder stage
-FROM python:3.13-alpine3.20 AS builder
+FROM python:3-alpine AS builder
 
 # Set build-time labels
 LABEL maintainer="Cedrus Excellence Team <team@cedrus.local>"
@@ -57,7 +57,7 @@ RUN pip install --no-cache-dir --disable-pip-version-check \
 # STAGE 2: RUNTIME
 # ==============================================================================
 # Minimal runtime image with only production dependencies
-FROM python:3.13-alpine3.20 AS runtime
+FROM python:3-alpine AS runtime
 
 # Runtime arguments
 ARG UID=1000
