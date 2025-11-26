@@ -3,7 +3,7 @@
 # ==============================================================================
 # Multi-stage build for optimal image size and security
 # Target: <500MB final image
-# Architecture: Python 3.13 + Django 5.2.8
+# Architecture: Python 3.15 + Django 5.2.8 (Alpine Linux)
 # Security: Non-root user, minimal attack surface
 # 
 # Built by: Dr. Thomas Berg (Caltech PhD, DevOps, 23 years)
@@ -14,23 +14,25 @@
 # STAGE 1: BUILDER
 # ==============================================================================
 # Build Python dependencies in isolated builder stage
-FROM python:3.13-slim-bookworm AS builder
-
-# Build arguments
-ARG DEBIAN_FRONTEND=noninteractive
+FROM python:3.13-alpine3.20 AS builder
 
 # Set build-time labels
 LABEL maintainer="Cedrus Excellence Team <team@cedrus.local>"
 LABEL stage="builder"
 
 # Install build dependencies (only needed for compilation)
-# hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# hadolint ignore=DL3018
+RUN apk add --no-cache \
+    build-base \
+    postgresql-dev \
+    musl-dev \
+    linux-headers \
+    libffi-dev \
+    jpeg-dev \
+    openjpeg-dev \
+    zlib-dev \
+    pango-dev \
+    gdk-pixbuf-dev
 
 # Create virtual environment for isolated dependencies
 RUN python -m venv /opt/venv
@@ -45,6 +47,7 @@ COPY requirements.txt /tmp/requirements.txt
 # --no-cache-dir: Don't cache pip downloads (saves space)
 # --disable-pip-version-check: Skip pip version check (faster)
 # hadolint ignore=DL3013
+# Install Python dependencies
 RUN pip install --no-cache-dir --disable-pip-version-check \
     --upgrade pip setuptools wheel && \
     pip install --no-cache-dir --disable-pip-version-check \
@@ -54,10 +57,9 @@ RUN pip install --no-cache-dir --disable-pip-version-check \
 # STAGE 2: RUNTIME
 # ==============================================================================
 # Minimal runtime image with only production dependencies
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.13-alpine3.20 AS runtime
 
 # Runtime arguments
-ARG DEBIAN_FRONTEND=noninteractive
 ARG UID=1000
 ARG GID=1000
 
@@ -72,10 +74,10 @@ LABEL org.opencontainers.image.documentation="https://cedrus.local/docs"
 LABEL org.opencontainers.image.source="https://github.com/yourorg/cedrus"
 
 # Install only runtime dependencies (no build tools)
-# hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# hadolint ignore=DL3018
+RUN apk add --no-cache \
     # PostgreSQL client library
-    libpq5 \
+    libpq \
     # PostgreSQL client for wait script
     postgresql-client \
     # Security: CA certificates for HTTPS
@@ -88,18 +90,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # File utilities
     gettext \
     # WeasyPrint dependencies (PDF generation)
-    libpango-1.0-0 \
-    libpangoft2-1.0-0 \
-    libjpeg62-turbo \
-    libopenjp2-7 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    pango \
+    gdk-pixbuf \
+    libffi \
+    shared-mime-info \
+    jpeg \
+    openjpeg \
+    zlib \
+    # Fonts for PDF generation
+    font-noto \
+    # Bash for scripts (Alpine uses ash by default)
+    bash
 
 # Create non-root user for security (principle of least privilege)
 # Running as root in containers is a security anti-pattern
-# hadolint ignore=DL3046
-RUN groupadd -g ${GID} cedrus && \
-    useradd -l -u ${UID} -g ${GID} -m -s /bin/bash cedrus
+RUN addgroup -g ${GID} cedrus && \
+    adduser -D -u ${UID} -G cedrus -h /home/cedrus -s /bin/bash cedrus
 
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
