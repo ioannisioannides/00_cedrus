@@ -5,10 +5,15 @@ These forms handle creation and editing of findings, with validation to ensure
 standards belong to the audit's certifications.
 """
 
+from typing import TYPE_CHECKING
+
 from django import forms
 from django.core.exceptions import ValidationError
 
 from .models import Nonconformity, Observation, OpportunityForImprovement
+
+if TYPE_CHECKING:
+    from .models import Audit
 
 
 class NonconformityForm(forms.ModelForm):
@@ -35,7 +40,7 @@ class NonconformityForm(forms.ModelForm):
             "due_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
         }
 
-    def __init__(self, *args, audit=None, **kwargs):
+    def __init__(self, *args, audit: "Audit | None" = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.audit = audit
 
@@ -79,7 +84,7 @@ class ObservationForm(forms.ModelForm):
             "explanation": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 
-    def __init__(self, *args, audit=None, **kwargs):
+    def __init__(self, *args, audit: "Audit | None" = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.audit = audit
 
@@ -119,7 +124,7 @@ class OpportunityForImprovementForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
 
-    def __init__(self, *args, audit=None, **kwargs):
+    def __init__(self, *args, audit: "Audit | None" = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.audit = audit
 
