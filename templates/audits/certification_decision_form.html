@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Certification Decision - Audit {{ audit.pk }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Certification Decision</h1>
+        <p class="page-subtitle">Audit #{{ audit.pk }} - {{ audit.organization.name }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Warning Alert -->
+        <div class="alert alert-warning" role="alert">
+            <h6 class="alert-heading"><strong>⚠️ Final Decision</strong></h6>
+            <p class="mb-0">Making a certification decision will mark this audit as "Decided" and lock it from further editing. Please review all audit findings, responses, and recommendations before proceeding.</p>
+        </div>
+        
+        <!-- Audit Summary Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Audit Summary</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Organization</dt>
+                    <dd class="col-sm-8">{{ audit.organization.name }}</dd>
+                    
+                    <dt class="col-sm-4">Audit Type</dt>
+                    <dd class="col-sm-8">{{ audit.get_audit_type_display }}</dd>
+                    
+                    <dt class="col-sm-4">Lead Auditor</dt>
+                    <dd class="col-sm-8">{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</dd>
+                    
+                    <dt class="col-sm-4">Major NCs</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-danger">{{ audit.nonconformity_set.filter|length }}</span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        
+        <!-- Decision Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Make Certification Decision</h5>
+                <p class="mb-0 text-muted">Select the decision and affected certifications</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Decision -->
+                    <div class="mb-4">
+                        <label for="{{ form.decision.id_for_label }}" class="form-label">
+                            <strong>Decision</strong>
+                        </label>
+                        {{ form.decision }}
+                        {% if form.decision.errors %}
+                            <div class="text-danger small">{{ form.decision.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Certifications Affected -->
+                    <div class="mb-4">
+                        <label for="{{ form.certifications_affected.id_for_label }}" class="form-label">
+                            <strong>Certifications Affected</strong>
+                        </label>
+                        {{ form.certifications_affected }}
+                        {% if form.certifications_affected.errors %}
+                            <div class="text-danger small">{{ form.certifications_affected.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Select the certifications this decision applies to.</div>
+                    </div>
+                    
+                    <!-- Decision Notes -->
+                    <div class="mb-4">
+                        <label for="{{ form.decision_notes.id_for_label }}" class="form-label">
+                            <strong>Decision Notes</strong>
+                        </label>
+                        {{ form.decision_notes }}
+                        {% if form.decision_notes.errors %}
+                            <div class="text-danger small">{{ form.decision_notes.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Justification for the decision.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to finalize this certification decision?');">
+                            <strong>✓ Finalize Decision</strong>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6>Decision Guidance</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-2"><strong>Grant Certification:</strong> No major NCs, all requirements met.</p>
+                <p class="small mb-2"><strong>Refuse:</strong> Major NCs not resolved or fundamental failure.</p>
+                <p class="small mb-2"><strong>Suspend:</strong> Serious non-compliance requiring corrective action within timeframe.</p>
+                <p class="small mb-2"><strong>Withdraw:</strong> Severe non-compliance, loss of confidence, or persistent failures.</p>
+                <p class="small mb-0"><strong>ISO Reference:</strong> ISO/IEC 17021-1:2015, 9.6</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

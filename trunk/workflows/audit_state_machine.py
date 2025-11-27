@@ -24,7 +24,7 @@ class AuditStateMachine:
         "client_review": ["submitted", "report_draft"],
         "submitted": ["technical_review"],
         "technical_review": ["decision_pending", "report_draft"],
-        "decision_pending": ["closed", "technical_review"],
+        "decision_pending": ["decided", "technical_review", "closed"],
         "decided": ["closed"],
         "closed": [],
         "cancelled": [],
@@ -130,6 +130,17 @@ class AuditStateMachine:
         # technical_review → decision_pending: CB Admin or Technical Reviewer
         if from_state == "technical_review" and to_state == "decision_pending":
             return PermissionPredicate.can_conduct_technical_review(user)
+
+        # decision_pending → decided: CB Decision Maker or CB Admin
+        if from_state == "decision_pending" and to_state == "decided":
+            if PermissionPredicate.is_decision_maker(user):
+                ok, _ = PBACPolicy.is_independent_for_decision(user, self.audit)
+                return ok
+            return PermissionPredicate.is_cb_admin(user)
+
+        # decided → closed: System or CB Admin (usually automatic after decision)
+        if from_state == "decided" and to_state == "closed":
+            return True
 
         # decision_pending → closed: CB Decision Maker or CB Admin
         if from_state == "decision_pending" and to_state == "closed":

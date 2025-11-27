@@ -1089,13 +1089,15 @@ class AuditMakeDecisionViewTest(TestCase):
             "revocation_recommended": False,
             "stage2_required": False,
         }
-        response = self.client.post(reverse("audits:audit_make_decision", kwargs={"audit_pk": self.audit.pk}), data)
-        # The view catches ValidationError and re-renders the form (status 200)
-        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            reverse("audits:audit_make_decision", kwargs={"audit_pk": self.audit.pk}), data, follow=True
+        )
+        # The view redirects because status is not decision_pending
+        self.assertEqual(response.status_code, 200)  # 200 after following redirect
 
         # Check for error message
         messages = list(response.context["messages"])
-        self.assertTrue(any("Invalid transition" in str(m) for m in messages))
+        self.assertTrue(any("Audit must be in 'Decision Pending' status" in str(m) for m in messages))
 
         # Status should remain submitted
         self.audit.refresh_from_db()
