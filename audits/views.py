@@ -319,11 +319,23 @@ class AuditDetailView(LoginRequiredMixin, DetailView):
 
         # Check if user can submit to client
         context["can_submit_to_client"] = (
-            audit.status == "draft" and PermissionPredicate.is_lead_auditor(user) and audit.lead_auditor == user
+            audit.status == "report_draft" and PermissionPredicate.is_lead_auditor(user) and audit.lead_auditor == user
+        )
+
+        # Check if user can start technical review
+        context["can_start_technical_review"] = (
+            audit.status == "submitted" and PermissionPredicate.can_conduct_technical_review(user)
+        )
+
+        # Check if user can conduct technical review (when in progress)
+        context["can_conduct_technical_review"] = (
+            audit.status == "technical_review" and PermissionPredicate.can_conduct_technical_review(user)
         )
 
         # Check if user can make decision
-        context["can_make_decision"] = audit.status == "submitted_to_cb" and PermissionPredicate.is_cb_admin(user)
+        context["can_make_decision"] = (
+            audit.status == "decision_pending" and PermissionPredicate.can_make_certification_decision(user)
+        )
 
         # Get or create related records
         context["changes"], _ = AuditChanges.objects.get_or_create(audit=audit)
@@ -607,14 +619,14 @@ def audit_make_decision(request, audit_pk):
     """Make certification decision for an audit."""
     audit = get_object_or_404(Audit, pk=audit_pk)
 
-    # Only CB Admin can make decisions
-    if not PermissionPredicate.is_cb_admin(request.user):
-        messages.error(request, "Only Certification Body Administrators can make certification decisions.")
+    # Only Decision Makers or CB Admin can make decisions
+    if not PermissionPredicate.can_make_certification_decision(request.user):
+        messages.error(request, "Only Certification Decision Makers can make certification decisions.")
         return redirect("audits:audit_detail", pk=audit_pk)
 
-    # Audit must be in submitted status
-    if audit.status != "submitted":
-        messages.error(request, "Audit must be in 'Submitted' status to make a decision.")
+    # Audit must be in decision_pending status
+    if audit.status != "decision_pending":
+        messages.error(request, "Audit must be in 'Decision Pending' status to make a decision.")
         return redirect("audits:audit_detail", pk=audit_pk)
 
     recommendation, _ = AuditRecommendation.objects.get_or_create(audit=audit)

@@ -15,12 +15,18 @@
         {% if can_submit_to_client %}
             <a href="{% url 'audits:audit_transition_status' audit.pk 'client_review' %}" class="btn btn-success" onclick="return confirm('Submit this audit to the client for review?');">Submit to Client</a>
         {% endif %}
+        {% if can_start_technical_review %}
+            <a href="{% url 'audits:audit_transition_status' audit.pk 'technical_review' %}" class="btn btn-info" onclick="return confirm('Start technical review?');">Start Technical Review</a>
+        {% endif %}
+        {% if can_conduct_technical_review %}
+            <a href="{% url 'audits:technical_review_create' audit.pk %}" class="btn btn-info">Conduct Technical Review</a>
+        {% endif %}
         {% if can_make_decision %}
-            <a href="{% url 'audits:audit_transition_status' audit.pk 'decided' %}" class="btn btn-warning" onclick="return confirm('Mark this audit as decided? This will lock the audit from further editing.');">Make Decision</a>
+            <a href="{% url 'audits:audit_make_decision' audit.pk %}" class="btn btn-warning">Make Decision</a>
         {% endif %}
         {% if available_transitions %}
             {% for status_code, status_display in available_transitions %}
-                {% if status_code != 'client_review' and status_code != 'decided' %}
+                {% if status_code != 'client_review' and status_code != 'decided' and status_code != 'technical_review' %}
                     <a href="{% url 'audits:audit_transition_status' audit.pk status_code %}" class="btn btn-outline-primary btn-sm">{{ status_display }}</a>
                 {% endif %}
             {% endfor %}
@@ -539,22 +545,5 @@
 </div>
 
 <!-- Certification Decision -->
-{% if audit.status == 'submitted_to_cb' and request.user.groups.filter|length > 0 %}
-    {% for group in request.user.groups.all %}
-        {% if group.name == 'cb_admin' %}
-            <div class="card mt-4 border-success">
-                <div class="card-header bg-success bg-opacity-10">
-                    <h5 class="mb-0">✓ Ready for Certification Decision</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-3">This audit has been submitted and is ready for a certification decision. Review all findings, responses, and recommendations before making your decision.</p>
-                    <a href="{% url 'audits:audit_make_decision' audit.pk %}" class="btn btn-success">
-                        <strong>Make Certification Decision</strong>
-                    </a>
-                </div>
-            </div>
-        {% endif %}
-    {% endfor %}
-{% endif %}
 {% endblock %}
 
