@@ -69,6 +69,14 @@ class Profile(models.Model):
         """Check if user is a client user (client_admin or client_user group)."""
         return self.user.groups.filter(name__in=["client_admin", "client_user"]).exists()
 
+    def is_technical_reviewer(self):
+        """Check if user is in the technical_reviewer group."""
+        return self.user.groups.filter(name="technical_reviewer").exists()
+
+    def is_decision_maker(self):
+        """Check if user is in the decision_maker group."""
+        return self.user.groups.filter(name="decision_maker").exists()
+
     def get_role_display(self):
         """Get a human-readable role name."""
         if self.is_cb_admin():
@@ -77,6 +85,10 @@ class Profile(models.Model):
             return "Lead Auditor"
         if self.user.groups.filter(name="auditor").exists():
             return "Auditor"
+        if self.is_technical_reviewer():
+            return "Technical Reviewer"
+        if self.is_decision_maker():
+            return "Decision Maker"
         if self.is_client_admin():
             return "Client Admin"
         if self.user.groups.filter(name="client_user").exists():

@@ -41,6 +41,8 @@ class Command(BaseCommand):
             "cb_admin": Group.objects.get_or_create(name="cb_admin")[0],
             "lead_auditor": Group.objects.get_or_create(name="lead_auditor")[0],
             "auditor": Group.objects.get_or_create(name="auditor")[0],
+            "technical_reviewer": Group.objects.get_or_create(name="technical_reviewer")[0],
+            "decision_maker": Group.objects.get_or_create(name="decision_maker")[0],
             "client_admin": Group.objects.get_or_create(name="client_admin")[0],
             "client_user": Group.objects.get_or_create(name="client_user")[0],
         }
@@ -79,6 +81,20 @@ class Command(BaseCommand):
         lead_auditor = self._create_user(
             "auditor1", "auditor1@cedrus.example", "Lead", "Auditor", groups["lead_auditor"]
         )
+        tech_reviewer = self._create_user(
+            "techreviewer",
+            "techreviewer@cedrus.example",
+            "Technical",
+            "Reviewer",
+            groups["technical_reviewer"],
+        )
+        decision_maker = self._create_user(
+            "decisionmaker",
+            "decisionmaker@cedrus.example",
+            "Decision",
+            "Maker",
+            groups["decision_maker"],
+        )
         client_admin = self._create_user(
             "clientadmin",
             "clientadmin@cedrus.example",
@@ -90,6 +106,8 @@ class Command(BaseCommand):
             "cb_admin": cb_admin,
             "lead_auditor": lead_auditor,
             "client_admin": client_admin,
+            "tech_reviewer": tech_reviewer,
+            "decision_maker": decision_maker,
         }
 
     def _create_organization(self):
@@ -196,4 +214,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("\nYou can now log in with:"))
         self.stdout.write(self.style.SUCCESS("  - CB Admin: cbadmin / password123"))
         self.stdout.write(self.style.SUCCESS("  - Lead Auditor: auditor1 / password123"))
+        self.stdout.write(self.style.SUCCESS("  - Technical Reviewer: techreviewer / password123"))
+        self.stdout.write(self.style.SUCCESS("  - Decision Maker: decisionmaker / password123"))
         self.stdout.write(self.style.SUCCESS("  - Client Admin: clientadmin / password123"))
