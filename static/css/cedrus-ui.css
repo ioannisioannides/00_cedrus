@@ -83,6 +83,7 @@
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
+    --radius-full: 9999px;
 }
 
 /* --------------------------------------------
@@ -93,20 +94,20 @@
 }
 
 body {
-    font-family: var(--font-sans);
     background-color: var(--color-bg-body);
     color: var(--color-text-main);
+    font-family: var(--font-sans);
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {
     color: var(--cedar-900);
     font-weight: 600;
+    letter-spacing: -0.02em;
     line-height: 1.2;
     margin-bottom: var(--space-4);
-    letter-spacing: -0.02em;
 }
 
 h1 { font-size: 2.5rem; font-weight: 700; }
@@ -130,31 +131,31 @@ a:hover {
 .navbar {
     background-color: var(--color-bg-surface);
     border-bottom: 1px solid var(--color-border);
-    padding: var(--space-4) 0;
     box-shadow: var(--shadow-sm);
+    padding: var(--space-4) 0;
 }
 
 .navbar-brand {
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: var(--cedar-800) !important;
-    letter-spacing: -0.03em;
-    display: flex;
     align-items: center;
+    color: var(--cedar-800) !important;
+    display: flex;
+    font-size: 1.25rem;
+    font-weight: 700;
     gap: var(--space-2);
+    letter-spacing: -0.03em;
 }
 
 .nav-link {
+    border-radius: var(--radius-md);
     color: var(--stone-600) !important;
     font-weight: 500;
     padding: var(--space-2) var(--space-4) !important;
-    border-radius: var(--radius-md);
     transition: all 0.2s ease;
 }
 
 .nav-link:hover, .nav-link.active {
-    color: var(--cedar-700) !important;
     background-color: var(--cedar-50);
+    color: var(--cedar-700) !important;
 }
 
 .main-content {
@@ -170,22 +171,22 @@ a:hover {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    overflow: hidden;
     margin-bottom: var(--space-6);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
-    box-shadow: var(--shadow-md);
     border-color: var(--stone-300);
+    box-shadow: var(--shadow-md);
 }
 
 .card-header {
     background: transparent;
     border-bottom: 1px solid var(--color-border);
-    padding: var(--space-6);
-    font-weight: 600;
     color: var(--cedar-900);
+    font-weight: 600;
+    padding: var(--space-6);
 }
 
 .card-body {
@@ -202,29 +203,29 @@ a:hover {
    5. BUTTONS
    -------------------------------------------- */
 .btn {
-    font-weight: 500;
-    padding: 0.625rem 1.25rem;
-    border-radius: var(--radius-md);
-    transition: all 0.2s ease;
-    letter-spacing: -0.01em;
-    display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
     border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    font-weight: 500;
+    gap: var(--space-2);
+    letter-spacing: -0.01em;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.2s ease;
 }
 
 .btn-primary {
     background-color: var(--cedar-500);
     border-color: var(--cedar-500);
-    color: white;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    color: white;
 }
 
 .btn-primary:hover {
     background-color: var(--cedar-600);
     border-color: var(--cedar-600);
-    transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -240,9 +241,9 @@ a:hover {
 }
 
 .btn-outline-primary {
-    color: var(--cedar-600);
-    border-color: var(--cedar-200);
     background: var(--cedar-50);
+    border-color: var(--cedar-200);
+    color: var(--cedar-600);
 }
 
 .btn-outline-primary:hover {
@@ -256,33 +257,33 @@ a:hover {
    -------------------------------------------- */
 .table-container {
     background: white;
-    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
-    overflow: hidden;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    overflow: hidden;
 }
 
 .table {
+    border-collapse: collapse;
     margin-bottom: 0;
     width: 100%;
-    border-collapse: collapse;
 }
 
 .table th {
     background: var(--stone-50);
+    border-bottom: 1px solid var(--color-border);
     color: var(--stone-600);
-    font-weight: 600;
-    text-transform: uppercase;
     font-size: 0.75rem;
+    font-weight: 600;
     letter-spacing: 0.05em;
     padding: var(--space-4) var(--space-6);
-    border-bottom: 1px solid var(--color-border);
+    text-transform: uppercase;
 }
 
 .table td {
-    padding: var(--space-4) var(--space-6);
     border-bottom: 1px solid var(--color-border);
     color: var(--stone-800);
+    padding: var(--space-4) var(--space-6);
     vertical-align: middle;
 }
 
@@ -298,19 +299,19 @@ a:hover {
    7. FORMS
    -------------------------------------------- */
 .form-label {
-    font-weight: 500;
     color: var(--stone-700);
-    margin-bottom: var(--space-2);
     font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: var(--space-2);
 }
 
 .form-control, .form-select {
+    background-color: white;
     border: 1px solid var(--stone-300);
     border-radius: var(--radius-md);
-    padding: 0.625rem 1rem;
     font-size: 1rem;
+    padding: 0.625rem 1rem;
     transition: all 0.2s ease;
-    background-color: white;
 }
 
 .form-control:focus, .form-select:focus {
@@ -323,11 +324,11 @@ a:hover {
    8. BADGES & STATUS
    -------------------------------------------- */
 .badge {
-    padding: 0.35em 0.65em;
+    border-radius: var(--radius-full);
     font-size: 0.75em;
     font-weight: 600;
-    border-radius: var(--radius-full);
     letter-spacing: 0.02em;
+    padding: 0.35em 0.65em;
 }
 
 .bg-success { background-color: var(--cedar-100) !important; color: var(--cedar-800); }
@@ -344,14 +345,14 @@ a:hover {
 .shadow-lg { box-shadow: var(--shadow-lg) !important; }
 
 .page-header {
-    margin-bottom: var(--space-8);
     border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-8);
     padding-bottom: var(--space-6);
 }
 
 .page-title {
-    font-size: 2rem;
     color: var(--cedar-900);
+    font-size: 2rem;
     margin-bottom: var(--space-2);
 }
 
@@ -362,18 +363,18 @@ a:hover {
 
 /* Dashboard Stats */
 .stat-card {
-    padding: var(--space-6);
+    background: linear-gradient(135deg, var(--cedar-600) 0%, var(--cedar-800) 100%);
+    border: none;
+    color: white;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, var(--cedar-600) 0%, var(--cedar-800) 100%);
-    color: white;
-    border: none;
+    padding: var(--space-6);
 }
 
 .stat-card .stat-value {
+    color: white;
     font-size: 2.5rem;
     font-weight: 700;
-    color: white;
     line-height: 1;
     margin: var(--space-2) 0;
 }
