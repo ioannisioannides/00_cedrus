@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Technical Review - Audit {{ audit.pk }} - Cedrus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Technical Review</h1>
+        <p class="page-subtitle">Audit #{{ audit.pk }} - {{ audit.organization.name }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Info Alert -->
+        <div class="alert alert-info" role="alert">
+            <h6 class="alert-heading"><strong>ℹ️ Technical Review Process</strong></h6>
+            <p class="mb-0">The technical review ensures that the audit process was conducted in accordance with requirements and that the audit report is accurate and complete before a certification decision is made.</p>
+        </div>
+        
+        <!-- Audit Summary Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Audit Summary</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Organization</dt>
+                    <dd class="col-sm-8">{{ audit.organization.name }}</dd>
+                    
+                    <dt class="col-sm-4">Audit Type</dt>
+                    <dd class="col-sm-8">{{ audit.get_audit_type_display }}</dd>
+                    
+                    <dt class="col-sm-4">Lead Auditor</dt>
+                    <dd class="col-sm-8">{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</dd>
+                    
+                    <dt class="col-sm-4">Findings</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-danger">{{ audit.nonconformity_set.count }} NCs</span>
+                        <span class="badge bg-warning text-dark">{{ audit.observation_set.count }} Obs</span>
+                        <span class="badge bg-info text-dark">{{ audit.opportunityforimprovement_set.count }} OFIs</span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        
+        <!-- Review Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Conduct Technical Review</h5>
+                <p class="mb-0 text-muted">Verify audit compliance and completeness</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Verification Checkboxes -->
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">Verification Items</h6>
+                        
+                        <div class="form-check mb-2">
+                            {{ form.scope_verified }}
+                            <label class="form-check-label" for="{{ form.scope_verified.id_for_label }}">
+                                <strong>Scope Verified</strong> - The audit scope was appropriate and fully covered.
+                            </label>
+                            {% if form.scope_verified.errors %}
+                                <div class="text-danger small">{{ form.scope_verified.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-2">
+                            {{ form.objectives_verified }}
+                            <label class="form-check-label" for="{{ form.objectives_verified.id_for_label }}">
+                                <strong>Objectives Verified</strong> - The audit objectives were achieved.
+                            </label>
+                            {% if form.objectives_verified.errors %}
+                                <div class="text-danger small">{{ form.objectives_verified.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-2">
+                            {{ form.findings_reviewed }}
+                            <label class="form-check-label" for="{{ form.findings_reviewed.id_for_label }}">
+                                <strong>Findings Reviewed</strong> - All findings are properly classified and documented.
+                            </label>
+                            {% if form.findings_reviewed.errors %}
+                                <div class="text-danger small">{{ form.findings_reviewed.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-check mb-2">
+                            {{ form.conclusion_clear }}
+                            <label class="form-check-label" for="{{ form.conclusion_clear.id_for_label }}">
+                                <strong>Conclusion Clear</strong> - The audit conclusion is clear and supported by evidence.
+                            </label>
+                            {% if form.conclusion_clear.errors %}
+                                <div class="text-danger small">{{ form.conclusion_clear.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Reviewer Notes -->
+                    <div class="mb-4">
+                        <label for="{{ form.reviewer_notes.id_for_label }}" class="form-label">
+                            <strong>Reviewer Notes</strong>
+                        </label>
+                        {{ form.reviewer_notes }}
+                        {% if form.reviewer_notes.errors %}
+                            <div class="text-danger small">{{ form.reviewer_notes.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Comments, observations, or issues identified during review.</div>
+                    </div>
+
+                    <!-- Clarification Requested -->
+                    <div class="mb-4">
+                        <label for="{{ form.clarification_requested.id_for_label }}" class="form-label">
+                            <strong>Clarification Requested</strong> (Optional)
+                        </label>
+                        {{ form.clarification_requested }}
+                        {% if form.clarification_requested.errors %}
+                            <div class="text-danger small">{{ form.clarification_requested.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">If clarification is needed from the audit team, describe it here.</div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                            <strong>Review Status</strong>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="text-danger small">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            Save Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6>ISO 17021 Requirements</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-2"><strong>Clause 9.5.1:</strong> The certification body shall ensure that the audit report and other information is sufficient to make a certification decision.</p>
+                <p class="small mb-2"><strong>Reviewer Competence:</strong> The review shall be carried out by person(s) who have not been involved in the audit.</p>
+                <p class="small mb-0"><strong>Outcome:</strong> The review must confirm that the audit team has provided sufficient information to support the recommendation.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

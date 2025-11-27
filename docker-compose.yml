@@ -276,7 +276,7 @@ services:
     # Security hardening
     security_opt:
       - no-new-privileges:true
-    read_only: true
+    read_only: false
     tmpfs:
       - /tmp
       - /var/lib/php/sessions
