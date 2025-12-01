@@ -89,7 +89,7 @@ jobs:
           sleep 10
 
       - name: Run ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.13.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:8000'
           fail_action: false # Don't fail the build, just report
