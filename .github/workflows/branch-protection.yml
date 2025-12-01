@@ -10,7 +10,7 @@ jobs:
       contents: write
     steps:
       - name: Configure branch protection for `main`
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GH_PAT }} # GITHUB_TOKEN cannot modify branch protection; use a PAT
           script: |
