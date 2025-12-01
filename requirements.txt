@@ -73,7 +73,7 @@ django-stubs-ext==5.2.7
     # via
     #   -r requirements.in
     #   django-stubs
-djangorestframework==3.15.2
+djangorestframework==3.16.1
     # via -r requirements.in
 drf-spectacular==0.27.1
     # via -r requirements.in
