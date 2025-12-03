@@ -136,7 +136,7 @@ For manual testing, create test users:
 ```python
 # In Django shell: python manage.py shell
 from django.contrib.auth.models import User, Group
-from accounts.models import Profile
+from identity.adapters.models import Profile
 from core.models import Organization
 
 # Create groups

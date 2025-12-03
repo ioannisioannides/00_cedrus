@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from audits.models import Audit
+from audit_management.models import Audit
 from core.models import Certification, Organization, Site, Standard
 from core.test_utils import TEST_PASSWORD
 

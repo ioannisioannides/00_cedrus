@@ -9,8 +9,8 @@ from typing import List
 
 from django.core.exceptions import ValidationError
 
-from accounts.models import AuditorCompetenceEvaluation, AuditorQualification
-from audits.models import Audit
+from audit_management.models import Audit
+from identity.adapters.models import AuditorCompetenceEvaluation, AuditorQualification
 
 
 class CompetenceService:

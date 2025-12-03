@@ -54,7 +54,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.db import models
 
-from accounts.models import Profile
+from identity.adapters.models import Profile
 from core.models import Organization
 ```
 

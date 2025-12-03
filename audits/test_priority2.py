@@ -9,7 +9,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from accounts.models import Profile
 from audits.models import (
     Audit,
     AuditChanges,
@@ -22,6 +21,7 @@ from audits.models import (
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard
 from core.test_utils import TEST_PASSWORD
+from identity.adapters.models import Profile
 
 
 class AuditWorkflowTest(TestCase):

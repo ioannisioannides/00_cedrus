@@ -11,14 +11,7 @@ from django.db.utils import IntegrityError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from core.models import (
-    CertificateHistory,
-    Certification,
-    Organization,
-    Site,
-    Standard,
-    SurveillanceSchedule,
-)
+from core.models import CertificateHistory, Certification, Organization, Site, Standard, SurveillanceSchedule
 from core.test_utils import TEST_PASSWORD
 
 # ==============================================================================
@@ -433,7 +426,7 @@ class OrganizationViewPermissionTest(TestCase):
     def test_organization_list_requires_login(self):
         """Test organization list requires authentication."""
         response = self.client.get(reverse("core:organization_list"))
-        self.assertRedirects(response, f"{reverse('accounts:login')}?next={reverse('core:organization_list')}")
+        self.assertRedirects(response, f"{reverse('identity:login')}?next={reverse('core:organization_list')}")
 
     def test_organization_create_cb_admin(self):
         """Test CB Admin can create organization."""

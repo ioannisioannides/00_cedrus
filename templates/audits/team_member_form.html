@@ -7,8 +7,8 @@
 <div class="container mt-4">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'audits:audit_list' %}">Audits</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'audits:audit_detail' audit.pk %}">Audit #{{ audit.pk }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audit_management:audit_list' %}">Audits</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audit_management:audit_detail' audit.pk %}">Audit #{{ audit.pk }}</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
         </ol>
     </nav>
@@ -142,7 +142,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">
+                            <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">

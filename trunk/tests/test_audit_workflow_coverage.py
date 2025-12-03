@@ -5,7 +5,8 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 
-from audits.models import Audit, Nonconformity, Observation, TechnicalReview
+from audit_management.models import Audit, Nonconformity, Observation
+from certification.models import TechnicalReview
 from core.models import Certification, Organization, Standard
 from core.test_utils import TEST_PASSWORD
 from trunk.workflows.audit_workflow import AuditWorkflow

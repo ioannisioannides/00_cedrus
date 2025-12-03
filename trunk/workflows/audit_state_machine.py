@@ -53,7 +53,7 @@ class AuditStateMachine:
         old_status = self.audit.status
         self._sm.transition(to_state, user)
         # Create audit status log entry (preserve legacy behavior)
-        from audits.models import AuditStatusLog
+        from audit_management.models import AuditStatusLog
 
         AuditStatusLog.objects.create(
             audit=self.audit,

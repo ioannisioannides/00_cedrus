@@ -10,24 +10,24 @@
     </div>
     <div class="page-actions">
         {% if can_edit %}
-            <a href="{% url 'audits:audit_update' audit.pk %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'audit_management:audit_update' audit.pk %}" class="btn btn-primary">Edit</a>
         {% endif %}
         {% if can_submit_to_client %}
-            <a href="{% url 'audits:audit_transition_status' audit.pk 'client_review' %}" class="btn btn-success" onclick="return confirm('Submit this audit to the client for review?');">Submit to Client</a>
+            <a href="{% url 'audit_management:audit_transition_status' audit.pk 'client_review' %}" class="btn btn-success" onclick="return confirm('Submit this audit to the client for review?');">Submit to Client</a>
         {% endif %}
         {% if can_start_technical_review %}
-            <a href="{% url 'audits:audit_transition_status' audit.pk 'technical_review' %}" class="btn btn-info" onclick="return confirm('Start technical review?');">Start Technical Review</a>
+            <a href="{% url 'audit_management:audit_transition_status' audit.pk 'technical_review' %}" class="btn btn-info" onclick="return confirm('Start technical review?');">Start Technical Review</a>
         {% endif %}
         {% if can_conduct_technical_review %}
-            <a href="{% url 'audits:technical_review_create' audit.pk %}" class="btn btn-info">Conduct Technical Review</a>
+            <a href="{% url 'certification:technical_review_create' audit.pk %}" class="btn btn-info">Conduct Technical Review</a>
         {% endif %}
         {% if can_make_decision %}
-            <a href="{% url 'audits:audit_make_decision' audit.pk %}" class="btn btn-warning">Make Decision</a>
+            <a href="{% url 'audit_management:audit_make_decision' audit.pk %}" class="btn btn-warning">Make Decision</a>
         {% endif %}
         {% if available_transitions %}
             {% for status_code, status_display in available_transitions %}
                 {% if status_code != 'client_review' and status_code != 'decided' and status_code != 'technical_review' %}
-                    <a href="{% url 'audits:audit_transition_status' audit.pk status_code %}" class="btn btn-outline-primary btn-sm">{{ status_display }}</a>
+                    <a href="{% url 'audit_management:audit_transition_status' audit.pk status_code %}" class="btn btn-outline-primary btn-sm">{{ status_display }}</a>
                 {% endif %}
             {% endfor %}
         {% endif %}
@@ -44,8 +44,8 @@
             {% endif %}
         </div>
 
-        <a href="{% url 'audits:audit_print' audit.pk %}" class="btn btn-outline-secondary">Print</a>
-        <a href="{% url 'audits:audit_list' %}" class="btn btn-outline-secondary">Back to List</a>
+        <a href="{% url 'audit_management:audit_print' audit.pk %}" class="btn btn-outline-secondary">Print</a>
+        <a href="{% url 'audit_management:audit_list' %}" class="btn btn-outline-secondary">Back to List</a>
     </div>
 </div>
 
@@ -185,25 +185,25 @@
             <div class="col-md-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <span>Organization Changes</span>
-                    <a href="{% url 'audits:audit_changes_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="{% url 'audit_management:audit_changes_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <span>Audit Plan Review</span>
-                    <a href="{% url 'audits:audit_plan_review_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="{% url 'audit_management:audit_plan_review_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <span>Audit Summary</span>
-                    <a href="{% url 'audits:audit_summary_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="{% url 'audit_management:audit_summary_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <span>Recommendations</span>
-                    <a href="{% url 'audits:audit_recommendation_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="{% url 'audit_management:audit_recommendation_edit' audit.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
                 </div>
             </div>
         </div>
@@ -216,7 +216,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Team Members</h5>
         {% if can_edit %}
-        <a href="{% url 'audits:team_member_add' audit.pk %}" class="btn btn-sm btn-primary">
+        <a href="{% url 'audit_management:team_member_add' audit.pk %}" class="btn btn-sm btn-primary">
             <i class="bi bi-plus-circle"></i> Add Team Member
         </a>
         {% endif %}
@@ -256,10 +256,10 @@
                                 {% if can_edit %}
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{% url 'audits:team_member_edit' member.pk %}" class="btn btn-outline-primary" title="Edit">
+                                        <a href="{% url 'audit_management:team_member_edit' member.pk %}" class="btn btn-outline-primary" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="{% url 'audits:team_member_delete' member.pk %}" class="btn btn-outline-danger" title="Delete">
+                                        <a href="{% url 'audit_management:team_member_delete' member.pk %}" class="btn btn-outline-danger" title="Delete">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -274,7 +274,7 @@
             <p class="text-muted mb-0">No team members assigned.</p>
             {% if can_edit %}
             <p class="mt-2">
-                <a href="{% url 'audits:team_member_add' audit.pk %}" class="btn btn-sm btn-outline-primary">
+                <a href="{% url 'audit_management:team_member_add' audit.pk %}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-plus-circle"></i> Add First Team Member
                 </a>
             </p>
@@ -327,7 +327,7 @@
             {% endif %}
         </h5>
         {% if can_add_findings %}
-            <a href="{% url 'audits:nonconformity_create' audit.pk %}" class="btn btn-sm btn-primary">
+            <a href="{% url 'audit_management:nonconformity_create' audit.pk %}" class="btn btn-sm btn-primary">
                 <i class="bi bi-plus-circle"></i> Add Nonconformity
             </a>
         {% endif %}
@@ -349,7 +349,7 @@
                         {% for nc in nonconformities %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'audits:nonconformity_detail' nc.pk %}">
+                                    <a href="{% url 'audit_management:nonconformity_detail' nc.pk %}">
                                         <strong>{{ nc.clause }}</strong>
                                     </a>
                                 </td>
@@ -365,20 +365,20 @@
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
                                         {% if can_edit and nc.verification_status == 'open' %}
-                                            <a href="{% url 'audits:nonconformity_update' nc.pk %}" class="btn btn-outline-primary">
+                                            <a href="{% url 'audit_management:nonconformity_update' nc.pk %}" class="btn btn-outline-primary">
                                                 <i class="bi bi-pencil"></i> Edit
                                             </a>
-                                            <a href="{% url 'audits:nonconformity_delete' nc.pk %}" class="btn btn-outline-danger">
+                                            <a href="{% url 'audit_management:nonconformity_delete' nc.pk %}" class="btn btn-outline-danger">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         {% endif %}
                                         {% if is_client and nc.verification_status == 'open' %}
-                                            <a href="{% url 'audits:nonconformity_respond' nc.pk %}" class="btn btn-outline-success">
+                                            <a href="{% url 'audit_management:nonconformity_respond' nc.pk %}" class="btn btn-outline-success">
                                                 <i class="bi bi-chat-dots"></i> Respond
                                             </a>
                                         {% endif %}
                                         {% if can_add_findings and nc.verification_status == 'client_responded' %}
-                                            <a href="{% url 'audits:nonconformity_verify' nc.pk %}" class="btn btn-outline-success">
+                                            <a href="{% url 'audit_management:nonconformity_verify' nc.pk %}" class="btn btn-outline-success">
                                                 <i class="bi bi-check-circle"></i> Verify
                                             </a>
                                         {% endif %}
@@ -404,7 +404,7 @@
             {% endif %}
         </h5>
         {% if can_add_findings %}
-            <a href="{% url 'audits:observation_create' audit.pk %}" class="btn btn-sm btn-primary">
+            <a href="{% url 'audit_management:observation_create' audit.pk %}" class="btn btn-sm btn-primary">
                 <i class="bi bi-plus-circle"></i> Add Observation
             </a>
         {% endif %}
@@ -416,17 +416,17 @@
                     <li class="mb-3 pb-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
-                                <a href="{% url 'audits:observation_detail' obs.pk %}">
+                                <a href="{% url 'audit_management:observation_detail' obs.pk %}">
                                     <strong class="d-block mb-1">{{ obs.clause }}</strong>
                                 </a>
                                 <p class="mb-0">{{ obs.objective_evidence|truncatewords:30 }}</p>
                             </div>
                             {% if can_edit %}
                                 <div class="btn-group btn-group-sm ms-3">
-                                    <a href="{% url 'audits:observation_update' obs.pk %}" class="btn btn-outline-primary">
+                                    <a href="{% url 'audit_management:observation_update' obs.pk %}" class="btn btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'audits:observation_delete' obs.pk %}" class="btn btn-outline-danger">
+                                    <a href="{% url 'audit_management:observation_delete' obs.pk %}" class="btn btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
@@ -450,7 +450,7 @@
             {% endif %}
         </h5>
         {% if can_add_findings %}
-            <a href="{% url 'audits:ofi_create' audit.pk %}" class="btn btn-sm btn-primary">
+            <a href="{% url 'audit_management:ofi_create' audit.pk %}" class="btn btn-sm btn-primary">
                 <i class="bi bi-plus-circle"></i> Add OFI
             </a>
         {% endif %}
@@ -462,17 +462,17 @@
                     <li class="mb-3 pb-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
-                                <a href="{% url 'audits:ofi_detail' ofi.pk %}">
+                                <a href="{% url 'audit_management:ofi_detail' ofi.pk %}">
                                     <strong class="d-block mb-1">{{ ofi.clause }}</strong>
                                 </a>
                                 <p class="mb-0">{{ ofi.objective_evidence|truncatewords:30 }}</p>
                             </div>
                             {% if can_edit %}
                                 <div class="btn-group btn-group-sm ms-3">
-                                    <a href="{% url 'audits:ofi_update' ofi.pk %}" class="btn btn-outline-primary">
+                                    <a href="{% url 'audit_management:ofi_update' ofi.pk %}" class="btn btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="{% url 'audits:ofi_delete' ofi.pk %}" class="btn btn-outline-danger">
+                                    <a href="{% url 'audit_management:ofi_delete' ofi.pk %}" class="btn btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
@@ -496,7 +496,7 @@
             {% endif %}
         </h5>
         {% if can_add_findings or is_client %}
-            <a href="{% url 'audits:evidence_file_upload' audit.pk %}" class="btn btn-sm btn-primary">Upload File</a>
+            <a href="{% url 'audit_management:evidence_file_upload' audit.pk %}" class="btn btn-sm btn-primary">Upload File</a>
         {% endif %}
     </div>
     <div class="card-body">
@@ -527,9 +527,9 @@
                                 <td><small>{{ file.uploaded_at|date:"M d, Y" }}</small></td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'audits:evidence_file_download' file.pk %}" class="btn btn-outline-success">Download</a>
+                                        <a href="{% url 'audit_management:evidence_file_download' file.pk %}" class="btn btn-outline-success">Download</a>
                                         {% if can_edit or file.uploaded_by == request.user %}
-                                            <a href="{% url 'audits:evidence_file_delete' file.pk %}" class="btn btn-outline-danger">Delete</a>
+                                            <a href="{% url 'audit_management:evidence_file_delete' file.pk %}" class="btn btn-outline-danger">Delete</a>
                                         {% endif %}
                                     </div>
                                 </td>

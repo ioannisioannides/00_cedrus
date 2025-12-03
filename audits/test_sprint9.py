@@ -20,12 +20,12 @@ from django.contrib.auth.models import Group
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from accounts.models import Profile
 from audits.finding_forms import NonconformityForm
 from audits.models import Audit, Nonconformity, Observation
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard
 from core.test_utils import TEST_PASSWORD
+from identity.adapters.models import Profile
 
 User = get_user_model()
 

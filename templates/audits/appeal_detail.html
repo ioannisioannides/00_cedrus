@@ -19,7 +19,7 @@
                     <h5>Appeal Info</h5>
                     <p><strong>Received:</strong> {{ appeal.received_date }}</p>
                     {% if appeal.related_audit %}
-                        <p><strong>Related Audit:</strong> <a href="{% url 'audits:audit_detail' appeal.related_audit.pk %}">{{ appeal.related_audit }}</a></p>
+                        <p><strong>Related Audit:</strong> <a href="{% url 'audit_management:audit_detail' appeal.related_audit.pk %}">{{ appeal.related_audit }}</a></p>
                     {% endif %}
                     {% if appeal.related_decision %}
                         <p><strong>Related Decision:</strong> {{ appeal.related_decision }}</p>
@@ -44,7 +44,7 @@
             {% endif %}
 
             <div class="mt-4">
-                <a href="{% url 'audits:appeal_list' %}" class="btn btn-secondary">Back to List</a>
+                <a href="{% url 'certification:appeal_list' %}" class="btn btn-secondary">Back to List</a>
             </div>
         </div>
     </div>

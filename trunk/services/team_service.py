@@ -4,7 +4,7 @@ Service for managing audit team members and competence checks.
 
 from django.db import transaction
 
-from audits.models import AuditTeamMember
+from audit_management.models import AuditTeamMember
 from trunk.events import EventType, event_dispatcher
 
 
@@ -36,7 +36,12 @@ class TeamService:
 
         # Emit event
         event_dispatcher.emit(
-            EventType.TEAM_MEMBER_ADDED, {"audit": audit, "team_member": team_member, "added_by": user}
+            EventType.TEAM_MEMBER_ADDED,
+            {
+                "audit_id": audit.id,
+                "team_member_id": team_member.id,
+                "added_by_id": user.id if user else None,
+            },
         )
 
         return team_member
@@ -73,7 +78,12 @@ class TeamService:
 
         # Emit event
         event_dispatcher.emit(
-            EventType.TEAM_MEMBER_REMOVED, {"audit": audit, "member_name": member_name, "removed_by": user}
+            EventType.TEAM_MEMBER_REMOVED,
+            {
+                "audit_id": audit.id,
+                "member_name": member_name,
+                "removed_by_id": user.id if user else None,
+            },
         )
 
     @staticmethod

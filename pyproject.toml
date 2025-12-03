@@ -8,6 +8,7 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "boto3>=1.42.1",
+    "celery>=5.3.6",
     "django>=5.2",
     "django-csp>=4.0",
     "django-environ>=0.12.0",
@@ -19,6 +20,7 @@ dependencies = [
     "nltk>=3.9.2",
     "pillow>=12.0.0",
     "psycopg2-binary>=2.9.11",
+    "pydantic>=2.6.1",
     "qrcode>=8.2",
     "redis>=7.1.0",
     "requests>=2.32.5",
@@ -28,7 +30,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["cedrus", "accounts", "audits", "core", "trunk", "reporting"]
+packages = ["cedrus", "identity", "audits", "core", "trunk", "reporting"]
 
 [tool.ruff]
 line-length = 120
@@ -82,11 +84,11 @@ ignore = []
 "**/migrations/*" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["cedrus", "accounts", "audits", "core", "trunk", "reporting"]
+known-first-party = ["cedrus", "identity", "audits", "core", "trunk", "reporting"]
 
 [tool.coverage.run]
 branch = true
-source = ["accounts", "audits", "core", "trunk", "reporting", "cedrus"]
+source = ["identity", "audits", "core", "trunk", "reporting", "cedrus"]
 omit = [
     "manage.py",
     "*/asgi.py",

@@ -14,10 +14,10 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from accounts.models import AuditorQualification, ConflictOfInterest
 from audits.models import Appeal, Audit, CertificationDecision, Complaint
 from core.models import CertificateHistory, Certification, Organization, Standard, SurveillanceSchedule
 from core.test_utils import TEST_PASSWORD
+from identity.adapters.models import AuditorQualification, ConflictOfInterest
 from trunk.services.certificate_service import CertificateService
 from trunk.services.competence_service import CompetenceService
 from trunk.services.complaint_service import ComplaintService

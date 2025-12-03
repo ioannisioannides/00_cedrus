@@ -8,8 +8,8 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'audits:audit_list' %}">Audits</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'audits:audit_detail' audit.pk %}">{{ audit.audit_number }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audit_management:audit_list' %}">Audits</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audit_management:audit_detail' audit.pk %}">{{ audit.audit_number }}</a></li>
             <li class="breadcrumb-item active" aria-current="page">Delete {{ finding_type }}</li>
         </ol>
     </nav>
@@ -64,7 +64,7 @@
                     <form method="post" class="mt-4">
                         {% csrf_token %}
                         <div class="d-flex justify-content-between">
-                            <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">
+                            <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-danger">

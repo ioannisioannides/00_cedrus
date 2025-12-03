@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     # Local apps
-    "accounts",
+    "identity",
     "core",
-    "audits",
+    "audit_management.apps.AuditManagementConfig",
+    "certification.apps.CertificationConfig",
+    # "audits",  # Legacy app, being migrated
     "reporting",
 ]
 
@@ -136,9 +138,9 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Login URLs
-LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "accounts:dashboard"
-LOGOUT_REDIRECT_URL = "accounts:login"
+LOGIN_URL = "identity:login"
+LOGIN_REDIRECT_URL = "identity:dashboard"
+LOGOUT_REDIRECT_URL = "identity:login"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -180,3 +182,11 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE

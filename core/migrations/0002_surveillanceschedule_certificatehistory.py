@@ -8,8 +8,9 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("audits", "0009_complaint_appeal_preauditdocumentsubmission_and_more"),
         ("core", "0001_initial"),
+        ("audit_management", "0001_initial"),
+        ("certification", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -44,7 +45,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="recertification_for",
-                        to="audits.audit",
+                        to="audit_management.audit",
                     ),
                 ),
                 (
@@ -54,7 +55,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="surveillance_1_for",
-                        to="audits.audit",
+                        to="audit_management.audit",
                     ),
                 ),
                 (
@@ -64,7 +65,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="surveillance_2_for",
-                        to="audits.audit",
+                        to="audit_management.audit",
                     ),
                 ),
             ],
@@ -127,7 +128,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="certificate_history_entries",
-                        to="audits.audit",
+                        to="audit_management.audit",
                     ),
                 ),
                 (
@@ -137,7 +138,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="certificate_history_entries",
-                        to="audits.certificationdecision",
+                        to="certification.certificationdecision",
                     ),
                 ),
             ],

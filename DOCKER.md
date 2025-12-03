@@ -264,7 +264,7 @@ docker compose exec web python manage.py seed_data
 docker compose exec web pytest
 
 # Run with coverage
-docker compose exec web pytest --cov=accounts --cov=audits --cov=core --cov-report=html
+docker compose exec web pytest --cov=identity --cov=audits --cov=core --cov-report=html
 
 # View coverage report
 open htmlcov/index.html

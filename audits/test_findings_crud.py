@@ -12,10 +12,10 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
-from accounts.models import Profile
 from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Standard
 from core.test_utils import TEST_PASSWORD
+from identity.adapters.models import Profile
 
 User = get_user_model()
 

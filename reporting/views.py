@@ -9,11 +9,11 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from weasyprint import HTML
 
-from audits.models import Audit
+from audit_management.models import Audit
 
 
 @login_required
-@permission_required("audits.view_audit", raise_exception=True)
+@permission_required("audit_management.view_audit", raise_exception=True)
 def generate_audit_report_pdf(request, audit_id):
     """
     Generate a PDF audit report for a specific audit.
@@ -47,7 +47,7 @@ def generate_audit_report_pdf(request, audit_id):
 
 
 @login_required
-@permission_required("audits.view_audit", raise_exception=True)
+@permission_required("audit_management.view_audit", raise_exception=True)
 def generate_certificate_pdf(request, audit_id):
     """
     Generate a PDF certificate for a specific audit.

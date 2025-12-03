@@ -15,7 +15,7 @@
         </p>
     </div>
     <div class="page-actions">
-        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
     </div>
 </div>
 
@@ -120,7 +120,7 @@
     
     <!-- Form Actions -->
     <div class="d-flex justify-content-end gap-2 mt-4">
-        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-secondary">Cancel</a>
+        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">{% if object %}Update{% else %}Create{% endif %} Observation</button>
     </div>
 </form>

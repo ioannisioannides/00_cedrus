@@ -611,7 +611,7 @@ branches/
 from django.test import TestCase
 from ..services import AuditService
 from trunk.models import Organization, Certification
-from accounts.models import Profile
+from identity.adapters.models import Profile
 
 class AuditServiceTest(TestCase):
     def setUp(self):

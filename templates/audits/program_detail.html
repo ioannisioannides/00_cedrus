@@ -15,10 +15,10 @@
         <p class="page-subtitle">{{ program.organization.name }}</p>
     </div>
     <div class="btn-group">
-        <a href="{% url 'audits:program_update' program.pk %}" class="btn btn-outline-primary">
+        <a href="{% url 'audit_management:program_update' program.pk %}" class="btn btn-outline-primary">
             <i class="bi bi-pencil"></i> Edit
         </a>
-        <a href="{% url 'audits:program_delete' program.pk %}" class="btn btn-outline-danger">
+        <a href="{% url 'audit_management:program_delete' program.pk %}" class="btn btn-outline-danger">
             <i class="bi bi-trash"></i> Delete
         </a>
     </div>
@@ -82,7 +82,7 @@
                                         </td>
                                         <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
                                         <td>
-                                            <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                            <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
                                         </td>
                                     </tr>
                                 {% endfor %}

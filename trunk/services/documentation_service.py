@@ -6,7 +6,7 @@ import logging
 
 from django.db import transaction
 
-from audits.models import AuditChanges, AuditPlanReview, AuditRecommendation, AuditSummary
+from audit_management.models import AuditChanges, AuditPlanReview, AuditRecommendation, AuditSummary
 from trunk.events.dispatcher import event_dispatcher
 from trunk.events.types import EventType
 

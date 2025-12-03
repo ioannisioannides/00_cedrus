@@ -236,7 +236,7 @@
     
     <!-- Form Actions -->
     <div class="d-flex justify-content-end gap-2 mt-4">
-        <a href="{% if object %}{% url 'audits:audit_detail' object.pk %}{% else %}{% url 'audits:audit_list' %}{% endif %}" class="btn btn-secondary">Cancel</a>
+        <a href="{% if object %}{% url 'audit_management:audit_detail' object.pk %}{% else %}{% url 'audit_management:audit_list' %}{% endif %}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">Save Audit</button>
     </div>
 </form>

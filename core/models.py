@@ -191,14 +191,14 @@ class CertificateHistory(models.Model):
     action: models.CharField = models.CharField(max_length=30, choices=ACTION_CHOICES)
     action_date: models.DateField = models.DateField()
     related_audit: models.ForeignKey = models.ForeignKey(
-        "audits.Audit",
+        "audit_management.Audit",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="certificate_history_entries",
     )
     related_decision: models.ForeignKey = models.ForeignKey(
-        "audits.CertificationDecision",
+        "certification.CertificationDecision",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -243,13 +243,13 @@ class SurveillanceSchedule(models.Model):
     surveillance_2_due_date: models.DateField = models.DateField()
     recertification_due_date: models.DateField = models.DateField()
     surveillance_1_audit: models.ForeignKey = models.ForeignKey(
-        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_1_for"
+        "audit_management.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_1_for"
     )
     surveillance_2_audit: models.ForeignKey = models.ForeignKey(
-        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_2_for"
+        "audit_management.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="surveillance_2_for"
     )
     recertification_audit: models.ForeignKey = models.ForeignKey(
-        "audits.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="recertification_for"
+        "audit_management.Audit", on_delete=models.SET_NULL, null=True, blank=True, related_name="recertification_for"
     )
     surveillance_1_completed: models.BooleanField = models.BooleanField(default=False)
     surveillance_2_completed: models.BooleanField = models.BooleanField(default=False)

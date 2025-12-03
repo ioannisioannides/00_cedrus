@@ -20,7 +20,7 @@
                     <p><strong>Received:</strong> {{ complaint.received_date }}</p>
                     <p><strong>Subject:</strong> {{ complaint.subject }}</p>
                     {% if complaint.related_audit %}
-                        <p><strong>Related Audit:</strong> <a href="{% url 'audits:audit_detail' complaint.related_audit.pk %}">{{ complaint.related_audit }}</a></p>
+                        <p><strong>Related Audit:</strong> <a href="{% url 'audit_management:audit_detail' complaint.related_audit.pk %}">{{ complaint.related_audit }}</a></p>
                     {% endif %}
                 </div>
             </div>
@@ -42,7 +42,7 @@
             {% endif %}
 
             <div class="mt-4">
-                <a href="{% url 'audits:complaint_list' %}" class="btn btn-secondary">Back to List</a>
+                <a href="{% url 'certification:complaint_list' %}" class="btn btn-secondary">Back to List</a>
             </div>
         </div>
     </div>

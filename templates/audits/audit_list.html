@@ -12,7 +12,7 @@
         {% if user.groups.all %}
             {% for group in user.groups.all %}
                 {% if group.name == "cb_admin" %}
-                    <a href="{% url 'audits:audit_create' %}" class="btn btn-primary">
+                    <a href="{% url 'audit_management:audit_create' %}" class="btn btn-primary">
                         <span>+</span> Create Audit
                     </a>
                 {% endif %}
@@ -61,7 +61,7 @@
                     <label class="form-label">&nbsp;</label>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary flex-fill">Apply Filters</button>
-                        <a href="{% url 'audits:audit_list' %}" class="btn btn-outline-secondary">Clear</a>
+                        <a href="{% url 'audit_management:audit_list' %}" class="btn btn-outline-secondary">Clear</a>
                     </div>
                 </div>
             </form>
@@ -100,8 +100,8 @@
                                 <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <a href="{% url 'audits:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
-                                        <a href="{% url 'audits:audit_print' audit.pk %}" class="btn btn-sm btn-outline-secondary">Print</a>
+                                        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="{% url 'audit_management:audit_print' audit.pk %}" class="btn btn-sm btn-outline-secondary">Print</a>
                                     </div>
                                 </td>
                             </tr>
@@ -152,7 +152,7 @@
                 {% if user.groups.all %}
                     {% for group in user.groups.all %}
                         {% if group.name == "cb_admin" %}
-                            <a href="{% url 'audits:audit_create' %}" class="btn btn-primary">Create First Audit</a>
+                            <a href="{% url 'audit_management:audit_create' %}" class="btn btn-primary">Create First Audit</a>
                         {% endif %}
                     {% endfor %}
                 {% endif %}

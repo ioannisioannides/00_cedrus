@@ -5,7 +5,7 @@ Service for technical reviews and certification decisions.
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from audits.models import CertificationDecision, TechnicalReview
+from certification.models import CertificationDecision, TechnicalReview
 from trunk.events import EventType, event_dispatcher
 from trunk.services.audit_service import AuditService
 from trunk.services.certificate_service import CertificateService
@@ -47,7 +47,14 @@ class ReviewService:
         event_type = (
             EventType.TECHNICAL_REVIEW_COMPLETED if review.status == "approved" else EventType.TECHNICAL_REVIEW_UPDATED
         )
-        event_dispatcher.emit(event_type, {"audit": audit, "review": review, "reviewer": reviewer})
+        event_dispatcher.emit(
+            event_type,
+            {
+                "audit_id": audit.id,
+                "review_id": review.id,
+                "reviewer_id": reviewer.id if reviewer else None,
+            },
+        )
 
         return review
 
@@ -87,7 +94,12 @@ class ReviewService:
 
         # Emit event
         event_dispatcher.emit(
-            EventType.CERTIFICATION_DECISION_MADE, {"audit": audit, "decision": decision, "maker": decision_maker}
+            EventType.CERTIFICATION_DECISION_MADE,
+            {
+                "audit_id": audit.id,
+                "decision_id": decision.id,
+                "maker_id": decision_maker.id if decision_maker else None,
+            },
         )
 
         return decision
@@ -119,7 +131,11 @@ class ReviewService:
         # Emit event
         event_dispatcher.emit(
             EventType.CERTIFICATION_DECISION_UPDATED,
-            {"audit": decision.audit, "decision": decision, "maker": decision_maker},
+            {
+                "audit_id": decision.audit.id,
+                "decision_id": decision.id,
+                "maker_id": decision_maker.id if decision_maker else None,
+            },
         )
 
         return decision

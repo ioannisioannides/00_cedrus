@@ -2,7 +2,7 @@
 Service for managing evidence files.
 """
 
-from audits.models import EvidenceFile
+from audit_management.models import EvidenceFile
 from trunk.events import EventType, event_dispatcher
 
 

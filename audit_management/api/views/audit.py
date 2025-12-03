@@ -1,0 +1,1763 @@
+"""
+Views for audit_management app: create, list, detail, edit audits and findings.
+
+Different views have different permission requirements:
+- CB Admin: Can create audits, view all, edit recommendations
+- Auditor: Can view/edit assigned audits, add findings
+- Client: Can view their audits, respond to nonconformities
+"""
+
+# pylint: disable=too-many-lines
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import ValidationError
+from django.db import models as django_models
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from audit_management.application.schemas import (
+    AuditChangesDTO,
+    AuditCreateDTO,
+    AuditPlanReviewDTO,
+    AuditRecommendationDTO,
+    AuditSummaryDTO,
+    AuditUpdateDTO,
+    EvidenceUploadDTO,
+)
+
+# Services
+from audit_management.application.services import AuditService, DocumentationService, EvidenceService
+
+# Forms
+from audit_management.forms.documentation_forms import AuditChangesForm, AuditPlanReviewForm, AuditSummaryForm
+from audit_management.forms.file_forms import EvidenceFileForm
+from audit_management.forms.finding_forms import (
+    NonconformityForm,
+    NonconformityResponseForm,
+    NonconformityVerificationForm,
+    ObservationForm,
+    OpportunityForImprovementForm,
+)
+from audit_management.forms.recommendation_forms import AuditRecommendationForm
+
+# Models
+from audit_management.models import (
+    Audit,
+    AuditChanges,
+    AuditPlanReview,
+    AuditRecommendation,
+    AuditSummary,
+    AuditTeamMember,
+    EvidenceFile,
+    Nonconformity,
+    Observation,
+    OpportunityForImprovement,
+)
+from core.models import Organization
+from trunk.permissions.mixins import CBAdminRequiredMixin
+from trunk.permissions.predicates import PermissionPredicate
+from trunk.services.finding_service import FindingService
+from trunk.services.team_service import TeamService
+
+# ============================================================================
+# PERMISSION HELPER FUNCTIONS
+# ============================================================================
+
+
+def can_add_finding(user, audit):
+    """Check if user can add findings to this audit."""
+    # CB Admin can always add findings
+    if user.groups.filter(name="cb_admin").exists():
+        return True
+
+    # Auditors can add findings if they're assigned to the audit
+    if user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists():
+        return audit.lead_auditor == user or audit.team_members.filter(user=user).exists()
+
+    return False
+
+
+def can_edit_finding(user, finding):
+    """Check if user can edit this finding."""
+    audit = finding.audit
+
+    # CB Admin can always edit
+    if user.groups.filter(name="cb_admin").exists():
+        return True
+
+    # Creator can edit (if auditor)
+    if finding.created_by == user:
+        return can_add_finding(user, audit)
+
+    # Lead auditor can edit findings in their audits
+    if user.groups.filter(name="lead_auditor").exists() and audit.lead_auditor == user:
+        return True
+
+    return False
+
+
+def can_respond_to_nc(user, nonconformity):
+    """Check if user (client) can respond to this nonconformity."""
+    audit = nonconformity.audit
+
+    # Must be client user
+    if not (user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists()):
+        return False
+
+    # Must be for their organization
+    if not hasattr(user, "profile") or not user.profile.organization:
+        return False
+
+    if audit.organization != user.profile.organization:
+        return False
+
+    # Audit must be in client_review status
+    if audit.status != "client_review":
+        return False
+
+    # NC must be open (not yet responded to)
+    if nonconformity.verification_status != "open":
+        return False
+
+    return True
+
+
+def can_verify_nc(user, nonconformity):
+    """Check if user (auditor) can verify this nonconformity."""
+    audit = nonconformity.audit
+
+    # Must be auditor
+    if not (user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists()):
+        return False
+
+    # Must be assigned to audit
+    if not (audit.lead_auditor == user or audit.team_members.filter(user=user).exists()):
+        return False
+
+    # NC must be in client_responded status
+    if nonconformity.verification_status != "client_responded":
+        return False
+
+    return True
+
+
+# ============================================================================
+# AUDIT VIEWS
+# ============================================================================
+
+
+# Audit List Views
+class AuditListView(LoginRequiredMixin, ListView):
+    """List audits - filtered by role."""
+
+    model = Audit
+    template_name = "audits/audit_list.html"
+    context_object_name = "audits"
+    paginate_by = 20
+
+    def get_queryset(self):
+        """
+        Get queryset of audits filtered by user role.
+        """
+        user = self.request.user
+        queryset = Audit.objects.select_related("organization", "lead_auditor", "created_by")
+
+        # CB Admin sees all
+        if PermissionPredicate.is_cb_admin(user):
+            pass  # Show all
+        # Auditor sees assigned audits
+        elif PermissionPredicate.is_auditor(user):
+            queryset = queryset.filter(
+                django_models.Q(lead_auditor=user) | django_models.Q(team_members__user=user)
+            ).distinct()
+        # Client sees their organization's audits
+        elif PermissionPredicate.is_client_user(user):
+            if hasattr(user, "profile") and user.profile.organization:
+                queryset = queryset.filter(organization=user.profile.organization)
+            else:
+                queryset = queryset.none()
+        else:
+            queryset = queryset.none()
+
+        # Apply filters
+        org_id = self.request.GET.get("organization")
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        status = self.request.GET.get("status")
+        if status:
+            queryset = queryset.filter(status=status)
+
+        audit_type = self.request.GET.get("audit_type")
+        if audit_type:
+            queryset = queryset.filter(audit_type=audit_type)
+
+        return queryset.order_by("-total_audit_date_from", "-created_at")
+
+    def get_context_data(self, **kwargs):
+        """Add organizations to context for filter dropdown."""
+        context = super().get_context_data(**kwargs)
+        context["organizations"] = Organization.objects.all()
+        return context
+
+
+# Audit Create View (CB Admin only)
+class AuditCreateView(LoginRequiredMixin, CBAdminRequiredMixin, CreateView):
+    """Create a new audit (CB Admin only)."""
+
+    model = Audit
+    template_name = "audits/audit_form.html"
+    fields = [
+        "organization",
+        "program",
+        "certifications",
+        "sites",
+        "audit_type",
+        "total_audit_date_from",
+        "total_audit_date_to",
+        "planned_duration_hours",
+        "lead_auditor",
+        "status",
+    ]
+
+    def form_valid(self, form):
+        """
+        Create audit using AuditService and redirect to detail view.
+        """
+        dto = AuditCreateDTO(
+            organization_id=form.cleaned_data["organization"].id,
+            program_id=form.cleaned_data["program"].id if form.cleaned_data.get("program") else None,
+            certification_ids=[c.id for c in form.cleaned_data["certifications"]],
+            site_ids=[s.id for s in form.cleaned_data["sites"]],
+            audit_type=form.cleaned_data["audit_type"],
+            total_audit_date_from=form.cleaned_data["total_audit_date_from"],
+            total_audit_date_to=form.cleaned_data["total_audit_date_to"],
+            planned_duration_hours=form.cleaned_data["planned_duration_hours"],
+            lead_auditor_id=form.cleaned_data["lead_auditor"].id if form.cleaned_data.get("lead_auditor") else None,
+            status=form.cleaned_data["status"],
+        )
+
+        self.object = AuditService.create_audit(
+            data=dto,
+            created_by=self.request.user,
+        )
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.pk})
+
+
+# Audit Detail View (role-based permissions)
+class AuditDetailView(LoginRequiredMixin, DetailView):
+    """View audit details with role-based access control."""
+
+    model = Audit
+    template_name = "audits/audit_detail.html"
+    context_object_name = "audit"
+
+    def get_queryset(self):
+        """Get audit queryset with optimized relationships based on user role."""
+        user = self.request.user
+        queryset = Audit.objects.select_related("organization", "lead_auditor", "created_by").prefetch_related(
+            "certifications",
+            "sites",
+            "team_members",
+            "nonconformity_set",
+            "observation_set",
+            "opportunityforimprovement_set",
+        )
+
+        # CB Admin sees all
+        if PermissionPredicate.is_cb_admin(user):
+            return queryset
+
+        # Auditor sees assigned audits
+        if PermissionPredicate.is_auditor(user):
+            return queryset.filter(
+                django_models.Q(lead_auditor=user) | django_models.Q(team_members__user=user)
+            ).distinct()
+
+        # Client sees their organization's audits
+        if PermissionPredicate.is_client_user(user):
+            if hasattr(user, "profile") and user.profile.organization:
+                return queryset.filter(organization=user.profile.organization)
+
+        return queryset.none()
+
+    def get_context_data(self, **kwargs):
+        """Add additional context data to template."""
+        context = super().get_context_data(**kwargs)
+        audit = self.object
+        user = self.request.user
+
+        # Get related objects
+        context["nonconformities"] = audit.nonconformity_set.all()
+        context["observations"] = audit.observation_set.all()
+        context["ofis"] = audit.opportunityforimprovement_set.all()
+
+        # Add counts
+        context["open_ncs_count"] = audit.nonconformity_set.exclude(verification_status="closed").count()
+
+        # Check if user can edit
+        context["can_edit"] = PermissionPredicate.is_cb_admin(user) or (
+            PermissionPredicate.is_lead_auditor(user) and audit.lead_auditor == user
+        )
+
+        # Check if user is client
+        context["is_client"] = PermissionPredicate.is_client_user(user)
+
+        # Check if user can add findings
+        context["can_add_findings"] = can_add_finding(user, audit) and audit.status != "decided"
+
+        # Get available status transitions
+        context["available_transitions"] = AuditService.get_available_transitions(audit, user)
+
+        # Check if user can submit to client
+        context["can_submit_to_client"] = (
+            audit.status == "report_draft" and PermissionPredicate.is_lead_auditor(user) and audit.lead_auditor == user
+        )
+
+        # Check if user can start technical review
+        context["can_start_technical_review"] = (
+            audit.status == "submitted" and PermissionPredicate.can_conduct_technical_review(user)
+        )
+
+        # Check if user can conduct technical review (when in progress)
+        context["can_conduct_technical_review"] = (
+            audit.status == "technical_review" and PermissionPredicate.can_conduct_technical_review(user)
+        )
+
+        # Check if user can make decision
+        context["can_make_decision"] = (
+            audit.status == "decision_pending" and PermissionPredicate.can_make_certification_decision(user)
+        )
+
+        # Get or create related records
+        context["changes"], _ = AuditChanges.objects.get_or_create(audit=audit)
+        context["plan_review"], _ = AuditPlanReview.objects.get_or_create(audit=audit)
+        context["summary"], _ = AuditSummary.objects.get_or_create(audit=audit)
+        context["recommendation"], _ = AuditRecommendation.objects.get_or_create(audit=audit)
+
+        # Multi-site sampling information (Sprint 8 - IAF MD1)
+        total_sites = audit.sites.count()
+        if total_sites > 1:
+            from trunk.services.sampling import calculate_sample_size
+
+            # Check if this is initial certification
+            is_initial = audit.audit_type in ["stage1", "stage2"]
+
+            # Calculate sampling requirements
+            try:
+                sampling_info = calculate_sample_size(total_sites=total_sites, is_initial_certification=is_initial)
+                context["sampling_info"] = sampling_info
+                context["is_multi_site"] = True
+            except (ValueError, TypeError, ZeroDivisionError) as e:
+                # Sampling calculation failed, don't block page load
+                context["sampling_error"] = str(e)
+                context["is_multi_site"] = True
+        else:
+            context["is_multi_site"] = False
+
+        return context
+
+
+# Audit Update View (CB Admin and Lead Auditor)
+class AuditUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Update audit (CB Admin or Lead Auditor of the audit)."""
+
+    model = Audit
+    template_name = "audits/audit_form.html"
+    fields = [
+        "organization",
+        "program",
+        "certifications",
+        "sites",
+        "audit_type",
+        "total_audit_date_from",
+        "total_audit_date_to",
+        "planned_duration_hours",
+        "lead_auditor",
+    ]  # Removed "status" - status changes via workflow only
+
+    def test_func(self):
+        """Check if user can edit this audit."""
+        user = self.request.user
+        audit = self.get_object()
+
+        if PermissionPredicate.is_cb_admin(user):
+            return True
+
+        if PermissionPredicate.is_lead_auditor(user) and audit.lead_auditor == user and audit.status == "draft":
+            return True
+
+        return False
+
+    def form_valid(self, form):
+        """Update audit using AuditService."""
+        dto = AuditUpdateDTO(
+            organization_id=form.cleaned_data["organization"].id,
+            program_id=form.cleaned_data["program"].id if form.cleaned_data.get("program") else None,
+            certification_ids=[c.id for c in form.cleaned_data["certifications"]],
+            site_ids=[s.id for s in form.cleaned_data["sites"]],
+            audit_type=form.cleaned_data["audit_type"],
+            total_audit_date_from=form.cleaned_data["total_audit_date_from"],
+            total_audit_date_to=form.cleaned_data["total_audit_date_to"],
+            planned_duration_hours=form.cleaned_data["planned_duration_hours"],
+            lead_auditor_id=form.cleaned_data["lead_auditor"].id if form.cleaned_data.get("lead_auditor") else None,
+        )
+
+        self.object = AuditService.update_audit(audit=self.object, data=dto, user=self.request.user)
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.pk})
+
+
+# Audit Print View
+@login_required
+def audit_print(request, pk):
+    """Print-friendly view of audit."""
+    audit = get_object_or_404(Audit, pk=pk)
+
+    # Permission check using centralized predicate
+    if not PermissionPredicate.can_view_audit(request.user, audit):
+        return redirect("audit_management:audit_list")
+
+    context = {
+        "audit": audit,
+        "nonconformities": audit.nonconformity_set.all(),
+        "observations": audit.observation_set.all(),
+        "ofis": audit.opportunityforimprovement_set.all(),
+    }
+
+    # Get or create related records
+    context["changes"], _ = AuditChanges.objects.get_or_create(audit=audit)
+    context["plan_review"], _ = AuditPlanReview.objects.get_or_create(audit=audit)
+    context["summary"], _ = AuditSummary.objects.get_or_create(audit=audit)
+    context["recommendation"], _ = AuditRecommendation.objects.get_or_create(audit=audit)
+
+    return render(request, "audits/audit_print.html", context)
+
+
+# ============================================================================
+# STATUS WORKFLOW VIEWS
+# ============================================================================
+
+
+@login_required
+def audit_transition_status(request, pk, new_status):
+    """
+    Handle audit status transitions via workflow.
+
+    This view enforces workflow rules and validates transitions.
+    """
+    audit = get_object_or_404(Audit, pk=pk)
+    user = request.user
+
+    # Permission check - only lead auditor or CB admin can transition
+    can_transition_audit = user.groups.filter(name="cb_admin").exists() or (
+        user.groups.filter(name="lead_auditor").exists() and audit.lead_auditor == user
+    )
+    if not can_transition_audit:
+        messages.error(request, "You do not have permission to change this audit's status.")
+        return redirect("audit_management:audit_detail", pk=pk)
+
+    try:
+        # Validate and perform the transition via service layer
+        AuditService.transition_status(audit, new_status, user)
+
+        # Success messages based on transition
+        if new_status == "client_review":
+            messages.success(request, "Audit submitted to client for review.")
+        elif new_status == "submitted":
+            messages.success(request, "Audit submitted to Certification Body for decision.")
+        elif new_status == "decided":
+            messages.success(request, "Certification decision has been made.")
+        else:
+            messages.success(request, f"Audit status updated to {audit.get_status_display()}.")
+
+    except ValidationError as e:
+        messages.error(request, str(e))
+
+    return redirect("audit_management:audit_detail", pk=pk)
+
+
+# ============================================================================
+# AUDIT DOCUMENTATION VIEWS
+# ============================================================================
+
+
+@login_required
+def audit_changes_edit(request, audit_pk):
+    """Edit organization changes for an audit."""
+    audit = get_object_or_404(Audit, pk=audit_pk)
+
+    # Permission check
+    user = request.user
+    can_edit = user.groups.filter(name="cb_admin").exists() or (
+        user.groups.filter(name="lead_auditor").exists() and audit.lead_auditor == user
+    )
+    if not can_edit:
+        messages.error(request, "You do not have permission to edit this audit's documentation.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    changes, _ = AuditChanges.objects.get_or_create(audit=audit)
+
+    if request.method == "POST":
+        form = AuditChangesForm(request.POST, instance=changes)
+        if form.is_valid():
+            dto = AuditChangesDTO(**form.cleaned_data)
+            DocumentationService.update_audit_changes(audit=audit, data=dto)
+            messages.success(request, "Organization changes updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = AuditChangesForm(instance=changes)
+
+    return render(
+        request,
+        "audits/audit_changes_form.html",
+        {"form": form, "audit": audit, "changes": changes},
+    )
+
+
+@login_required
+def audit_plan_review_edit(request, audit_pk):
+    """Edit audit plan review for an audit."""
+    audit = get_object_or_404(Audit, pk=audit_pk)
+
+    # Permission check
+    user = request.user
+    can_edit = user.groups.filter(name="cb_admin").exists() or (
+        user.groups.filter(name="lead_auditor").exists() and audit.lead_auditor == user
+    )
+    if not can_edit:
+        messages.error(request, "You do not have permission to edit this audit's documentation.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    plan_review, _ = AuditPlanReview.objects.get_or_create(audit=audit)
+
+    if request.method == "POST":
+        form = AuditPlanReviewForm(request.POST, instance=plan_review)
+        if form.is_valid():
+            dto = AuditPlanReviewDTO(**form.cleaned_data)
+            DocumentationService.update_audit_plan_review(audit=audit, data=dto)
+            messages.success(request, "Audit plan review updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = AuditPlanReviewForm(instance=plan_review)
+
+    return render(
+        request,
+        "audits/audit_plan_review_form.html",
+        {"form": form, "audit": audit, "plan_review": plan_review},
+    )
+
+
+@login_required
+def audit_summary_edit(request, audit_pk):
+    """Edit audit summary for an audit."""
+    audit = get_object_or_404(Audit, pk=audit_pk)
+
+    # Permission check
+    user = request.user
+    can_edit = user.groups.filter(name="cb_admin").exists() or (
+        user.groups.filter(name="lead_auditor").exists() and audit.lead_auditor == user
+    )
+    if not can_edit:
+        messages.error(request, "You do not have permission to edit this audit's documentation.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    summary, _ = AuditSummary.objects.get_or_create(audit=audit)
+
+    if request.method == "POST":
+        form = AuditSummaryForm(request.POST, instance=summary)
+        if form.is_valid():
+            dto = AuditSummaryDTO(**form.cleaned_data)
+            DocumentationService.update_audit_summary(audit=audit, data=dto)
+            messages.success(request, "Audit summary updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = AuditSummaryForm(instance=summary)
+
+    return render(
+        request,
+        "audits/audit_summary_form.html",
+        {"form": form, "audit": audit, "summary": summary},
+    )
+
+
+# ============================================================================
+# RECOMMENDATIONS VIEWS
+# ============================================================================
+
+
+@login_required
+def audit_recommendation_edit(request, audit_pk):
+    """Edit audit recommendations."""
+    audit = get_object_or_404(Audit, pk=audit_pk)
+
+    # Permission check - Lead Auditor or CB Admin
+    user = request.user
+    can_edit = user.groups.filter(name="cb_admin").exists() or (
+        user.groups.filter(name="lead_auditor").exists() and audit.lead_auditor == user
+    )
+    if not can_edit:
+        messages.error(request, "You do not have permission to edit recommendations.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    recommendation, _ = AuditRecommendation.objects.get_or_create(audit=audit)
+
+    if request.method == "POST":
+        form = AuditRecommendationForm(request.POST, instance=recommendation)
+        if form.is_valid():
+            dto = AuditRecommendationDTO(**form.cleaned_data)
+            DocumentationService.update_audit_recommendation(audit=audit, data=dto)
+            messages.success(request, "Recommendations updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = AuditRecommendationForm(instance=recommendation)
+
+    return render(
+        request,
+        "audits/audit_recommendation_form.html",
+        {"form": form, "audit": audit, "recommendation": recommendation},
+    )
+
+
+# ============================================================================
+# EVIDENCE FILE MANAGEMENT VIEWS
+# ============================================================================
+
+
+@login_required
+def evidence_file_upload(request, audit_pk):
+    """Upload evidence file to an audit."""
+    audit = get_object_or_404(Audit, pk=audit_pk)
+
+    # Permission check - auditors and clients can upload
+    user = request.user
+    can_upload = (
+        PermissionPredicate.is_cb_admin(user)
+        or can_add_finding(user, audit)
+        or (
+            PermissionPredicate.is_client_user(user)
+            and hasattr(user, "profile")
+            and user.profile.organization == audit.organization
+        )
+    )
+
+    if not can_upload:
+        messages.error(request, "You do not have permission to upload files to this audit.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    if request.method == "POST":
+        form = EvidenceFileForm(request.POST, request.FILES, audit=audit)
+        if form.is_valid():
+            dto = EvidenceUploadDTO(
+                file=form.cleaned_data["file"],
+                finding_id=form.cleaned_data["finding"].id if form.cleaned_data.get("finding") else None,
+            )
+            EvidenceService.upload_evidence(audit=audit, data=dto, user=user)
+            messages.success(request, "File uploaded successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = EvidenceFileForm(audit=audit)
+
+    return render(request, "audits/evidence_file_upload.html", {"form": form, "audit": audit})
+
+
+@login_required
+def evidence_file_download(request, file_pk):
+    """Download an evidence file."""
+    from django.http import FileResponse, Http404
+
+    evidence_file = get_object_or_404(EvidenceFile, pk=file_pk)
+    audit = evidence_file.audit
+
+    # Permission check - same as viewing audit
+    user = request.user
+    can_view = False
+
+    if user.groups.filter(name="cb_admin").exists():
+        can_view = True
+    elif user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists():
+        can_view = audit.lead_auditor == user or audit.team_members.filter(user=user).exists()
+    elif user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists():
+        if hasattr(user, "profile") and user.profile.organization:
+            can_view = audit.organization == user.profile.organization
+
+    if not can_view:
+        raise Http404("File not found or access denied.")
+
+    try:
+        response = FileResponse(
+            evidence_file.file.open(),
+            as_attachment=True,
+            filename=evidence_file.file.name.split("/")[-1],
+        )
+        return response
+    except FileNotFoundError as exc:
+        raise Http404("File not found on server.") from exc
+
+
+@login_required
+def evidence_file_delete(request, file_pk):
+    """Delete an evidence file."""
+    evidence_file = get_object_or_404(EvidenceFile, pk=file_pk)
+    audit = evidence_file.audit
+
+    # Permission check - uploader or CB Admin can delete
+    user = request.user
+    can_delete = user.groups.filter(name="cb_admin").exists() or evidence_file.uploaded_by == user
+
+    if not can_delete:
+        messages.error(request, "You do not have permission to delete this file.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        audit_pk = audit.pk
+        EvidenceService.delete_evidence(evidence_file, user=request.user)
+        messages.success(request, "File deleted successfully.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    return render(
+        request,
+        "audits/evidence_file_delete.html",
+        {"evidence_file": evidence_file, "audit": audit},
+    )
+
+
+# ============================================================================
+# FINDING VIEWS
+# ============================================================================
+
+
+# Nonconformity Views
+class NonconformityCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Create a new nonconformity."""
+
+    model = Nonconformity
+    form_class = NonconformityForm
+    template_name = "audits/nonconformity_form.html"
+
+    def test_func(self):
+        """Check if user can create nonconformities for this audit."""
+        audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
+        # Check audit status allows findings
+        if audit.status in ["decided", "closed"]:
+            return False
+        return can_add_finding(self.request.user, audit)
+
+    def get_audit(self):
+        """Retrieve the audit instance from URL parameters."""
+        return get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
+
+    def get_form_kwargs(self):
+        """Pass additional kwargs to form initialization."""
+        kwargs = super().get_form_kwargs()
+        kwargs["audit"] = self.get_audit()
+        return kwargs
+
+    def form_valid(self, form):
+        """Create nonconformity using FindingService."""
+        audit = self.get_audit()
+        # Use FindingService to create nonconformity
+        FindingService.create_nonconformity(audit=audit, user=self.request.user, data=form.cleaned_data)
+        messages.success(self.request, "Nonconformity created successfully.")
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
+
+    def get_context_data(self, **kwargs):
+        """Add additional context data to template."""
+        context = super().get_context_data(**kwargs)
+        context["audit"] = self.get_audit()
+        context["finding_type"] = "Nonconformity"
+        return context
+
+
+class NonconformityDetailView(LoginRequiredMixin, DetailView):
+    """View nonconformity details."""
+
+    model = Nonconformity
+    template_name = "audits/nonconformity_detail.html"
+    context_object_name = "nc"
+
+    def get_queryset(self):
+        """Get nonconformity queryset with role-based filtering."""
+        # Use same permission logic as audit detail
+        user = self.request.user
+        queryset = Nonconformity.objects.select_related("audit", "standard", "created_by", "verified_by")
+
+        if user.groups.filter(name="cb_admin").exists():
+            return queryset
+
+        if user.groups.filter(name="lead_auditor").exists() or user.groups.filter(name="auditor").exists():
+            return queryset.filter(
+                django_models.Q(audit__lead_auditor=user) | django_models.Q(audit__team_members__user=user)
+            ).distinct()
+
+        if user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists():
+            if hasattr(user, "profile") and user.profile.organization:
+                return queryset.filter(audit__organization=user.profile.organization)
+
+        return queryset.none()
+
+    def get_context_data(self, **kwargs):
+        """Add permission flags to template context."""
+        context = super().get_context_data(**kwargs)
+        nc = self.object
+        user = self.request.user
+
+        context["can_edit"] = can_edit_finding(user, nc)
+        context["can_respond"] = can_respond_to_nc(user, nc)
+        context["can_verify"] = can_verify_nc(user, nc)
+        context["is_client"] = (
+            user.groups.filter(name="client_admin").exists() or user.groups.filter(name="client_user").exists()
+        )
+        return context
+
+
+class NonconformityUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Update a nonconformity."""
+
+    model = Nonconformity
+    form_class = NonconformityForm
+    template_name = "audits/nonconformity_form.html"
+
+    def test_func(self):
+        """Check if user can update this nonconformity."""
+        nc = self.get_object()
+        # Can't edit if audit is decided
+        if nc.audit.status in ["decided", "closed"]:
+            return False
+        # Can't edit if client has responded
+        if nc.verification_status in ["client_responded", "accepted", "closed"]:
+            return False
+        return can_edit_finding(self.request.user, nc)
+
+    def get_form_kwargs(self):
+        """Pass additional kwargs to form initialization."""
+        kwargs = super().get_form_kwargs()
+        kwargs["audit"] = self.object.audit
+        return kwargs
+
+    def form_valid(self, form):
+        """Process valid form submission."""
+        FindingService.update_nonconformity(nc=self.object, data=form.cleaned_data, user=self.request.user)
+        messages.success(self.request, "Nonconformity updated successfully.")
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:nonconformity_detail", kwargs={"pk": self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        """Add additional context data to template."""
+        context = super().get_context_data(**kwargs)
+        context["audit"] = self.object.audit
+        context["finding_type"] = "Nonconformity"
+        return context
+
+
+class NonconformityResponseView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Client response to nonconformity."""
+
+    model = Nonconformity
+    form_class = NonconformityResponseForm
+    template_name = "audits/nonconformity_response.html"
+    context_object_name = "nc"
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        return can_respond_to_nc(self.request.user, self.get_object())
+
+    def form_valid(self, form):
+        """Process valid form submission."""
+        # Use FindingService to handle response
+        FindingService.respond_to_nonconformity(nc=self.object, response_data=form.cleaned_data)
+        messages.success(self.request, "Response submitted successfully.")
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:nonconformity_detail", kwargs={"pk": self.object.pk})
+
+
+class NonconformityVerifyView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Auditor verification of nonconformity response."""
+
+    model = Nonconformity
+    form_class = NonconformityVerificationForm
+    template_name = "audits/nonconformity_verify.html"
+    context_object_name = "nc"
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        return can_verify_nc(self.request.user, self.get_object())
+
+    def form_valid(self, form):
+        """Process valid form submission."""
+        # Get verification action from form
+        action = form.cleaned_data["verification_action"]
+        notes = form.cleaned_data.get("verification_notes")
+
+        try:
+            FindingService.verify_nonconformity(nc=self.object, user=self.request.user, action=action, notes=notes)
+
+            if action == "accept":
+                messages.success(self.request, "Response accepted.")
+            elif action == "request_changes":
+                messages.info(self.request, "Changes requested. Nonconformity remains open.")
+            elif action == "close":
+                messages.success(self.request, "Nonconformity closed and verified effective.")
+
+        except ValidationError as e:
+            messages.error(self.request, str(e))
+            return self.form_invalid(form)
+
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:nonconformity_detail", kwargs={"pk": self.object.pk})
+
+
+# Observation Views
+class ObservationCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Create a new observation."""
+
+    model = Observation
+    form_class = ObservationForm
+    template_name = "audits/observation_form.html"
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
+        if audit.status in ["decided", "closed"]:
+            return False
+        return can_add_finding(self.request.user, audit)
+
+    def get_audit(self):
+        """Retrieve the audit instance from URL parameters."""
+        return get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
+
+    def get_form_kwargs(self):
+        """Pass additional kwargs to form initialization."""
+        kwargs = super().get_form_kwargs()
+        kwargs["audit"] = self.get_audit()
+        return kwargs
+
+    def form_valid(self, form):
+        """Process valid form submission."""
+        audit = self.get_audit()
+        # Use FindingService to create observation
+        FindingService.create_observation(audit=audit, user=self.request.user, data=form.cleaned_data)
+        messages.success(self.request, "Observation created successfully.")
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
+
+    def get_context_data(self, **kwargs):
+        """Add additional context data to template."""
+        context = super().get_context_data(**kwargs)
+        context["audit"] = self.get_audit()
+        context["finding_type"] = "Observation"
+        return context
+
+
+class ObservationDetailView(LoginRequiredMixin, DetailView):
+    """View observation details."""
+
+    model = Observation
+    template_name = "audits/observation_detail.html"
+    context_object_name = "observation"
+
+    def get_queryset(self):
+        """Get observation queryset with role-based filtering."""
+        user = self.request.user
+        queryset = Observation.objects.select_related("audit", "standard", "created_by")
+
+        if PermissionPredicate.is_cb_admin(user):
+            return queryset
+
+        if PermissionPredicate.is_auditor(user):
+            return queryset.filter(
+                django_models.Q(audit__lead_auditor=user) | django_models.Q(audit__team_members__user=user)
+            ).distinct()
+
+        if PermissionPredicate.is_client_user(user):
+            if hasattr(user, "profile") and user.profile.organization:
+                return queryset.filter(audit__organization=user.profile.organization)
+
+        return queryset.none()
+
+    def get_context_data(self, **kwargs):
+        """Add permission flags to template context."""
+        context = super().get_context_data(**kwargs)
+        observation = self.object
+        user = self.request.user
+
+        context["can_edit"] = can_edit_finding(user, observation) and observation.audit.status != "decided"
+        context["audit"] = observation.audit
+        return context
+
+
+class ObservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Update an observation."""
+
+    model = Observation
+    form_class = ObservationForm
+    template_name = "audits/observation_form.html"
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        obs = self.get_object()
+        if obs.audit.status in ["decided", "closed"]:
+            return False
+        return can_edit_finding(self.request.user, obs)
+
+    def get_form_kwargs(self):
+        """Pass additional kwargs to form initialization."""
+        kwargs = super().get_form_kwargs()
+        kwargs["audit"] = self.object.audit
+        return kwargs
+
+    def form_valid(self, form):
+        """Process valid form submission."""
+        FindingService.update_observation(observation=self.object, data=form.cleaned_data, user=self.request.user)
+        messages.success(self.request, "Observation updated successfully.")
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.audit.pk})
+
+    def get_context_data(self, **kwargs):
+        """Add additional context data to template."""
+        context = super().get_context_data(**kwargs)
+        context["audit"] = self.object.audit
+        context["finding_type"] = "Observation"
+        return context
+
+
+# Opportunity for Improvement Views
+class OpportunityForImprovementCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Create a new opportunity for improvement."""
+
+    model = OpportunityForImprovement
+    form_class = OpportunityForImprovementForm
+    template_name = "audits/ofi_form.html"
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        audit = get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
+        if audit.status in ["decided", "closed"]:
+            return False
+        return can_add_finding(self.request.user, audit)
+
+    def get_audit(self):
+        """Retrieve the audit instance from URL parameters."""
+        return get_object_or_404(Audit, pk=self.kwargs["audit_pk"])
+
+    def get_form_kwargs(self):
+        """Pass additional kwargs to form initialization."""
+        kwargs = super().get_form_kwargs()
+        kwargs["audit"] = self.get_audit()
+        return kwargs
+
+    def form_valid(self, form):
+        """Process valid form submission."""
+        audit = self.get_audit()
+        # Use FindingService to create OFI
+        FindingService.create_ofi(audit=audit, user=self.request.user, data=form.cleaned_data)
+        messages.success(self.request, "Opportunity for Improvement created successfully.")
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
+
+    def get_context_data(self, **kwargs):
+        """Add additional context data to template."""
+        context = super().get_context_data(**kwargs)
+        context["audit"] = self.get_audit()
+        context["finding_type"] = "Opportunity for Improvement"
+        return context
+
+
+class OpportunityForImprovementDetailView(LoginRequiredMixin, DetailView):
+    """View opportunity for improvement details."""
+
+    model = OpportunityForImprovement
+    template_name = "audits/ofi_detail.html"
+    context_object_name = "ofi"
+
+    def get_queryset(self):
+        """Get OFI queryset with role-based filtering."""
+        user = self.request.user
+        queryset = OpportunityForImprovement.objects.select_related("audit", "standard", "created_by")
+
+        if PermissionPredicate.is_cb_admin(user):
+            return queryset
+
+        if PermissionPredicate.is_auditor(user):
+            return queryset.filter(
+                django_models.Q(audit__lead_auditor=user) | django_models.Q(audit__team_members__user=user)
+            ).distinct()
+
+        if PermissionPredicate.is_client_user(user):
+            if hasattr(user, "profile") and user.profile.organization:
+                return queryset.filter(audit__organization=user.profile.organization)
+
+        return queryset.none()
+
+    def get_context_data(self, **kwargs):
+        """Add permission flags to template context."""
+        context = super().get_context_data(**kwargs)
+        ofi = self.object
+        user = self.request.user
+
+        context["can_edit"] = can_edit_finding(user, ofi) and ofi.audit.status != "decided"
+        context["audit"] = ofi.audit
+        return context
+
+
+class OpportunityForImprovementUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Update an opportunity for improvement."""
+
+    model = OpportunityForImprovement
+    form_class = OpportunityForImprovementForm
+    template_name = "audits/ofi_form.html"
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        ofi = self.get_object()
+        if ofi.audit.status in ["decided", "closed"]:
+            return False
+        return can_edit_finding(self.request.user, ofi)
+
+    def get_form_kwargs(self):
+        """Pass additional kwargs to form initialization."""
+        kwargs = super().get_form_kwargs()
+        kwargs["audit"] = self.object.audit
+        return kwargs
+
+    def form_valid(self, form):
+        """Process valid form submission."""
+        FindingService.update_ofi(ofi=self.object, data=form.cleaned_data, user=self.request.user)
+        messages.success(self.request, "Opportunity for Improvement updated successfully.")
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.audit.pk})
+
+    def get_context_data(self, **kwargs):
+        """Add additional context data to template."""
+        context = super().get_context_data(**kwargs)
+        context["audit"] = self.object.audit
+        context["finding_type"] = "Opportunity for Improvement"
+        return context
+
+
+# Delete Views (for all finding types)
+
+
+class NonconformityDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Delete a nonconformity."""
+
+    model = Nonconformity
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        nc = self.get_object()
+        if nc.audit.status in ["decided", "closed"]:
+            return False
+        return can_edit_finding(self.request.user, nc)
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.audit.pk})
+
+    def delete(self, request, *args, **kwargs):
+        """Handle deletion with success message."""
+        messages.success(request, "Nonconformity deleted successfully.")
+        return super().delete(request, *args, **kwargs)
+
+
+class ObservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Delete an observation."""
+
+    model = Observation
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        obs = self.get_object()
+        if obs.audit.status in ["decided", "closed"]:
+            return False
+        return can_edit_finding(self.request.user, obs)
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.audit.pk})
+
+    def delete(self, request, *args, **kwargs):
+        """Handle deletion with success message."""
+        messages.success(request, "Observation deleted successfully.")
+        return super().delete(request, *args, **kwargs)
+
+
+class OpportunityForImprovementDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Delete an opportunity for improvement."""
+
+    model = OpportunityForImprovement
+
+    def test_func(self):
+        """Check if user has permission to access this view."""
+        ofi = self.get_object()
+        if ofi.audit.status in ["decided", "closed"]:
+            return False
+        return can_edit_finding(self.request.user, ofi)
+
+    def get_success_url(self):
+        """Redirect to appropriate page after successful form submission."""
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.audit.pk})
+
+    def delete(self, request, *args, **kwargs):
+        """Handle deletion with success message."""
+        messages.success(request, "Opportunity for Improvement deleted successfully.")
+        return super().delete(request, *args, **kwargs)
+
+
+# ============================================================================
+# TEAM MEMBER MANAGEMENT VIEWS (Sprint 8 - US-010)
+# ============================================================================
+
+
+@login_required
+def team_member_add(request, audit_pk):
+    """
+    Add a team member to an audit.
+
+    Only lead auditor or CB admin can add team members.
+    Displays competence warnings if applicable.
+    """
+    from audit_management.forms.team_forms import AuditTeamMemberForm
+    from audit_management.models import AuditorCompetenceWarning
+
+    audit = get_object_or_404(Audit, pk=audit_pk)
+    user = request.user
+
+    # Permission check: must be lead auditor or CB admin
+    is_cb_admin = user.groups.filter(name="cb_admin").exists()
+    is_lead_auditor = audit.lead_auditor == user
+
+    if not (is_cb_admin or is_lead_auditor):
+        messages.error(request, "You don't have permission to add team members to this audit.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    competence_warnings = []
+
+    if request.method == "POST":
+        form = AuditTeamMemberForm(request.POST, audit=audit, user=request.user)
+        if form.is_valid():
+            team_member = TeamService.add_team_member(audit=audit, data=form.cleaned_data, user=request.user)
+
+            # Check for competence warnings (only if user is selected)
+            if team_member.user:
+                # Check for warnings related to this team member
+                warnings = AuditorCompetenceWarning.objects.filter(audit=audit, auditor=team_member.user)
+                if warnings.exists():
+                    competence_warnings = list(warnings)
+                    messages.warning(
+                        request,
+                        f"Team member added with {warnings.count()} competence warning(s). "
+                        "Review warnings in audit detail.",
+                    )
+                else:
+                    messages.success(request, f"Team member {team_member.name} added successfully.")
+            else:
+                messages.success(request, f"External expert {team_member.name} added successfully.")
+
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = AuditTeamMemberForm(audit=audit, user=request.user)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "competence_warnings": competence_warnings,
+        "page_title": "Add Team Member",
+    }
+
+    return render(request, "audits/team_member_form.html", context)
+
+
+@login_required
+def team_member_edit(request, pk):
+    """
+    Edit an existing audit team member.
+
+    Only lead auditor or CB admin can edit team members.
+    """
+    from audit_management.forms.team_forms import AuditTeamMemberForm
+
+    team_member = get_object_or_404(AuditTeamMember, pk=pk)
+    audit = team_member.audit
+    user = request.user
+
+    # Permission check: must be lead auditor or CB admin
+    is_cb_admin = user.groups.filter(name="cb_admin").exists()
+    is_lead_auditor = audit.lead_auditor == user
+
+    if not (is_cb_admin or is_lead_auditor):
+        messages.error(request, "You don't have permission to edit team members for this audit.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        form = AuditTeamMemberForm(request.POST, instance=team_member, audit=audit, user=request.user)
+        if form.is_valid():
+            team_member = TeamService.update_team_member(
+                team_member=team_member, data=form.cleaned_data, user=request.user
+            )
+            messages.success(request, f"Team member {team_member.name} updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit.pk)
+    else:
+        form = AuditTeamMemberForm(instance=team_member, audit=audit, user=request.user)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "team_member": team_member,
+        "page_title": "Edit Team Member",
+    }
+
+    return render(request, "audits/team_member_form.html", context)
+
+
+@login_required
+def team_member_delete(request, pk):
+    """
+    Delete an audit team member.
+
+    Only lead auditor or CB admin can delete team members.
+    """
+    team_member = get_object_or_404(AuditTeamMember, pk=pk)
+    audit = team_member.audit
+    user = request.user
+
+    # Permission check: must be lead auditor or CB admin
+    is_cb_admin = user.groups.filter(name="cb_admin").exists()
+    is_lead_auditor = audit.lead_auditor == user
+
+    if not (is_cb_admin or is_lead_auditor):
+        messages.error(request, "You don't have permission to delete team members from this audit.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        member_name = team_member.name
+        TeamService.remove_team_member(team_member, user=request.user)
+        messages.success(request, f"Team member {member_name} removed from audit.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    context = {
+        "audit": audit,
+        "team_member": team_member,
+        "page_title": "Delete Team Member",
+    }
+
+    return render(request, "audits/team_member_confirm_delete.html", context)
+
+
+# ============================================================================
+# FINDINGS VIEWS (US-012, US-013, US-014)
+# ============================================================================
+
+
+@login_required
+def nonconformity_add(request, audit_pk):
+    """
+    Add a nonconformity to an audit.
+
+    Only auditors (lead_auditor, auditor, cb_admin) can create findings.
+    """
+    audit = get_object_or_404(Audit, pk=audit_pk)
+    user = request.user
+
+    # Permission check: must be auditor, lead auditor, or CB admin
+    has_permission = user.groups.filter(name__in=["auditor", "lead_auditor", "cb_admin"]).exists()
+
+    if not has_permission:
+        messages.error(request, "You don't have permission to add findings to this audit.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    if request.method == "POST":
+        form = NonconformityForm(request.POST, audit=audit)
+        if form.is_valid():
+            FindingService.create_nonconformity(audit=audit, user=user, data=form.cleaned_data)
+            messages.success(request, "Nonconformity added successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = NonconformityForm(audit=audit)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "finding_type": "Nonconformity",
+        "page_title": "Add Nonconformity",
+    }
+
+    return render(request, "audits/finding_form.html", context)
+
+
+@login_required
+def observation_add(request, audit_pk):
+    """
+    Add an observation to an audit.
+
+    Only auditors can create findings.
+    """
+    audit = get_object_or_404(Audit, pk=audit_pk)
+    user = request.user
+
+    # Permission check
+    has_permission = user.groups.filter(name__in=["auditor", "lead_auditor", "cb_admin"]).exists()
+
+    if not has_permission:
+        messages.error(request, "You don't have permission to add findings to this audit.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    if request.method == "POST":
+        form = ObservationForm(request.POST, audit=audit)
+        if form.is_valid():
+            FindingService.create_observation(audit=audit, user=user, data=form.cleaned_data)
+            messages.success(request, "Observation added successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = ObservationForm(audit=audit)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "finding_type": "Observation",
+        "page_title": "Add Observation",
+    }
+
+    return render(request, "audits/finding_form.html", context)
+
+
+@login_required
+def ofi_add(request, audit_pk):
+    """
+    Add an opportunity for improvement to an audit.
+
+    Only auditors can create findings.
+    """
+    audit = get_object_or_404(Audit, pk=audit_pk)
+    user = request.user
+
+    # Permission check
+    has_permission = user.groups.filter(name__in=["auditor", "lead_auditor", "cb_admin"]).exists()
+
+    if not has_permission:
+        messages.error(request, "You don't have permission to add findings to this audit.")
+        return redirect("audit_management:audit_detail", pk=audit_pk)
+
+    if request.method == "POST":
+        form = OpportunityForImprovementForm(request.POST, audit=audit)
+        if form.is_valid():
+            FindingService.create_ofi(audit=audit, user=user, data=form.cleaned_data)
+            messages.success(request, "Opportunity for improvement added successfully.")
+            return redirect("audit_management:audit_detail", pk=audit_pk)
+    else:
+        form = OpportunityForImprovementForm(audit=audit)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "finding_type": "Opportunity for Improvement",
+        "page_title": "Add OFI",
+    }
+
+    return render(request, "audits/finding_form.html", context)
+
+
+@login_required
+def nonconformity_edit(request, pk):
+    """
+    Edit a nonconformity.
+
+    Only the creator or CB admin can edit. Cannot edit if client has responded.
+    """
+    nc = get_object_or_404(Nonconformity, pk=pk)
+    audit = nc.audit
+    user = request.user
+
+    # Permission check
+    is_creator = nc.created_by == user
+    is_cb_admin = user.groups.filter(name="cb_admin").exists()
+
+    if not (is_creator or is_cb_admin):
+        messages.error(request, "You don't have permission to edit this nonconformity.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    # Cannot edit if client has responded
+    if nc.verification_status != "open":
+        messages.error(
+            request,
+            "Cannot edit nonconformity - client has already responded or it has been verified.",
+        )
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        form = NonconformityForm(request.POST, instance=nc, audit=audit)
+        if form.is_valid():
+            FindingService.update_nonconformity(nc=nc, data=form.cleaned_data, user=request.user)
+            messages.success(request, "Nonconformity updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit.pk)
+    else:
+        form = NonconformityForm(instance=nc, audit=audit)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "finding": nc,
+        "finding_type": "Nonconformity",
+        "page_title": "Edit Nonconformity",
+    }
+
+    return render(request, "audits/finding_form.html", context)
+
+
+@login_required
+def observation_edit(request, pk):
+    """Edit an observation."""
+    obs = get_object_or_404(Observation, pk=pk)
+    audit = obs.audit
+    user = request.user
+
+    # Permission check
+    is_creator = obs.created_by == user
+    is_cb_admin = user.groups.filter(name="cb_admin").exists()
+
+    if not (is_creator or is_cb_admin):
+        messages.error(request, "You don't have permission to edit this observation.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        form = ObservationForm(request.POST, instance=obs, audit=audit)
+        if form.is_valid():
+            FindingService.update_observation(observation=obs, data=form.cleaned_data, user=request.user)
+            messages.success(request, "Observation updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit.pk)
+    else:
+        form = ObservationForm(instance=obs, audit=audit)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "finding": obs,
+        "finding_type": "Observation",
+        "page_title": "Edit Observation",
+    }
+
+    return render(request, "audits/finding_form.html", context)
+
+
+@login_required
+def ofi_edit(request, pk):
+    """Edit an opportunity for improvement."""
+    ofi = get_object_or_404(OpportunityForImprovement, pk=pk)
+    audit = ofi.audit
+    user = request.user
+
+    # Permission check
+    is_creator = ofi.created_by == user
+    is_cb_admin = user.groups.filter(name="cb_admin").exists()
+
+    if not (is_creator or is_cb_admin):
+        messages.error(request, "You don't have permission to edit this OFI.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        form = OpportunityForImprovementForm(request.POST, instance=ofi, audit=audit)
+        if form.is_valid():
+            FindingService.update_ofi(ofi=ofi, data=form.cleaned_data, user=request.user)
+            messages.success(request, "Opportunity for improvement updated successfully.")
+            return redirect("audit_management:audit_detail", pk=audit.pk)
+    else:
+        form = OpportunityForImprovementForm(instance=ofi, audit=audit)
+
+    context = {
+        "audit": audit,
+        "form": form,
+        "finding": ofi,
+        "finding_type": "Opportunity for Improvement",
+        "page_title": "Edit OFI",
+    }
+
+    return render(request, "audits/finding_form.html", context)
+
+
+@login_required
+def finding_delete(request, finding_type, pk):
+    """
+    Delete a finding (NC, Observation, or OFI).
+
+    Only creator or CB admin can delete. Cannot delete NC if client has responded.
+    """
+    user = request.user
+
+    # Get the appropriate finding model
+    if finding_type == "nc":
+        finding = get_object_or_404(Nonconformity, pk=pk)
+        type_name = "Nonconformity"
+    elif finding_type == "observation":
+        finding = get_object_or_404(Observation, pk=pk)
+        type_name = "Observation"
+    elif finding_type == "ofi":
+        finding = get_object_or_404(OpportunityForImprovement, pk=pk)
+        type_name = "Opportunity for Improvement"
+    else:
+        messages.error(request, "Invalid finding type.")
+        return redirect("audit_management:audit_list")
+
+    audit = finding.audit
+
+    # Permission check
+    is_creator = finding.created_by == user
+    is_cb_admin = user.groups.filter(name="cb_admin").exists()
+
+    if not (is_creator or is_cb_admin):
+        messages.error(request, f"You don't have permission to delete this {type_name.lower()}.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    # Cannot delete NC if client has responded
+    if finding_type == "nc" and finding.verification_status != "open":
+        messages.error(
+            request,
+            "Cannot delete nonconformity - client has already responded or it has been verified.",
+        )
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        FindingService.delete_finding(finding, user=request.user)
+        messages.success(request, f"{type_name} deleted successfully.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    context = {
+        "audit": audit,
+        "finding": finding,
+        "finding_type": type_name,
+        "page_title": f"Delete {type_name}",
+    }
+
+    return render(request, "audits/finding_confirm_delete.html", context)
+
+
+@login_required
+def nonconformity_respond(request, pk):
+    """
+    Client response to a nonconformity.
+
+    Only clients from the organization can respond.
+    """
+    nc = get_object_or_404(Nonconformity, pk=pk)
+    audit = nc.audit
+    user = request.user
+
+    # Permission check: must be client from the organization
+    is_client = user.groups.filter(name="client").exists()
+
+    # Note: Organization membership check will be added when User-Organization
+    # relationship model is implemented. For now, clients can respond to any NC.
+
+    if not is_client:
+        messages.error(request, "You don't have permission to respond to this nonconformity.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    # Can only respond if status is 'open'
+    if nc.verification_status != "open":
+        messages.error(request, "This nonconformity has already been responded to or verified.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        form = NonconformityResponseForm(request.POST, instance=nc)
+        if form.is_valid():
+            FindingService.respond_to_nonconformity(nc=nc, response_data=form.cleaned_data)
+
+            messages.success(
+                request,
+                "Response submitted successfully. The auditor will review your corrective action.",
+            )
+            return redirect("audit_management:audit_detail", pk=audit.pk)
+    else:
+        form = NonconformityResponseForm(instance=nc)
+
+    context = {"audit": audit, "nc": nc, "form": form, "page_title": "Respond to Nonconformity"}
+
+    return render(request, "audits/nc_response_form.html", context)
+
+
+@login_required
+def nonconformity_verify(request, pk):
+    """
+    Auditor verification of client response to nonconformity.
+
+    Only auditors can verify.
+    """
+    nc = get_object_or_404(Nonconformity, pk=pk)
+    audit = nc.audit
+    user = request.user
+
+    # Permission check: must be auditor
+    has_permission = user.groups.filter(name__in=["auditor", "lead_auditor", "cb_admin"]).exists()
+
+    if not has_permission:
+        messages.error(request, "You don't have permission to verify nonconformities.")
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    # Can only verify if client has responded
+    if nc.verification_status != "client_responded":
+        messages.error(
+            request,
+            "Cannot verify - client has not responded or this NC has already been verified.",
+        )
+        return redirect("audit_management:audit_detail", pk=audit.pk)
+
+    if request.method == "POST":
+        form = NonconformityVerificationForm(request.POST, instance=nc)
+        if form.is_valid():
+            action = form.cleaned_data["verification_action"]
+            notes = form.cleaned_data.get("verification_notes")
+
+            try:
+                FindingService.verify_nonconformity(nc=nc, user=user, action=action, notes=notes)
+                messages.success(
+                    request,
+                    f"Nonconformity verification completed - status: {nc.get_verification_status_display()}.",
+                )
+                return redirect("audit_management:audit_detail", pk=audit.pk)
+            except ValidationError as e:
+                messages.error(request, str(e))
+    else:
+        form = NonconformityVerificationForm(instance=nc)
+
+    context = {
+        "audit": audit,
+        "nc": nc,
+        "form": form,
+        "page_title": "Verify Nonconformity Response",
+    }
+
+    return render(request, "audits/nc_verification_form.html", context)

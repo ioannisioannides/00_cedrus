@@ -9,7 +9,7 @@
         <p class="page-subtitle">Manage annual audit schedules (ISO 19011)</p>
     </div>
     <div>
-        <a href="{% url 'audits:program_create' %}" class="btn btn-primary">
+        <a href="{% url 'audit_management:program_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i> New Program
         </a>
     </div>
@@ -34,7 +34,7 @@
                         {% for program in programs %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'audits:program_detail' program.pk %}" class="fw-bold text-decoration-none">
+                                    <a href="{% url 'audit_management:program_detail' program.pk %}" class="fw-bold text-decoration-none">
                                         {{ program.title }}
                                     </a>
                                 </td>
@@ -54,8 +54,8 @@
                                 <td>{{ program.created_by.get_full_name|default:program.created_by.username }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'audits:program_detail' program.pk %}" class="btn btn-outline-primary">View</a>
-                                        <a href="{% url 'audits:program_update' program.pk %}" class="btn btn-outline-secondary">Edit</a>
+                                        <a href="{% url 'audit_management:program_detail' program.pk %}" class="btn btn-outline-primary">View</a>
+                                        <a href="{% url 'audit_management:program_update' program.pk %}" class="btn btn-outline-secondary">Edit</a>
                                     </div>
                                 </td>
                             </tr>
@@ -88,7 +88,7 @@
                 <div class="empty-state-icon">📅</div>
                 <h3>No Audit Programs</h3>
                 <p class="text-muted">Create an audit program to schedule and manage audits.</p>
-                <a href="{% url 'audits:program_create' %}" class="btn btn-primary mt-3">Create Program</a>
+                <a href="{% url 'audit_management:program_create' %}" class="btn btn-primary mt-3">Create Program</a>
             </div>
         {% endif %}
     </div>

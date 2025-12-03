@@ -140,9 +140,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     # Local apps
-    "accounts",
+    "identity",
     "core",
-    "audits",
+    "audit_management.apps.AuditManagementConfig",
+    "certification.apps.CertificationConfig",
+    # "audits",
 ]
 
 MIDDLEWARE = [

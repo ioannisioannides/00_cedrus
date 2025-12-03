@@ -8,14 +8,14 @@ Tests for:
 """
 
 from datetime import date, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
-from accounts.models import Profile
 from core.models import Certification, Organization, Site, Standard
 from core.test_utils import TEST_PASSWORD
+from identity.adapters.models import Profile
 from trunk.events import EventType, event_dispatcher
 from trunk.events.dispatcher import EventDispatcher
 from trunk.events.handlers import (
@@ -93,7 +93,7 @@ class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
 
     def _create_audit(self):
         """Helper to create audit."""
-        from audits.models import Audit
+        from audit_management.models import Audit
 
         audit = Audit.objects.create(
             organization=self.org,
@@ -123,7 +123,7 @@ class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
 
     def test_is_independent_for_decision_team_member_not_allowed(self):
         """Test team member cannot make decision on their audit."""
-        from audits.models import AuditTeamMember
+        from audit_management.models import AuditTeamMember
 
         AuditTeamMember.objects.create(
             audit=self.audit,
@@ -167,7 +167,7 @@ class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
             customer_id="ORG002",
             total_employee_count=5,
         )
-        from audits.models import Audit
+        from audit_management.models import Audit
 
         other_audit = Audit.objects.create(
             organization=other_org,
@@ -204,7 +204,7 @@ class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
 
     def test_is_assigned_to_audit_team_member(self):
         """Test team member is assigned."""
-        from audits.models import AuditTeamMember
+        from audit_management.models import AuditTeamMember
 
         AuditTeamMember.objects.create(
             audit=self.audit,
@@ -248,7 +248,7 @@ class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
 
     def test_can_conduct_technical_review_team_member_not_allowed(self):
         """Test team member cannot review their own audit."""
-        from audits.models import AuditTeamMember
+        from audit_management.models import AuditTeamMember
 
         self.auditor.groups.add(self.tech_reviewer_group)
         AuditTeamMember.objects.create(
@@ -288,6 +288,17 @@ class EventHandlersTest(TestCase):
 
     def setUp(self):
         """Set up test data."""
+        self.patcher = patch("trunk.events.tasks.dispatch_event_task.delay")
+        self.mock_delay = self.patcher.start()
+
+        # Configure mock to execute dispatch_sync immediately to simulate worker
+        def side_effect(event_type, payload):
+            event_dispatcher.dispatch_sync(event_type, payload)
+
+        self.mock_delay.side_effect = side_effect
+
+        self.addCleanup(self.patcher.stop)
+
         self.org = Organization.objects.create(
             name="Test Org",
             registered_address="123 St",
@@ -304,7 +315,7 @@ class EventHandlersTest(TestCase):
             certificate_status="active",
         )
 
-        from audits.models import Audit
+        from audit_management.models import Audit
 
         self.user = User.objects.create_user(username="test", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor = User.objects.create_user(username="lead_auditor", password=TEST_PASSWORD)  # nosec B106
@@ -324,27 +335,29 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, events.append)
 
-        on_audit_status_changed({"audit": self.audit, "new_status": "client_review", "changed_by": self.user})
+        on_audit_status_changed(
+            {"audit_id": self.audit.id, "new_status": "client_review", "changed_by_id": self.user.id}
+        )
 
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["audit"], self.audit)
+        self.assertEqual(events[0]["audit_id"], self.audit.id)
 
     def test_on_audit_status_changed_to_submitted(self):
         """Test handler for status change to submitted."""
         events = []
         event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CB, events.append)
 
-        on_audit_status_changed({"audit": self.audit, "new_status": "submitted", "changed_by": self.user})
+        on_audit_status_changed({"audit_id": self.audit.id, "new_status": "submitted", "changed_by_id": self.user.id})
 
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["audit"], self.audit)
+        self.assertEqual(events[0]["audit_id"], self.audit.id)
 
     def test_on_audit_status_changed_to_decided(self):
         """Test handler for status change to decided."""
         events = []
         event_dispatcher.register(EventType.AUDIT_DECIDED, events.append)
 
-        on_audit_status_changed({"audit": self.audit, "new_status": "decided", "changed_by": self.user})
+        on_audit_status_changed({"audit_id": self.audit.id, "new_status": "decided", "changed_by_id": self.user.id})
 
         self.assertEqual(len(events), 1)
 
@@ -353,7 +366,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, events.append)
 
-        on_audit_status_changed({"new_status": "client_review", "changed_by": self.user})
+        on_audit_status_changed({"new_status": "client_review", "changed_by_id": self.user.id})
 
         self.assertEqual(len(events), 0)
 
@@ -362,7 +375,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.AUDIT_SUBMITTED_TO_CLIENT, events.append)
 
-        on_audit_status_changed({"audit": self.audit, "changed_by": self.user})
+        on_audit_status_changed({"audit_id": self.audit.id, "changed_by_id": self.user.id})
 
         self.assertEqual(len(events), 0)
 
@@ -371,7 +384,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, events.append)
 
-        from audits.models import Nonconformity
+        from audit_management.models import Nonconformity
 
         nc = Nonconformity.objects.create(
             audit=self.audit,
@@ -383,17 +396,17 @@ class EventHandlersTest(TestCase):
             created_by=self.user,
         )
 
-        on_nc_verified({"nc": nc, "verification_status": "accepted"})
+        on_nc_verified({"nc_id": nc.id, "verification_status": "accepted"})
 
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["nc"], nc)
+        self.assertEqual(events[0]["nc_id"], nc.id)
 
     def test_on_nc_verified_rejected(self):
         """Test handler for NC verification rejected."""
         events = []
         event_dispatcher.register(EventType.NC_VERIFIED_REJECTED, events.append)
 
-        from audits.models import Nonconformity
+        from audit_management.models import Nonconformity
 
         nc = Nonconformity.objects.create(
             audit=self.audit,
@@ -405,7 +418,7 @@ class EventHandlersTest(TestCase):
             created_by=self.user,
         )
 
-        on_nc_verified({"nc": nc, "verification_status": "rejected"})
+        on_nc_verified({"nc_id": nc.id, "verification_status": "rejected"})
 
         self.assertEqual(len(events), 1)
 
@@ -414,7 +427,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.NC_CLOSED, events.append)
 
-        from audits.models import Nonconformity
+        from audit_management.models import Nonconformity
 
         nc = Nonconformity.objects.create(
             audit=self.audit,
@@ -426,7 +439,7 @@ class EventHandlersTest(TestCase):
             created_by=self.user,
         )
 
-        on_nc_verified({"nc": nc, "verification_status": "closed"})
+        on_nc_verified({"nc_id": nc.id, "verification_status": "closed"})
 
         self.assertEqual(len(events), 1)
 
@@ -444,7 +457,7 @@ class EventHandlersTest(TestCase):
         events = []
         event_dispatcher.register(EventType.NC_VERIFIED_ACCEPTED, events.append)
 
-        from audits.models import Nonconformity
+        from audit_management.models import Nonconformity
 
         nc = Nonconformity.objects.create(
             audit=self.audit,
@@ -456,36 +469,55 @@ class EventHandlersTest(TestCase):
             created_by=self.user,
         )
 
-        on_nc_verified({"nc": nc})
+        on_nc_verified({"nc_id": nc.id})
 
         self.assertEqual(len(events), 0)
 
     def test_on_complaint_received(self):
         """Test handler for complaint received."""
-        mock_complaint = MagicMock()
-        mock_complaint.complaint_number = "C001"
-        mock_complaint.complainant_name = "Test Complainant"
+        # Need real objects for ID lookup
+        from certification.models import Complaint
+
+        complaint = Complaint.objects.create(
+            complaint_number="C001",
+            complainant_name="Test Complainant",
+            description="Test",
+            status="open",
+        )
 
         # Should not raise
-        on_complaint_received({"complaint": mock_complaint})
+        on_complaint_received({"complaint_id": complaint.id})
 
     def test_on_appeal_received(self):
         """Test handler for appeal received."""
-        mock_appeal = MagicMock()
-        mock_appeal.appeal_number = "A001"
-        mock_appeal.appellant_name = "Test Appellant"
+        from certification.models import Appeal
+
+        appeal = Appeal.objects.create(
+            appeal_number="A001",
+            appellant_name="Test Appellant",
+            grounds="Test",
+            status="open",
+        )
 
         # Should not raise
-        on_appeal_received({"appeal": mock_appeal})
+        on_appeal_received({"appeal_id": appeal.id})
 
     def test_on_certificate_history_created(self):
         """Test handler for certificate history created."""
-        mock_history = MagicMock()
-        mock_history.action = "issued"
-        mock_history.certification.certificate_id = "CERT001"
+        from core.models import CertificateHistory
+
+        history = CertificateHistory.objects.create(
+            certification=self.cert,
+            action="issued",
+            action_date=date.today(),
+            certificate_number_snapshot="CERT001",
+            certification_scope_snapshot="Test",
+            valid_from=date.today(),
+            valid_to=date.today() + timedelta(days=365),
+        )
 
         # Should not raise
-        on_certificate_history_created({"history": mock_history})
+        on_certificate_history_created({"history_id": history.id})
 
     def test_register_event_handlers(self):
         """Test that register_event_handlers registers all handlers."""
@@ -512,14 +544,20 @@ class EventDispatcherTest(TestCase):
         self.dispatcher = EventDispatcher()
         self.events_received = []
 
-    def test_register_and_emit(self):
-        """Test basic register and emit."""
+    @patch("trunk.events.tasks.dispatch_event_task.delay")
+    def test_emit_queues_task(self, mock_delay):
+        """Test emit queues a Celery task."""
+        self.dispatcher.emit(EventType.AUDIT_CREATED, {"test": "data"})
+        mock_delay.assert_called_once_with(EventType.AUDIT_CREATED, {"test": "data"})
+
+    def test_register_and_dispatch_sync(self):
+        """Test basic register and synchronous dispatch."""
 
         def handler(payload):
             self.events_received.append(payload)
 
         self.dispatcher.register(EventType.AUDIT_CREATED, handler)
-        self.dispatcher.emit(EventType.AUDIT_CREATED, {"test": "data"})
+        self.dispatcher.dispatch_sync(EventType.AUDIT_CREATED, {"test": "data"})
 
         self.assertEqual(len(self.events_received), 1)
         self.assertEqual(self.events_received[0]["test"], "data")
@@ -535,7 +573,7 @@ class EventDispatcherTest(TestCase):
 
         self.dispatcher.register(EventType.AUDIT_CREATED, handler1)
         self.dispatcher.register(EventType.AUDIT_CREATED, handler2)
-        self.dispatcher.emit(EventType.AUDIT_CREATED, {"test": "data"})
+        self.dispatcher.dispatch_sync(EventType.AUDIT_CREATED, {"test": "data"})
 
         self.assertEqual(len(self.events_received), 2)
 
@@ -547,14 +585,14 @@ class EventDispatcherTest(TestCase):
 
         self.dispatcher.register(EventType.AUDIT_CREATED, handler)
         self.dispatcher.clear()
-        self.dispatcher.emit(EventType.AUDIT_CREATED, {"test": "data"})
+        self.dispatcher.dispatch_sync(EventType.AUDIT_CREATED, {"test": "data"})
 
         self.assertEqual(len(self.events_received), 0)
 
-    def test_emit_no_handlers(self):
-        """Test emit with no handlers doesn't error."""
+    def test_dispatch_sync_no_handlers(self):
+        """Test dispatch_sync with no handlers doesn't error."""
         # Should not raise
-        self.dispatcher.emit(EventType.AUDIT_CREATED, {"test": "data"})
+        self.dispatcher.dispatch_sync(EventType.AUDIT_CREATED, {"test": "data"})
 
     def test_handler_exception_logged(self):
         """Test handler exceptions are logged but don't stop other handlers."""
@@ -569,7 +607,7 @@ class EventDispatcherTest(TestCase):
         self.dispatcher.register(EventType.AUDIT_CREATED, good_handler)
 
         # Should not raise, and good handler should still be called
-        self.dispatcher.emit(EventType.AUDIT_CREATED, {"test": "data"})
+        self.dispatcher.dispatch_sync(EventType.AUDIT_CREATED, {"test": "data"})
 
         self.assertEqual(len(self.events_received), 1)
 

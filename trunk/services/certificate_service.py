@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from audits.models import CertificationDecision
+from certification.models import CertificationDecision
 from core.models import CertificateHistory, SurveillanceSchedule
 from trunk.events import EventType, event_dispatcher
 
@@ -43,7 +43,11 @@ class CertificateService:
 
         event_dispatcher.emit(
             EventType.CERTIFICATE_HISTORY_CREATED,
-            {"history": history, "certification": certification, "decision": decision},
+            {
+                "history_id": history.id,
+                "certification_id": certification.id,
+                "decision_id": decision.id,
+            },
         )
 
         # Create surveillance schedule for new cycle (stage2 or recertification)
@@ -61,7 +65,8 @@ class CertificateService:
             )
 
             event_dispatcher.emit(
-                EventType.SURVEILLANCE_SCHEDULE_CREATED, {"schedule": schedule, "certification": certification}
+                EventType.SURVEILLANCE_SCHEDULE_CREATED,
+                {"schedule_id": schedule.id, "certification_id": certification.id},
             )
 
     @staticmethod
@@ -75,7 +80,7 @@ class CertificateService:
 
                 event_dispatcher.emit(
                     EventType.CERTIFICATION_SUSPENDED,
-                    {"certification": cert, "audit": audit},
+                    {"certification_id": cert.id, "audit_id": audit.id},
                 )
 
         if recommendation.revocation_recommended:
@@ -86,5 +91,5 @@ class CertificateService:
 
                 event_dispatcher.emit(
                     EventType.CERTIFICATION_REVOKED,
-                    {"certification": cert, "audit": audit},
+                    {"certification_id": cert.id, "audit_id": audit.id},
                 )

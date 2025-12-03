@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 
-from audits.models import Audit
+from audit_management.models import Audit
 from trunk.events import EventType, event_dispatcher
 from trunk.workflows.audit_state_machine import AuditStateMachine
 
@@ -39,7 +39,10 @@ class AuditService:
         audit.sites.set(sites)
 
         # Emit audit created event
-        event_dispatcher.emit(EventType.AUDIT_CREATED, {"audit": audit, "created_by": created_by})
+        event_dispatcher.emit(
+            EventType.AUDIT_CREATED,
+            {"audit_id": audit.id, "created_by_id": created_by.id if created_by else None},
+        )
 
         return audit
 
@@ -59,13 +62,15 @@ class AuditService:
 
         # Emit audit updated event
         event_dispatcher.emit(
-            EventType.AUDIT_UPDATED, {"audit": audit, "old_status": old_status, "new_status": audit.status}
+            EventType.AUDIT_UPDATED,
+            {"audit_id": audit.id, "old_status": old_status, "new_status": audit.status},
         )
 
         # Emit status change event if status changed
         if old_status != audit.status:
             event_dispatcher.emit(
-                EventType.AUDIT_STATUS_CHANGED, {"audit": audit, "old_status": old_status, "new_status": audit.status}
+                EventType.AUDIT_STATUS_CHANGED,
+                {"audit_id": audit.id, "old_status": old_status, "new_status": audit.status},
             )
 
         return audit
@@ -123,7 +128,13 @@ class AuditService:
         # Emit status changed event
         event_dispatcher.emit(
             EventType.AUDIT_STATUS_CHANGED,
-            {"audit": audit, "old_status": old_status, "new_status": audit.status, "changed_by": user, "notes": notes},
+            {
+                "audit_id": audit.id,
+                "old_status": old_status,
+                "new_status": audit.status,
+                "changed_by_id": user.id if user else None,
+                "notes": notes,
+            },
         )
         return audit
 

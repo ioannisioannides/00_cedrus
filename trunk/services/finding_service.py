@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from audits.models import Nonconformity, Observation, OpportunityForImprovement
+from audit_management.models import Nonconformity, Observation, OpportunityForImprovement
 from trunk.events import EventType, event_dispatcher
 
 
@@ -20,7 +20,12 @@ class FindingService:
         # Emit finding created event
         event_dispatcher.emit(
             EventType.FINDING_CREATED,
-            {"finding": nc, "finding_type": "nonconformity", "audit": audit, "created_by": user},
+            {
+                "finding_id": nc.id,
+                "finding_type": "nonconformity",
+                "audit_id": audit.id,
+                "created_by_id": user.id if user else None,
+            },
         )
 
         return nc
@@ -34,7 +39,12 @@ class FindingService:
         # Emit finding created event
         event_dispatcher.emit(
             EventType.FINDING_CREATED,
-            {"finding": obs, "finding_type": "observation", "audit": audit, "created_by": user},
+            {
+                "finding_id": obs.id,
+                "finding_type": "observation",
+                "audit_id": audit.id,
+                "created_by_id": user.id if user else None,
+            },
         )
 
         return obs
@@ -47,7 +57,13 @@ class FindingService:
 
         # Emit finding created event
         event_dispatcher.emit(
-            EventType.FINDING_CREATED, {"finding": ofi, "finding_type": "ofi", "audit": audit, "created_by": user}
+            EventType.FINDING_CREATED,
+            {
+                "finding_id": ofi.id,
+                "finding_type": "ofi",
+                "audit_id": audit.id,
+                "created_by_id": user.id if user else None,
+            },
         )
 
         return ofi
@@ -69,7 +85,8 @@ class FindingService:
 
         # Emit client response event
         event_dispatcher.emit(
-            EventType.NC_CLIENT_RESPONDED, {"nonconformity": nc, "audit": nc.audit, "response_data": response_data}
+            EventType.NC_CLIENT_RESPONDED,
+            {"nonconformity_id": nc.id, "audit_id": nc.audit.id, "response_data": response_data},
         )
 
         return nc
@@ -95,7 +112,8 @@ class FindingService:
 
             # Emit verification accepted event
             event_dispatcher.emit(
-                EventType.NC_VERIFIED_ACCEPTED, {"nonconformity": nc, "verified_by": user, "notes": notes}
+                EventType.NC_VERIFIED_ACCEPTED,
+                {"nc_id": nc.id, "verified_by_id": user.id if user else None, "notes": notes},
             )
 
         elif action == "request_changes":
@@ -103,7 +121,8 @@ class FindingService:
 
             # Emit verification rejected event
             event_dispatcher.emit(
-                EventType.NC_VERIFIED_REJECTED, {"nonconformity": nc, "verified_by": user, "notes": notes}
+                EventType.NC_VERIFIED_REJECTED,
+                {"nc_id": nc.id, "verified_by_id": user.id if user else None, "notes": notes},
             )
 
         elif action == "close":
@@ -112,7 +131,7 @@ class FindingService:
             nc.verification_status = "closed"
 
             # Emit NC closed event
-            event_dispatcher.emit(EventType.NC_CLOSED, {"nonconformity": nc, "closed_by": user})
+            event_dispatcher.emit(EventType.NC_CLOSED, {"nc_id": nc.id, "closed_by_id": user.id if user else None})
 
         nc.save()
         return nc
@@ -134,7 +153,12 @@ class FindingService:
         # Emit finding updated event
         event_dispatcher.emit(
             EventType.FINDING_UPDATED,
-            {"finding": nc, "finding_type": "nonconformity", "audit": nc.audit, "updated_by": user},
+            {
+                "finding_id": nc.id,
+                "finding_type": "nonconformity",
+                "audit_id": nc.audit.id,
+                "updated_by_id": user.id if user else None,
+            },
         )
         return nc
 
@@ -155,7 +179,12 @@ class FindingService:
         # Emit finding updated event
         event_dispatcher.emit(
             EventType.FINDING_UPDATED,
-            {"finding": observation, "finding_type": "observation", "audit": observation.audit, "updated_by": user},
+            {
+                "finding_id": observation.id,
+                "finding_type": "observation",
+                "audit_id": observation.audit.id,
+                "updated_by_id": user.id if user else None,
+            },
         )
         return observation
 
@@ -176,7 +205,12 @@ class FindingService:
         # Emit finding updated event
         event_dispatcher.emit(
             EventType.FINDING_UPDATED,
-            {"finding": ofi, "finding_type": "ofi", "audit": ofi.audit, "updated_by": user},
+            {
+                "finding_id": ofi.id,
+                "finding_type": "ofi",
+                "audit_id": ofi.audit.id,
+                "updated_by_id": user.id if user else None,
+            },
         )
         return ofi
 
@@ -196,5 +230,9 @@ class FindingService:
 
         event_dispatcher.emit(
             EventType.FINDING_DELETED,
-            {"finding_type": finding_type, "audit": audit, "deleted_by": user},
+            {
+                "finding_type": finding_type,
+                "audit_id": audit.id,
+                "deleted_by_id": user.id if user else None,
+            },
         )

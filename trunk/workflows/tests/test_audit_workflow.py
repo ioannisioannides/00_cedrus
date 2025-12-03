@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from audits.models import Audit, Nonconformity, TechnicalReview
+from audit_management.models import Audit, Nonconformity
+from certification.models import TechnicalReview
 from core.models import Certification, Organization, Site, Standard
 from core.test_utils import TEST_PASSWORD
 from trunk.workflows.audit_workflow import AuditWorkflow

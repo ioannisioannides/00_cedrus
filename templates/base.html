@@ -30,7 +30,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'accounts:dashboard' %}">
+            <a class="navbar-brand" href="{% url 'identity:dashboard' %}">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-success">
                     <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -48,13 +48,13 @@
                             {% for group in user.groups.all %}
                                 {% if group.name == "cb_admin" %}
                                     <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_cb' %}active{% endif %}" href="{% url 'accounts:dashboard_cb' %}">Dashboard</a>
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_cb' %}active{% endif %}" href="{% url 'identity:dashboard_cb' %}">Dashboard</a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link {% if 'organization' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:organization_list' %}">Organizations</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audits:audit_list' %}">Audits</a>
+                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audit_management:audit_list' %}">Audits</a>
                                     </li>
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -68,17 +68,17 @@
                                     </li>
                                 {% elif group.name == "lead_auditor" or group.name == "auditor" %}
                                     <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_auditor' %}active{% endif %}" href="{% url 'accounts:dashboard_auditor' %}">Dashboard</a>
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_auditor' %}active{% endif %}" href="{% url 'identity:dashboard_auditor' %}">Dashboard</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audits:audit_list' %}">My Audits</a>
+                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audit_management:audit_list' %}">My Audits</a>
                                     </li>
                                 {% elif group.name == "client_admin" or group.name == "client_user" %}
                                     <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_client' %}active{% endif %}" href="{% url 'accounts:dashboard_client' %}">Dashboard</a>
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_client' %}active{% endif %}" href="{% url 'identity:dashboard_client' %}">Dashboard</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audits:audit_list' %}">Our Audits</a>
+                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audit_management:audit_list' %}">Our Audits</a>
                                     </li>
                                 {% endif %}
                             {% endfor %}
@@ -102,12 +102,12 @@
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">Sign Out</a></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'identity:logout' %}">Sign Out</a></li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="btn btn-primary btn-sm" href="{% url 'accounts:login' %}">Sign In</a>
+                            <a class="btn btn-primary btn-sm" href="{% url 'identity:login' %}">Sign In</a>
                         </li>
                     {% endif %}
                 </ul>

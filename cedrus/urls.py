@@ -32,9 +32,10 @@ urlpatterns = [
     path("health/", health_check, name="health"),
     path("health/ready/", readiness_check, name="readiness"),
     path("health/live/", liveness_check, name="liveness"),
-    path("", include("accounts.urls")),
+    path("", include("identity.api.urls")),
     path("core/", include("core.urls")),
-    path("audits/", include("audits.urls")),
+    path("audits/", include("audit_management.urls")),
+    path("certification/", include("certification.urls")),
     path("reporting/", include("reporting.urls")),
     # API Documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

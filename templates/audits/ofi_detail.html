@@ -9,9 +9,9 @@
         <p class="page-subtitle">Clause {{ ofi.clause }} - Audit #{{ ofi.audit.pk }}</p>
     </div>
     <div class="page-actions">
-        <a href="{% url 'audits:audit_detail' ofi.audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
+        <a href="{% url 'audit_management:audit_detail' ofi.audit.pk %}" class="btn btn-outline-secondary">Back to Audit</a>
         {% if can_edit %}
-            <a href="{% url 'audits:ofi_update' ofi.pk %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'audit_management:ofi_update' ofi.pk %}" class="btn btn-primary">Edit</a>
         {% endif %}
     </div>
 </div>

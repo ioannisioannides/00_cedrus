@@ -50,13 +50,28 @@ class EventDispatcher:
 
     def emit(self, event_type, payload):
         """
-        Emit an event to all registered handlers.
+        Emit an event asynchronously via Celery.
 
         Args:
             event_type: The event type (string)
-            payload: The event payload (can be any object)
+            payload: The event payload (must be JSON serializable)
         """
-        logger.info("Emitting event: %s", event_type)
+        from trunk.events.tasks import dispatch_event_task
+
+        logger.info("Queueing event: %s", event_type)
+        # We use .delay() to send the task to Celery
+        dispatch_event_task.delay(event_type, payload)
+
+    def dispatch_sync(self, event_type, payload):
+        """
+        Dispatch an event synchronously to all registered handlers.
+        This is called by the Celery worker.
+
+        Args:
+            event_type: The event type (string)
+            payload: The event payload
+        """
+        logger.info("Dispatching event sync: %s", event_type)
 
         for handler in self._handlers.get(event_type, []):
             try:
