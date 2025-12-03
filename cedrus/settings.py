@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Third-party apps
-    "debug_toolbar",  # Django Debug Toolbar (development only)
     "rest_framework",
     "drf_spectacular",
     # Local apps
@@ -53,7 +52,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",  # Django Debug Toolbar (development only)
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -146,10 +144,17 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Django Debug Toolbar (development only)
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+if DEBUG:
+    try:
+        import debug_toolbar  # noqa: F401
+
+        INSTALLED_APPS += ["debug_toolbar"]
+        MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+        INTERNAL_IPS = [
+            "127.0.0.1",
+        ]
+    except ImportError:
+        pass
 
 # Django REST Framework
 REST_FRAMEWORK = {
