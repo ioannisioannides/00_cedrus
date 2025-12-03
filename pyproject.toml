@@ -6,135 +6,109 @@ build-backend = "setuptools.build_meta"
 name = "00_cedrus"
 version = "0.1.0"
 requires-python = ">=3.13"
-
-[tool.black]
-line-length = 120
-target-version = ['py313']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | migrations
-)/
-'''
-
-[tool.isort]
-profile = "black"
-line_length = 120
-skip_gitignore = true
-known_django = "django"
-known_first_party = ["cedrus", "accounts", "audits", "core", "trunk"]
-sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-
-[tool.bandit]
-# Bandit Security Scanner Configuration
-# Configured by: Col. Marcus Stone (Security Agent, NSA 20 years)
-# Enterprise Excellence Initiative - Week 1, Day 3-4
-
-# Test IDs to skip
-# B101: Use of assert (test assertions are NOT security issues)
-# B106: Hardcoded password (test fixtures use test passwords)
-# B110: try_except_pass (acceptable for cleanup code)
-# B404: import_subprocess (used safely in our codebase)
-skips = ["B101", "B106", "B110", "B404"]
-
-# Paths to exclude from scanning
-exclude_dirs = [
-    "/tests/",
-    "*/tests/",
-    "*/test_*.py",
-    "**/test_*.py",
-    "*/migrations/",
-    "*/management/commands/seed_data.py",
-    "*/venv/",
-    "*/env/",
-    "*/.venv/",
-    "*/.tox/",
-    "*/htmlcov/",
-    "*/__pycache__/",
+dependencies = [
+    "boto3>=1.42.1",
+    "django>=5.2",
+    "django-csp>=4.0",
+    "django-environ>=0.12.0",
+    "django-redis>=6.0.0",
+    "django-storages>=1.14.6",
+    "djangorestframework>=3.16.1",
+    "drf-spectacular>=0.29.0",
+    "gunicorn>=23.0.0",
+    "nltk>=3.9.2",
+    "pillow>=12.0.0",
+    "psycopg2-binary>=2.9.11",
+    "qrcode>=8.2",
+    "redis>=7.1.0",
+    "requests>=2.32.5",
+    "sentry-sdk>=2.47.0",
+    "tenacity>=9.1.2",
+    "weasyprint>=67.0",
 ]
 
-# ==============================================================================
-# RATIONALE FOR B101 SKIP
-# ==============================================================================
-# Bandit flags all Python assert statements as security risks (B101) because
-# they can be disabled with `python -O` (optimize flag).
-#
-# However, in our codebase:
-# 1. All B101 warnings are in test files (pytest assertions)
-# 2. Test assertions are REQUIRED for testing functionality
-# 3. Tests are never run with -O flag in production
-# 4. These are NOT security vulnerabilities in our context
-#
-# Result: 280 false positives eliminated ✅
-# ==============================================================================
+[tool.setuptools]
+packages = ["cedrus", "accounts", "audits", "core", "trunk", "reporting"]
 
-# ==============================================================================
-# SECURITY STANDARDS
-# ==============================================================================
-# Target: 0 HIGH severity issues (blocking)
-# Target: 0 MEDIUM severity issues (reviewed and fixed)
-# Acceptable: LOW severity issues (informational only)
-#
-# Current Status:
-# - HIGH: 0 ✅
-# - MEDIUM: 0 ✅
-# - LOW: 0 (after B101 skip) ✅
-# ==============================================================================
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "**/migrations/*",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "S",  # flake8-bandit
+    "DJ", # flake8-django
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"**/test_*.py" = ["S101", "S105", "S106"]
+"**/tests.py" = ["S101", "S105", "S106"]
+"**/settings*.py" = ["S101", "S105", "S106"]
+"**/migrations/*" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["cedrus", "accounts", "audits", "core", "trunk", "reporting"]
 
 [tool.coverage.run]
-# Coverage configuration for pytest-cov
 branch = true
 source = ["accounts", "audits", "core", "trunk", "reporting", "cedrus"]
 omit = [
-    # Django management scripts
     "manage.py",
-    # ASGI/WSGI server configs (run by gunicorn/uvicorn)
     "*/asgi.py",
     "*/wsgi.py",
-    # Production settings (environment-specific)
     "*/settings_production.py",
-    # Database migrations (auto-generated)
     "*/migrations/*",
-    # Management commands (run via manage.py)
     "*/management/*",
-    # Test files (test themselves, not tested)
     "*/test_*.py",
     "*/tests.py",
-    # Cache directories
     "*/__pycache__/*",
 ]
 
 [tool.coverage.report]
-# Exclude lines from coverage analysis
 exclude_lines = [
-    # Skip defensive assertions
     "pragma: no cover",
-    # Skip debug-only code
     "def __repr__",
-    # Skip abstract methods
     "raise NotImplementedError",
-    # Skip TYPE_CHECKING blocks
     "if TYPE_CHECKING:",
-    # Skip protocol definitions
     "@abstractmethod",
 ]
-# Fail if coverage is below threshold
 fail_under = 95
-# Show missing lines
 show_missing = true
-# Skip empty files
 skip_empty = true
 
 [tool.mypy]
@@ -151,3 +125,15 @@ ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "cedrus.settings"
+
+[dependency-groups]
+dev = [
+    "coverage>=7.12.0",
+    "django-debug-toolbar>=6.1.0",
+    "django-stubs>=5.2.8",
+    "mypy>=1.19.0",
+    "pytest>=9.0.1",
+    "pytest-cov>=7.0.0",
+    "pytest-django>=4.11.1",
+    "ruff>=0.14.7",
+]

@@ -234,7 +234,7 @@ class Audit(models.Model):
                 raise ValidationError(
                     {
                         "lead_auditor": (
-                            f"{self.lead_auditor.username} does not have lead_auditor, " "auditor, or cb_admin role."
+                            f"{self.lead_auditor.username} does not have lead_auditor, auditor, or cb_admin role."
                         )
                     }
                 )
@@ -306,8 +306,7 @@ class AuditTeamMember(models.Model):
                 raise ValidationError(
                     {
                         "date_to": (
-                            f"Team member end date cannot be after audit end date "
-                            f"({self.audit.total_audit_date_to})."
+                            f"Team member end date cannot be after audit end date ({self.audit.total_audit_date_to})."
                         )
                     }
                 )
@@ -1005,6 +1004,18 @@ class EvidenceFile(models.Model):
             return f"Evidence for NC {self.finding.clause} ({self.audit})"
         return f"Evidence for {self.audit}"
 
+    def save(self, *args, **kwargs):
+        """Auto-calculate purge_after date based on retention policy."""
+        if not self.purge_after and self.uploaded_at:
+            from datetime import timedelta
+
+            from django.utils import timezone
+
+            upload_date = self.uploaded_at if self.uploaded_at else timezone.now()
+            self.purge_after = upload_date.date() + timedelta(days=365 * self.retention_years)
+
+        super().save(*args, **kwargs)
+
     def clean(self):
         """Validate file uploads."""
         import os
@@ -1046,18 +1057,6 @@ class EvidenceFile(models.Model):
                         )
                     }
                 )
-
-    def save(self, *args, **kwargs):
-        """Auto-calculate purge_after date based on retention policy."""
-        if not self.purge_after and self.uploaded_at:
-            from datetime import timedelta
-
-            from django.utils import timezone
-
-            upload_date = self.uploaded_at if self.uploaded_at else timezone.now()
-            self.purge_after = upload_date.date() + timedelta(days=365 * self.retention_years)
-
-        super().save(*args, **kwargs)
 
 
 # ============================================================================

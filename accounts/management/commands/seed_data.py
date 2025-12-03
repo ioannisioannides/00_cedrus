@@ -49,9 +49,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("✓ Created user groups"))
         return groups
 
-    def _create_user(
-        self, username, email, first_name, last_name, group
-    ):  # pylint: disable=too-many-positional-arguments
+    def _create_user(self, username, email, first_name, last_name, group):  # pylint: disable=too-many-positional-arguments
         user, created = User.objects.get_or_create(
             username=username,
             defaults={
@@ -61,13 +59,13 @@ class Command(BaseCommand):
             },
         )
         if created:
-            password = "password123"
+            password = "password123"  # noqa: S105
             try:
                 validate_password(password, user)
-            except Exception:  # pylint: disable=broad-except
+            except Exception as e:  # pylint: disable=broad-except
                 # In development seeding, we might use weak passwords
                 # but we should still validate them in principle
-                pass
+                self.stdout.write(self.style.WARNING(f"  Password validation warning: {e}"))
             user.set_password(password)
             user.save()
             user.groups.add(group)

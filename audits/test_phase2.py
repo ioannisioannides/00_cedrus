@@ -11,12 +11,23 @@ Tests for:
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from audits.models import Audit, AuditorCompetenceWarning, FindingRecurrence, Nonconformity, RootCauseCategory
+from audits.models import (
+    Audit,
+    AuditorCompetenceWarning,
+    FindingRecurrence,
+    Nonconformity,
+    RootCauseCategory,
+)
 from core.models import Certification, Organization, Site, Standard
 from core.test_utils import TEST_PASSWORD
-from trunk.services.duration_validator import calculate_complexity_factor, get_base_duration, validate_audit_duration
+from trunk.services.duration_validator import (
+    calculate_complexity_factor,
+    get_base_duration,
+    validate_audit_duration,
+)
 from trunk.services.sampling import calculate_sample_size, validate_site_selection
 
 
@@ -131,7 +142,7 @@ class FindingRecurrenceTests(TestCase):
         )
 
         # Attempting to create another should raise an error
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             FindingRecurrence.objects.create(
                 finding=self.nc,
                 recurrence_count=2,
@@ -415,8 +426,8 @@ class Phase2IntegrationTests(TestCase):
         for i in range(10):
             site = Site.objects.create(
                 organization=self.org,
-                site_name=f"Site {i+1}",
-                site_address=f"Address {i+1}",
+                site_name=f"Site {i + 1}",
+                site_address=f"Address {i + 1}",
                 site_employee_count=50,
             )
             self.sites.append(site)

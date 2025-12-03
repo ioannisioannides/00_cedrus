@@ -1,10 +1,9 @@
 # pylint: disable=redefined-outer-name,unused-argument
 from datetime import date, timedelta
 
+import pytest
 from django.contrib.auth.models import Group, User
 from django.urls import reverse
-
-import pytest
 
 from audits.models import Appeal, Audit, AuditorCompetenceWarning, Complaint
 from core.models import CertificateHistory, Certification, Organization, Standard, SurveillanceSchedule

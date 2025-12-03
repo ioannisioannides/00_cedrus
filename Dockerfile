@@ -14,7 +14,7 @@
 # STAGE 1: BUILDER
 # ==============================================================================
 # Build Python dependencies in isolated builder stage
-FROM python:3-alpine AS builder
+FROM python:3.13-alpine AS builder
 
 # Set build-time labels
 LABEL maintainer="Cedrus Excellence Team <team@cedrus.local>"
@@ -32,32 +32,32 @@ RUN apk add --no-cache \
     openjpeg-dev \
     zlib-dev \
     pango-dev \
-    gdk-pixbuf-dev
+    gdk-pixbuf-dev \
+    curl
 
-# Create virtual environment for isolated dependencies
-RUN python -m venv /opt/venv
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
-# Enable virtual environment
-ENV PATH="/opt/venv/bin:$PATH"
+# Set working directory
+WORKDIR /app
 
-# Copy requirements first (Docker layer caching optimization)
-COPY requirements.txt /tmp/requirements.txt
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies in virtual environment
-# --no-cache-dir: Don't cache pip downloads (saves space)
-# --disable-pip-version-check: Skip pip version check (faster)
-# hadolint ignore=DL3013
-# Install Python dependencies
-RUN pip install --no-cache-dir --disable-pip-version-check \
-    --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir --disable-pip-version-check \
-    -r /tmp/requirements.txt
+# Install dependencies
+# --frozen: sync with uv.lock
+# --no-install-project: don't install the project itself (we copy code in runtime)
+# --no-dev: install only production dependencies
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+RUN uv sync --frozen --no-install-project --no-dev
 
 # ==============================================================================
 # STAGE 2: RUNTIME
 # ==============================================================================
 # Minimal runtime image with only production dependencies
-FROM python:3-alpine AS runtime
+FROM python:3.13-alpine AS runtime
 
 # Runtime arguments
 ARG UID=1000

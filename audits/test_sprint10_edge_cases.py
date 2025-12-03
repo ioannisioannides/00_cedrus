@@ -54,7 +54,9 @@ class MultiSiteEdgeCaseTests(TestCase):
         """Test IAF MD1 sampling with large number of sites."""
         # Create 100 sites
         for i in range(100):
-            site = Site.objects.create(organization=self.org, site_name=f"Site {i+1}", site_address=f"Address {i+1}")
+            site = Site.objects.create(
+                organization=self.org, site_name=f"Site {i + 1}", site_address=f"Address {i + 1}"
+            )
             self.audit.sites.add(site)
 
         result = calculate_sample_size(total_sites=100, is_initial_certification=True)
@@ -64,7 +66,9 @@ class MultiSiteEdgeCaseTests(TestCase):
     def test_exact_square_root_sites(self):
         """Test sampling when site count is perfect square."""
         for i in range(16):  # 16 = 4²
-            site = Site.objects.create(organization=self.org, site_name=f"Site {i+1}", site_address=f"Address {i+1}")
+            site = Site.objects.create(
+                organization=self.org, site_name=f"Site {i + 1}", site_address=f"Address {i + 1}"
+            )
             self.audit.sites.add(site)
 
         result = calculate_sample_size(total_sites=16, is_initial_certification=True)
@@ -172,11 +176,11 @@ class MultipleNCEdgeCaseTests(TestCase):
             Nonconformity.objects.create(
                 audit=self.audit,
                 standard=self.standard,
-                clause=f"4.{i+1}",
+                clause=f"4.{i + 1}",
                 category="major",
-                objective_evidence=f"Evidence {i+1}",
-                statement_of_nc=f"Statement {i+1}",
-                auditor_explanation=f"Explanation {i+1}",
+                objective_evidence=f"Evidence {i + 1}",
+                statement_of_nc=f"Statement {i + 1}",
+                auditor_explanation=f"Explanation {i + 1}",
                 created_by=self.auditor,
                 verification_status="open",
             )
@@ -206,11 +210,11 @@ class MultipleNCEdgeCaseTests(TestCase):
             Nonconformity.objects.create(
                 audit=self.audit,
                 standard=self.standard,
-                clause=f"5.{i+1}",
+                clause=f"5.{i + 1}",
                 category="minor",
-                objective_evidence=f"Minor evidence {i+1}",
-                statement_of_nc=f"Minor NC {i+1}",
-                auditor_explanation=f"Minor explanation {i+1}",
+                objective_evidence=f"Minor evidence {i + 1}",
+                statement_of_nc=f"Minor NC {i + 1}",
+                auditor_explanation=f"Minor explanation {i + 1}",
                 created_by=self.auditor,
                 verification_status="open",
             )

@@ -7,11 +7,10 @@ Tests complete CRUD workflow for all finding types.
 
 # pylint: disable=redefined-outer-name,unused-argument
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
-
-import pytest
 
 from accounts.models import Profile
 from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement

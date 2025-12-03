@@ -100,9 +100,7 @@ class AuthenticationTest(TestCase):
         """Test that login page is accessible."""
         response = self.client.get(reverse("accounts:login"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response, "Username"
-        )  # pylint: disable=unexpected-keyword-arg  # pylint: disable=unexpected-keyword-arg
+        self.assertContains(response, "Username")  # pylint: disable=unexpected-keyword-arg  # pylint: disable=unexpected-keyword-arg
 
     def test_login_valid_credentials(self):
         """Test login with valid credentials."""
