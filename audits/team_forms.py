@@ -119,7 +119,14 @@ class AuditTeamMemberForm(forms.ModelForm):
         return cleaned_data
 
     def _validate_dates(self, cleaned_data):
-        """Validate date ranges."""
+        """
+        Validate the member's date range and ensure it falls within the audit's overall dates.
+        
+        Raises a ValidationError mapped to form fields when:
+        - "date_to" is earlier than "date_from".
+        - "date_from" is earlier than the audit's total_audit_date_from (error keyed to "date_from").
+        - "date_to" is later than the audit's total_audit_date_to (error keyed to "date_to").
+        """
         date_from = cleaned_data.get("date_from")
         date_to = cleaned_data.get("date_to")
 

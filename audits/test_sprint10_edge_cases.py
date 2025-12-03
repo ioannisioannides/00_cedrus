@@ -170,7 +170,11 @@ class MultipleNCEdgeCaseTests(TestCase):
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality management systems - Requirements")
 
     def test_multiple_major_ncs_block_submission(self):
-        """Test that multiple open major NCs block submission."""
+        """
+        Create three open major nonconformities for the audit and verify they are recorded.
+        
+        Asserts that the audit has three nonconformities with category "major" and verification_status "open".
+        """
         # Create 3 major NCs
         for i in range(3):
             Nonconformity.objects.create(
@@ -191,7 +195,11 @@ class MultipleNCEdgeCaseTests(TestCase):
         )
 
     def test_mix_of_major_and_minor_ncs(self):
-        """Test audit with both major and minor NCs."""
+        """
+        Verify that an audit with both major and minor nonconformities reports the expected counts.
+        
+        Creates one major and three minor Nonconformity records for the test audit and asserts the audit has 1 major and 3 minor nonconformities.
+        """
         # 2 major NCs
         Nonconformity.objects.create(
             audit=self.audit,

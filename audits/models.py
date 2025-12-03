@@ -222,7 +222,14 @@ class Audit(models.Model):
                 raise ValidationError({"sites": f"All sites must belong to {self.organization.name}."})
 
     def _validate_roles(self):
-        """Validate user roles."""
+        """
+        Ensure the audit's lead_auditor (when set) belongs to an auditor-related group.
+        
+        Verifies that if a lead_auditor is assigned, that user is a member of one of the auditor-related groups: 'lead_auditor', 'auditor', or 'cb_admin'.
+        
+        Raises:
+            django.core.exceptions.ValidationError: If lead_auditor is set but is not a member of any required group.
+        """
         from django.core.exceptions import ValidationError
 
         # Validate that lead_auditor has proper role
@@ -280,7 +287,22 @@ class AuditTeamMember(models.Model):
         return f"{self.name} - {self.get_role_display()} ({self.audit})"
 
     def clean(self):
-        """Validate team member data."""
+        """
+        Validate AuditTeamMember fields and raise ValidationError on invalid data.
+        
+        Performs these checks:
+        - Either `user` or `name` must be provided.
+        - When `date_from`, `date_to`, and `audit` are present:
+          - `date_from` must be on or before `date_to`.
+          - `date_from` must not be before `audit.total_audit_date_from`.
+          - `date_to` must not be after `audit.total_audit_date_to`.
+        - When `user` and `role` are present, a user assigned to roles `lead_auditor`, `auditor`, or `technical_expert`
+          must belong to one of the auditor-related groups (`lead_auditor`, `auditor`, `technical_expert`, `cb_admin`).
+        
+        Raises:
+            django.core.exceptions.ValidationError: If any validation rule is violated. Field-specific error dictionaries
+            are used where applicable (e.g., `{"date_to": "..."}`, `{"user": "..."}`).
+        """
         from django.core.exceptions import ValidationError
 
         # Validate that name is provided if user is null
@@ -999,13 +1021,23 @@ class EvidenceFile(models.Model):
         ]
 
     def __str__(self):
-        """Return string representation of the model instance."""
+        """
+        Human-readable label for this EvidenceFile instance.
+        
+        Returns:
+            str: Description including the related nonconformity clause when linked (e.g., "Evidence for NC <clause> (<audit>)"); otherwise "Evidence for <audit>".
+        """
         if self.finding:
             return f"Evidence for NC {self.finding.clause} ({self.audit})"
         return f"Evidence for {self.audit}"
 
     def save(self, *args, **kwargs):
-        """Auto-calculate purge_after date based on retention policy."""
+        """
+        Set the purge_after date from the object's retention policy when not already provided.
+        
+        If purge_after is empty, this sets it to the date portion of uploaded_at (or today's date if uploaded_at is not set)
+        plus retention_years (computed as retention_years * 365 days), then proceeds with the normal save.
+        """
         if not self.purge_after and self.uploaded_at:
             from datetime import timedelta
 
@@ -1017,7 +1049,13 @@ class EvidenceFile(models.Model):
         super().save(*args, **kwargs)
 
     def clean(self):
-        """Validate file uploads."""
+        """
+        Validate the uploaded file's size and extension.
+        
+        Checks that the attached file does not exceed 10 MB and that its extension is one of:
+        .pdf, .jpg, .jpeg, .png, .gif, .bmp, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .csv.
+        Raises ValidationError with a field-specific message if validation fails.
+        """
         import os
 
         from django.core.exceptions import ValidationError

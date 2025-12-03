@@ -284,7 +284,9 @@ class StandardModelTest(TestCase):
             Standard.objects.create(code="ISO 9001:2015", title="Duplicate")
 
     def test_standard_optional_fields(self):
-        """Test optional fields can be blank."""
+        """
+        Verify that creating a Standard without specifying optional fields sets `nace_code` and `ea_code` to empty strings.
+        """
         std = Standard.objects.create(code="ISO 14001:2015", title="Environmental Management")
         self.assertEqual(std.nace_code, "")
         self.assertEqual(std.ea_code, "")

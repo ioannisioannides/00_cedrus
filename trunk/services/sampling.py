@@ -113,7 +113,19 @@ def calculate_sample_size(
 def _calculate_risk_adjustments(
     base_sample: int, high_risk_sites: int, previous_findings_count: int, scope_variation: str
 ) -> Tuple[int, List[str]]:
-    """Helper to calculate risk-based adjustments."""
+    """
+    Compute additional site-count adjustments and explanatory messages based on identified risks.
+    
+    Parameters:
+        base_sample (int): Base MD1 sample count used as the reference for percentage-based adjustments.
+        high_risk_sites (int): Number of sites classified as high risk.
+        previous_findings_count (int): Number of previous major nonconformities.
+        scope_variation (str): Scope variation level across sites; expected values include "uniform", "moderate", or "high".
+    
+    Returns:
+        risk_adjustment (int): Total number of additional sites to add to the base sample.
+        risk_factors (List[str]): Human-readable descriptions explaining each applied adjustment.
+    """
     risk_adjustment = 0
     risk_factors = []
 
