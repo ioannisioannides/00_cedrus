@@ -59,7 +59,7 @@ class Command(BaseCommand):
             },
         )
         if created:
-            password = "password123"
+            password = "password123"  # noqa: S105
             try:
                 validate_password(password, user)
             except Exception as e:  # pylint: disable=broad-except
