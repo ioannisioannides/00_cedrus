@@ -16,7 +16,7 @@ asgiref==3.11.0
     # via
     #   -r requirements.in
     #   django
-astroid==4.0.2
+astroid==3.3.8
     # via
     #   -r requirements.in
     #   pylint
@@ -175,7 +175,7 @@ pygments==2.19.2
     # via
     #   -r requirements.in
     #   rich
-pylint==4.0.4
+pylint==3.3.3
     # via
     #   -r requirements.in
     #   pylint-django
