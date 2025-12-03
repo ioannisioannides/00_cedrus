@@ -59,7 +59,7 @@ dill==0.4.0
     # via
     #   -r requirements.in
     #   pylint
-django==5.2.8
+django==5.2.9
     # via
     #   -r requirements.in
     #   django-debug-toolbar
