@@ -537,7 +537,7 @@ class WorkflowIntegrationTests(TestCase):
         )
 
         workflow = AuditWorkflow(self.audit)
-        can_transition, _ = workflow.can_transition("client_review", self.auditor)
+        can_transition = workflow.can_transition_to("client_review")
 
         # ISO 17021-1: Reports MUST be sent to clients WITH findings so they can respond
         self.assertTrue(can_transition)
@@ -566,7 +566,7 @@ class WorkflowIntegrationTests(TestCase):
         )
 
         workflow = AuditWorkflow(self.audit)
-        can_transition, _ = workflow.can_transition("client_review", self.auditor)
+        can_transition = workflow.can_transition_to("client_review")
 
         self.assertTrue(can_transition)
 
@@ -590,6 +590,6 @@ class WorkflowIntegrationTests(TestCase):
         )
 
         workflow = AuditWorkflow(self.audit)
-        can_transition, _ = workflow.can_transition("client_review", self.auditor)
+        can_transition = workflow.can_transition_to("client_review")
 
         self.assertTrue(can_transition)

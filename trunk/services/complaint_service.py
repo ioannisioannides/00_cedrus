@@ -19,7 +19,7 @@ class ComplaintService:
 
         complaint = Complaint.objects.create(complaint_number=complaint_number, submitted_by=created_by, **data)
 
-        event_dispatcher.emit(EventType.COMPLAINT_RECEIVED, {"complaint": complaint, "created_by": created_by})
+        event_dispatcher.emit(EventType.COMPLAINT_RECEIVED, {"complaint_id": complaint.id, "created_by_id": created_by.id})
         return complaint
 
     @staticmethod
@@ -33,7 +33,12 @@ class ComplaintService:
 
         event_dispatcher.emit(
             EventType.COMPLAINT_STATUS_CHANGED,
-            {"complaint": complaint, "old_status": old_status, "new_status": new_status, "changed_by": user},
+            {
+                "complaint_id": complaint.id,
+                "old_status": old_status,
+                "new_status": new_status,
+                "changed_by_id": user.id,
+            },
         )
         return complaint
 
@@ -46,7 +51,7 @@ class ComplaintService:
 
         appeal = Appeal.objects.create(appeal_number=appeal_number, submitted_by=created_by, **data)
 
-        event_dispatcher.emit(EventType.APPEAL_RECEIVED, {"appeal": appeal, "created_by": created_by})
+        event_dispatcher.emit(EventType.APPEAL_RECEIVED, {"appeal_id": appeal.id, "created_by_id": created_by.id})
         return appeal
 
     @staticmethod
@@ -61,6 +66,12 @@ class ComplaintService:
 
         event_dispatcher.emit(
             EventType.APPEAL_DECIDED,
-            {"appeal": appeal, "old_status": old_status, "decision": decision, "decided_by": user, "notes": notes},
+            {
+                "appeal_id": appeal.id,
+                "old_status": old_status,
+                "decision": decision,
+                "decided_by_id": user.id,
+                "notes": notes,
+            },
         )
         return appeal

@@ -47,7 +47,9 @@ class ReviewService:
         event_type = (
             EventType.TECHNICAL_REVIEW_COMPLETED if review.status == "approved" else EventType.TECHNICAL_REVIEW_UPDATED
         )
-        event_dispatcher.emit(event_type, {"audit": audit, "review": review, "reviewer": reviewer})
+        event_dispatcher.emit(
+            event_type, {"audit_id": audit.pk, "review_id": review.pk, "reviewer_id": reviewer.pk}
+        )
 
         return review
 
@@ -87,7 +89,8 @@ class ReviewService:
 
         # Emit event
         event_dispatcher.emit(
-            EventType.CERTIFICATION_DECISION_MADE, {"audit": audit, "decision": decision, "maker": decision_maker}
+            EventType.CERTIFICATION_DECISION_MADE,
+            {"audit_id": audit.pk, "decision_id": decision.pk, "maker_id": decision_maker.pk},
         )
 
         return decision
@@ -119,7 +122,7 @@ class ReviewService:
         # Emit event
         event_dispatcher.emit(
             EventType.CERTIFICATION_DECISION_UPDATED,
-            {"audit": decision.audit, "decision": decision, "maker": decision_maker},
+            {"audit_id": decision.audit.pk, "decision_id": decision.pk, "maker_id": decision_maker.pk},
         )
 
         return decision

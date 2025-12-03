@@ -93,7 +93,7 @@ class AuditProgramCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView
         return redirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse("audits:program_detail", kwargs={"pk": self.object.pk})
+        return reverse("audit_management:program_detail", kwargs={"pk": self.object.pk})
 
 
 class AuditProgramDetailView(LoginRequiredMixin, DetailView):
@@ -149,7 +149,7 @@ class AuditProgramUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return False
 
     def get_success_url(self):
-        return reverse("audits:program_detail", kwargs={"pk": self.object.pk})
+        return reverse("audit_management:program_detail", kwargs={"pk": self.object.pk})
 
 
 class AuditProgramDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -157,7 +157,7 @@ class AuditProgramDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
 
     model = AuditProgram
     template_name = "audits/program_confirm_delete.html"
-    success_url = reverse_lazy("audits:program_list")
+    success_url = reverse_lazy("audit_management:program_list")
 
     def test_func(self):
         """Only admins can delete."""

@@ -43,7 +43,11 @@ class CertificateService:
 
         event_dispatcher.emit(
             EventType.CERTIFICATE_HISTORY_CREATED,
-            {"history": history, "certification": certification, "decision": decision},
+            {
+                "history_id": history.pk,
+                "certification_id": certification.pk,
+                "decision_id": decision.pk,
+            },
         )
 
         # Create surveillance schedule for new cycle (stage2 or recertification)

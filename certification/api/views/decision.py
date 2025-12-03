@@ -69,7 +69,7 @@ class TechnicalReviewView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
         # TODO: Update URL name to point to audit detail in new app
-        return reverse("audits:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
 
 
 class TechnicalReviewUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -111,7 +111,7 @@ class TechnicalReviewUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
 
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
-        return reverse("audits:audit_detail", kwargs={"pk": self.object.audit.pk})
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.audit.pk})
 
 
 class CertificationDecisionView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -169,7 +169,7 @@ class CertificationDecisionView(LoginRequiredMixin, UserPassesTestMixin, CreateV
 
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
-        return reverse("audits:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
 
 
 class CertificationDecisionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -199,4 +199,4 @@ class CertificationDecisionUpdateView(LoginRequiredMixin, UserPassesTestMixin, U
 
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
-        return reverse("audits:audit_detail", kwargs={"pk": self.object.audit.pk})
+        return reverse("audit_management:audit_detail", kwargs={"pk": self.object.audit.pk})

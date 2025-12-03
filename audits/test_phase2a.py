@@ -14,7 +14,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from audit_management.models import Appeal, Audit, CertificationDecision, Complaint
+from audit_management.models import Audit
+from certification.models import Appeal, CertificationDecision, Complaint
 from core.models import CertificateHistory, Certification, Organization, Standard, SurveillanceSchedule
 from core.test_utils import TEST_PASSWORD
 from identity.adapters.models import AuditorQualification, ConflictOfInterest
