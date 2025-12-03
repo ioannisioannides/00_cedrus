@@ -15,6 +15,7 @@ from django.test import TestCase
 
 from audits.models import Audit, AuditorCompetenceWarning, FindingRecurrence, Nonconformity, RootCauseCategory
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.services.duration_validator import calculate_complexity_factor, get_base_duration, validate_audit_duration
 from trunk.services.sampling import calculate_sample_size, validate_site_selection
 
@@ -66,7 +67,7 @@ class FindingRecurrenceTests(TestCase):
 
     def setUp(self):
         """Create test data."""
-        self.user = User.objects.create_user(username="auditor", password="pass")  # nosec B106
+        self.user = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.org = Organization.objects.create(name="Test Org", customer_id="C001", total_employee_count=50)
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management")
         self.cert = Certification.objects.create(
@@ -144,8 +145,8 @@ class AuditorCompetenceWarningTests(TestCase):
 
     def setUp(self):
         """Create test data."""
-        self.auditor = User.objects.create_user(username="auditor", password="pass")  # nosec B106
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.org = Organization.objects.create(name="Test Org", customer_id="C001", total_employee_count=50)
         self.audit = Audit.objects.create(
             organization=self.org,
@@ -402,8 +403,8 @@ class Phase2IntegrationTests(TestCase):
 
     def setUp(self):
         """Create comprehensive test scenario."""
-        self.auditor = User.objects.create_user(username="auditor", password="pass")  # nosec B106
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
 
         self.org = Organization.objects.create(
             name="Multi-Site Manufacturing Corp", customer_id="C001", total_employee_count=500

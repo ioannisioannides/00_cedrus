@@ -13,6 +13,7 @@ from django.urls import reverse
 
 from audits.models import Audit, AuditTeamMember, Nonconformity
 from core.models import Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.services.sampling import calculate_sample_size
 
 
@@ -27,7 +28,7 @@ class MultiSiteEdgeCaseTests(TestCase):
             customer_id="CUST-MULTI-001",
             total_employee_count=500,
         )
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
@@ -81,7 +82,7 @@ class ExternalTeamMemberEdgeCaseTests(TestCase):
             customer_id="CUST-EXT-001",
             total_employee_count=10,
         )
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
@@ -148,7 +149,7 @@ class MultipleNCEdgeCaseTests(TestCase):
             customer_id="CUST-NC-001",
             total_employee_count=10,
         )
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
@@ -229,7 +230,7 @@ class DateBoundaryEdgeCaseTests(TestCase):
             customer_id="CUST-DATE-001",
             total_employee_count=10,
         )
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
@@ -275,15 +276,15 @@ class RolePermissionEdgeCaseTests(TestCase):
         )
 
         # Create users with different roles
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
-        self.lead_auditor = User.objects.create_user(username="leadauditor1", password="testpass123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor1", password=TEST_PASSWORD)  # nosec B106
         lead_group, _ = Group.objects.get_or_create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_group)
 
-        self.cb_admin = User.objects.create_user(username="cbadmin1", password="testpass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin1", password=TEST_PASSWORD)  # nosec B106
         cb_group, _ = Group.objects.get_or_create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
 
@@ -299,21 +300,21 @@ class RolePermissionEdgeCaseTests(TestCase):
 
     def test_cb_admin_has_full_access(self):
         """Test CB admin can access all audits."""
-        self.client_http.login(username="cbadmin1", password="testpass123")  # nosec B106
+        self.client_http.login(username="cbadmin1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:audit_detail", kwargs={"pk": self.audit.pk})
         response = self.client_http.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_lead_auditor_can_edit_own_audit(self):
         """Test lead auditor can edit their own audit."""
-        self.client_http.login(username="leadauditor1", password="testpass123")  # nosec B106
+        self.client_http.login(username="leadauditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:audit_update", kwargs={"pk": self.audit.pk})
         response = self.client_http.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_regular_auditor_limited_access(self):
         """Test regular auditor has limited access to unassigned audits."""
-        self.client_http.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client_http.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:audit_detail", kwargs={"pk": self.audit.pk})
         response = self.client_http.get(url)
         # Should not see audit they're not assigned to

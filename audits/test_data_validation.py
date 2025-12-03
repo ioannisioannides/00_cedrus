@@ -20,6 +20,7 @@ from django.utils import timezone
 from audits.models import Audit, AuditTeamMember, Nonconformity, Observation
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class FutureDateValidationTests(TestCase):
@@ -45,7 +46,7 @@ class FutureDateValidationTests(TestCase):
             site_address="123 Test St",
             site_employee_count=50,
         )
-        self.user = User.objects.create_user(username="leadauditor", password="pass")  # nosec B106
+        self.user = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor_group = Group.objects.get_or_create(name="lead_auditor")[0]
         self.user.groups.add(self.auditor_group)
 
@@ -107,14 +108,14 @@ class AuditSequenceValidationTests(TestCase):
             site_address="123 Test St",
             site_employee_count=50,
         )
-        self.user = User.objects.create_user(username="leadauditor", password="pass")  # nosec B106
+        self.user = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor_group = Group.objects.get_or_create(name="lead_auditor")[0]
         self.user.groups.add(self.auditor_group)
 
     def test_stage2_cannot_proceed_to_technical_review_without_stage1(self):
         """Stage 2 cannot proceed to closure without completed Stage 1."""
         # Create CB Admin for transition check
-        cb_admin = User.objects.create_user(username="cbadmin_val", password="pass")  # nosec B106
+        cb_admin = User.objects.create_user(username="cbadmin_val", password=TEST_PASSWORD)  # nosec B106
         cb_admin.groups.add(Group.objects.get_or_create(name="cb_admin")[0])
 
         today = timezone.now().date()
@@ -142,7 +143,7 @@ class AuditSequenceValidationTests(TestCase):
         """Surveillance cannot proceed to closure without active certification."""
         # Create CB Admin for transition check
         if not User.objects.filter(username="cbadmin_val").exists():
-            cb_admin = User.objects.create_user(username="cbadmin_val", password="pass")  # nosec B106
+            cb_admin = User.objects.create_user(username="cbadmin_val", password=TEST_PASSWORD)  # nosec B106
             cb_admin.groups.add(Group.objects.get_or_create(name="cb_admin")[0])
         else:
             cb_admin = User.objects.get(username="cbadmin_val")
@@ -219,7 +220,7 @@ class SurveillanceAuditValidationTests(TestCase):
             site_address="123 Test St",
             site_employee_count=50,
         )
-        self.user = User.objects.create_user(username="leadauditor", password="pass")  # nosec B106
+        self.user = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor_group = Group.objects.get_or_create(name="lead_auditor")[0]
         self.user.groups.add(self.auditor_group)
 
@@ -304,7 +305,7 @@ class FindingStandardValidationTests(TestCase):
             site_employee_count=50,
         )
 
-        self.user = User.objects.create_user(username="auditor", password="pass")  # nosec B106
+        self.user = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor_group = Group.objects.get_or_create(name="auditor")[0]
         self.user.groups.add(self.auditor_group)
 
@@ -395,11 +396,11 @@ class TeamMemberRoleValidationTests(TestCase):
             site_employee_count=50,
         )
 
-        self.auditor_user = User.objects.create_user(username="auditor", password="pass")  # nosec B106
+        self.auditor_user = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor_group = Group.objects.get_or_create(name="auditor")[0]
         self.auditor_user.groups.add(self.auditor_group)
 
-        self.client_user = User.objects.create_user(username="client", password="pass")  # nosec B106
+        self.client_user = User.objects.create_user(username="client", password=TEST_PASSWORD)  # nosec B106
         self.client_group = Group.objects.get_or_create(name="client_user")[0]
         self.client_user.groups.add(self.client_group)
 
@@ -484,7 +485,7 @@ class WorkflowAuditSequenceValidationTests(TestCase):
             site_employee_count=50,
         )
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin_group = Group.objects.get_or_create(name="cb_admin")[0]
         self.cb_admin.groups.add(self.cb_admin_group)
 

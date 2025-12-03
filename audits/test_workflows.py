@@ -12,6 +12,7 @@ from django.test import TestCase
 
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.services.audit_service import AuditService
 from trunk.services.finding_service import FindingService
 
@@ -27,13 +28,13 @@ class AuditWorkflowTest(TestCase):
         auditor_group = Group.objects.create(name="auditor")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(lead_group)
 
-        self.auditor = User.objects.create_user(username="auditor", password="pass")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor.groups.add(auditor_group)
 
         # Create organization data
@@ -238,10 +239,10 @@ class AuditWorkflowValidationTest(TestCase):
         lead_group = Group.objects.create(name="lead_auditor")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(lead_group)
 
         # Create organization data
@@ -380,10 +381,10 @@ class AuditWorkflowAvailableTransitionsTest(TestCase):
         lead_group = Group.objects.create(name="lead_auditor")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(lead_group)
 
         # Create organization data

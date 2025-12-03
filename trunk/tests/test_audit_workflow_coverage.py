@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from audits.models import Audit, Nonconformity, Observation, TechnicalReview
 from core.models import Certification, Organization, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.workflows.audit_workflow import AuditWorkflow
 
 
@@ -23,7 +24,7 @@ class AuditWorkflowCoverageTest(TestCase):
         )
 
         # Create users
-        self.user = User.objects.create_user(username="auditor", password="password")
+        self.user = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.profile = self.user.profile
 
         # Assign role via Group

@@ -13,6 +13,7 @@ from django.test import TestCase
 
 from audits.models import Audit, AuditTeamMember, EvidenceFile
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class AuditTeamMemberDateValidationTests(TestCase):
@@ -33,11 +34,11 @@ class AuditTeamMemberDateValidationTests(TestCase):
             certificate_status="active",
             certification_scope="Manufacturing",
         )
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_auditor_group)
 
-        self.auditor = User.objects.create_user(username="auditor", password="password123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
@@ -138,7 +139,7 @@ class AuditDateValidationTests(TestCase):
             certificate_status="active",
             certification_scope="Manufacturing",
         )
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_auditor_group)
 
@@ -224,7 +225,7 @@ class OrganizationScopedValidationTests(TestCase):
         )
         self.site1 = Site.objects.create(organization=self.org1, site_name="Site 1", site_address="123 Test St")
         self.site2 = Site.objects.create(organization=self.org2, site_name="Site 2", site_address="456 Test Ave")
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_auditor_group)
 
@@ -322,16 +323,16 @@ class LeadAuditorRoleValidationTests(TestCase):
         self.client_group = Group.objects.create(name="client_admin")
 
         # Create users with different roles
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(self.lead_auditor_group)
 
-        self.regular_auditor = User.objects.create_user(username="auditor", password="password123")  # nosec B106
+        self.regular_auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.regular_auditor.groups.add(self.auditor_group)
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(self.cb_admin_group)
 
-        self.client = User.objects.create_user(username="client", password="password123")  # nosec B106
+        self.client = User.objects.create_user(username="client", password=TEST_PASSWORD)  # nosec B106
         self.client.groups.add(self.client_group)
 
     def test_valid_lead_auditor_with_lead_auditor_role(self):
@@ -417,7 +418,7 @@ class FileTypeValidationTests(TestCase):
             certificate_status="active",
             certification_scope="Manufacturing",
         )
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage1",
@@ -551,7 +552,7 @@ class FileSizeValidationTests(TestCase):
             certificate_status="active",
             certification_scope="Manufacturing",
         )
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage1",
@@ -630,10 +631,10 @@ class ValidationIntegrationTests(TestCase):
             certification_scope="Manufacturing",
         )
         self.lead_auditor_group = Group.objects.create(name="lead_auditor")
-        self.lead_auditor = User.objects.create_user(username="leadauditor", password="password123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="leadauditor", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(self.lead_auditor_group)
         self.auditor_group = Group.objects.create(name="auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor.groups.add(self.auditor_group)
 
     def test_complete_valid_audit_with_team_member(self):
@@ -679,7 +680,7 @@ class ValidationIntegrationTests(TestCase):
         """Multiple validation errors caught at once"""
         # Invalid date range, no lead auditor role
         client_group = Group.objects.create(name="client_admin")
-        client_user = User.objects.create_user(username="client", password="pass")  # nosec B106
+        client_user = User.objects.create_user(username="client", password=TEST_PASSWORD)  # nosec B106
         client_user.groups.add(client_group)
 
         audit = Audit(

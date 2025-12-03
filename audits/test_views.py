@@ -10,6 +10,7 @@ from django.urls import reverse
 
 from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class AuditListViewTest(TestCase):
@@ -23,16 +24,16 @@ class AuditListViewTest(TestCase):
         self.client_user_group, _ = Group.objects.get_or_create(name="client_user")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
-        self.other_auditor = User.objects.create_user(username="other_auditor", password="password")
+        self.other_auditor = User.objects.create_user(username="other_auditor", password=TEST_PASSWORD)
         self.other_auditor.groups.add(self.auditor_group)
 
-        self.client_user = User.objects.create_user(username="client", password="password")
+        self.client_user = User.objects.create_user(username="client", password=TEST_PASSWORD)
         self.client_user.groups.add(self.client_user_group)
 
         # Create organization and profile for client
@@ -72,14 +73,14 @@ class AuditListViewTest(TestCase):
 
     def test_cb_admin_sees_all_audits(self):
         """Test that CB Admin sees all audits."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_list"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["audits"]), 2)
 
     def test_auditor_sees_assigned_audits(self):
         """Test that Auditor sees only assigned audits."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_list"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["audits"]), 1)
@@ -87,7 +88,7 @@ class AuditListViewTest(TestCase):
 
     def test_filter_by_status(self):
         """Test filtering audits by status."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_list"), {"status": "planned"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["audits"]), 1)
@@ -105,16 +106,16 @@ class AuditDetailViewTest(TestCase):
         self.client_user_group, _ = Group.objects.get_or_create(name="client_user")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
-        self.other_auditor = User.objects.create_user(username="other_auditor", password="password")
+        self.other_auditor = User.objects.create_user(username="other_auditor", password=TEST_PASSWORD)
         self.other_auditor.groups.add(self.auditor_group)
 
-        self.client_user = User.objects.create_user(username="client", password="password")
+        self.client_user = User.objects.create_user(username="client", password=TEST_PASSWORD)
         self.client_user.groups.add(self.client_user_group)
 
         # Create organization and profile for client
@@ -143,26 +144,26 @@ class AuditDetailViewTest(TestCase):
 
     def test_cb_admin_can_view_audit(self):
         """Test that CB Admin can view audit detail."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_detail", kwargs={"pk": self.audit.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["audit"], self.audit)
 
     def test_assigned_auditor_can_view_audit(self):
         """Test that assigned auditor can view audit detail."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_detail", kwargs={"pk": self.audit.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_unassigned_auditor_cannot_view_audit(self):
         """Test that unassigned auditor cannot view audit detail."""
-        self.client.login(username="other_auditor", password="password")
+        self.client.login(username="other_auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_detail", kwargs={"pk": self.audit.pk}))
         self.assertEqual(response.status_code, 404)
 
     def test_client_can_view_own_audit(self):
         """Test that client can view their own audit."""
-        self.client.login(username="client", password="password")
+        self.client.login(username="client", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_detail", kwargs={"pk": self.audit.pk}))
         self.assertEqual(response.status_code, 200)
 
@@ -173,11 +174,11 @@ class AuditCreateViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         self.org = Organization.objects.create(
@@ -202,7 +203,7 @@ class AuditCreateViewTest(TestCase):
 
     def test_cb_admin_can_create_audit(self):
         """Test that CB Admin can create an audit."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         data = {
             "organization": self.org.id,
             "certifications": [self.cert.id],
@@ -222,7 +223,7 @@ class AuditCreateViewTest(TestCase):
 
     def test_auditor_cannot_create_audit(self):
         """Test that Auditor cannot create an audit."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_create"))
         self.assertEqual(response.status_code, 403)
 
@@ -233,11 +234,11 @@ class AuditWorkflowViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         self.org = Organization.objects.create(
@@ -259,7 +260,7 @@ class AuditWorkflowViewTest(TestCase):
 
     def test_lead_auditor_can_transition_status(self):
         """Test that Lead Auditor can transition audit status."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         # Transition from draft to scheduled (assuming this is allowed)
         # I need to check AuditStateMachine for allowed transitions.
         # Assuming draft -> scheduled is allowed for lead auditor.
@@ -279,8 +280,8 @@ class AuditWorkflowViewTest(TestCase):
 
     def test_unauthorized_user_cannot_transition_status(self):
         """Test that unauthorized user cannot transition status."""
-        User.objects.create_user(username="user", password="password")
-        self.client.login(username="user", password="password")
+        User.objects.create_user(username="user", password=TEST_PASSWORD)
+        self.client.login(username="user", password=TEST_PASSWORD)
         response = self.client.get(
             reverse("audits:audit_transition_status", kwargs={"pk": self.audit.pk, "new_status": "scheduled"})
         )
@@ -295,11 +296,11 @@ class AuditDocumentationViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         self.org = Organization.objects.create(
@@ -321,7 +322,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_changes_edit(self):
         """Test editing audit changes."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("audits:audit_changes_edit", kwargs={"audit_pk": self.audit.pk}),
             {"significant_changes": "None"},
@@ -330,7 +331,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_plan_review_edit(self):
         """Test editing audit plan review."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("audits:audit_plan_review_edit", kwargs={"audit_pk": self.audit.pk}),
             {"changes_to_plan": "None"},
@@ -339,7 +340,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_summary_edit(self):
         """Test editing audit summary."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("audits:audit_summary_edit", kwargs={"audit_pk": self.audit.pk}),
             {"executive_summary": "Summary"},
@@ -348,7 +349,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_recommendation_edit(self):
         """Test editing audit recommendation."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("audits:audit_recommendation_edit", kwargs={"audit_pk": self.audit.pk}),
             {"recommendation": "grant_certification"},
@@ -357,7 +358,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_print(self):
         """Test audit print view."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_print", kwargs={"pk": self.audit.pk}))
         self.assertEqual(response.status_code, 200)
 
@@ -368,15 +369,15 @@ class FindingViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         self.client_user_group, _ = Group.objects.get_or_create(name="client_user")
-        self.client_user = User.objects.create_user(username="client", password="password")
+        self.client_user = User.objects.create_user(username="client", password=TEST_PASSWORD)
         self.client_user.groups.add(self.client_user_group)
 
         self.org = Organization.objects.create(
@@ -410,7 +411,7 @@ class FindingViewTest(TestCase):
 
     def test_create_nonconformity(self):
         """Test creating a nonconformity."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "standard": self.std.id,
             "clause": "4.1",
@@ -426,7 +427,7 @@ class FindingViewTest(TestCase):
 
     def test_create_observation(self):
         """Test creating an observation."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "standard": self.std.id,
             "clause": "4.1",
@@ -439,7 +440,7 @@ class FindingViewTest(TestCase):
 
     def test_create_ofi(self):
         """Test creating an OFI."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "standard": self.std.id,
             "clause": "4.1",
@@ -451,7 +452,7 @@ class FindingViewTest(TestCase):
 
     def test_client_cannot_create_finding(self):
         """Test that client cannot create findings."""
-        self.client.login(username="client", password="password")
+        self.client.login(username="client", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk}))
         self.assertEqual(response.status_code, 403)
 
@@ -466,7 +467,7 @@ class FindingViewTest(TestCase):
             statement_of_nc="Statement",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:nonconformity_detail", kwargs={"pk": nc.pk}))
         self.assertEqual(response.status_code, 200)
 
@@ -487,7 +488,7 @@ class FindingViewTest(TestCase):
             verification_status="open",
         )
 
-        self.client.login(username="client", password="password")
+        self.client.login(username="client", password=TEST_PASSWORD)
         data = {
             "client_root_cause": "Root cause",
             "client_correction": "Correction",
@@ -516,7 +517,7 @@ class FindingViewTest(TestCase):
             client_corrective_action="Action",
         )
 
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "verification_action": "accept",
             "verification_notes": "Good",
@@ -537,7 +538,7 @@ class FindingViewTest(TestCase):
             statement_of_nc="Statement",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "standard": self.std.id,
             "clause": "4.2",
@@ -562,7 +563,7 @@ class FindingViewTest(TestCase):
             statement="Statement",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "standard": self.std.id,
             "clause": "4.2",
@@ -584,7 +585,7 @@ class FindingViewTest(TestCase):
             description="Description",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "standard": self.std.id,
             "clause": "4.2",
@@ -605,7 +606,7 @@ class FindingViewTest(TestCase):
             statement="Statement",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:observation_detail", kwargs={"pk": obs.pk}))
         self.assertEqual(response.status_code, 200)
 
@@ -618,7 +619,7 @@ class FindingViewTest(TestCase):
             description="Description",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:ofi_detail", kwargs={"pk": ofi.pk}))
         self.assertEqual(response.status_code, 200)
 
@@ -629,11 +630,11 @@ class EvidenceFileViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         self.org = Organization.objects.create(
@@ -657,7 +658,7 @@ class EvidenceFileViewTest(TestCase):
         """Test uploading evidence file."""
         from django.core.files.uploadedfile import SimpleUploadedFile
 
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         file = SimpleUploadedFile("test.pdf", b"content")
         data = {
             "file": file,
@@ -685,7 +686,7 @@ class EvidenceFileViewTest(TestCase):
             uploaded_by=self.auditor,
         )
 
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(reverse("audits:evidence_file_delete", kwargs={"file_pk": evidence_file.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(EvidenceFile.objects.filter(pk=evidence_file.pk).exists())
@@ -705,7 +706,7 @@ class EvidenceFileViewTest(TestCase):
             uploaded_by=self.auditor,
         )
 
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:evidence_file_download", kwargs={"file_pk": evidence_file.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
@@ -719,7 +720,7 @@ class TechnicalReviewViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.org = Organization.objects.create(
@@ -741,7 +742,7 @@ class TechnicalReviewViewTest(TestCase):
 
     def test_technical_review_create(self):
         """Test creating technical review."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         data = {
             "scope_verified": True,
             "objectives_verified": True,
@@ -766,7 +767,7 @@ class TechnicalReviewViewTest(TestCase):
             status="pending",
             scope_verified=False,
         )
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         data = {
             "scope_verified": True,
             "objectives_verified": True,
@@ -789,7 +790,7 @@ class CertificationDecisionViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.org = Organization.objects.create(
@@ -824,7 +825,7 @@ class CertificationDecisionViewTest(TestCase):
 
     def test_certification_decision_create(self):
         """Test creating certification decision."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         data = {
             "decision": "grant",
             "decision_notes": "Granted",
@@ -850,7 +851,7 @@ class CertificationDecisionViewTest(TestCase):
         )
         decision.certifications_affected.add(self.cert)
 
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         data = {
             "decision": "refuse",
             "decision_notes": "Updated decision",
@@ -868,11 +869,11 @@ class FindingDeleteViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         self.org = Organization.objects.create(
@@ -904,7 +905,7 @@ class FindingDeleteViewTest(TestCase):
             statement_of_nc="Statement",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(reverse("audits:nonconformity_delete", kwargs={"pk": nc.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Nonconformity.objects.filter(pk=nc.pk).exists())
@@ -918,7 +919,7 @@ class FindingDeleteViewTest(TestCase):
             statement="Statement",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(reverse("audits:observation_delete", kwargs={"pk": obs.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Observation.objects.filter(pk=obs.pk).exists())
@@ -932,7 +933,7 @@ class FindingDeleteViewTest(TestCase):
             description="Description",
             created_by=self.auditor,
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(reverse("audits:ofi_delete", kwargs={"pk": ofi.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(OpportunityForImprovement.objects.filter(pk=ofi.pk).exists())
@@ -944,14 +945,14 @@ class TeamMemberViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
-        self.other_auditor = User.objects.create_user(username="other_auditor", password="password")
+        self.other_auditor = User.objects.create_user(username="other_auditor", password=TEST_PASSWORD)
         self.other_auditor.groups.add(self.auditor_group)
 
         self.org = Organization.objects.create(
@@ -973,7 +974,7 @@ class TeamMemberViewTest(TestCase):
 
     def test_team_member_add(self):
         """Test adding a team member."""
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "user": self.other_auditor.id,
             "role": "auditor",
@@ -1000,7 +1001,7 @@ class TeamMemberViewTest(TestCase):
             issued_by=self.cb_admin,
         )
 
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "user": self.other_auditor.id,
             "role": "auditor",
@@ -1024,7 +1025,7 @@ class TeamMemberViewTest(TestCase):
             date_from=date.today(),
             date_to=date.today() + timedelta(days=1),
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         data = {
             "user": self.other_auditor.id,
             "role": "technical_expert",
@@ -1047,7 +1048,7 @@ class TeamMemberViewTest(TestCase):
             date_from=date.today(),
             date_to=date.today() + timedelta(days=1),
         )
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.post(reverse("audits:team_member_delete", kwargs={"pk": member.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(AuditTeamMember.objects.filter(pk=member.pk).exists())
@@ -1059,7 +1060,7 @@ class AuditMakeDecisionViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.org = Organization.objects.create(
@@ -1081,7 +1082,7 @@ class AuditMakeDecisionViewTest(TestCase):
 
     def test_audit_make_decision(self):
         """Test making audit decision (legacy view - should fail transition)."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         data = {
             "decision_notes": "Granted",
             "special_audit_required": False,
@@ -1110,11 +1111,11 @@ class AuditUpdateViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.cb_admin_group, _ = Group.objects.get_or_create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="password")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         self.org = Organization.objects.create(
@@ -1155,7 +1156,7 @@ class AuditUpdateViewTest(TestCase):
 
     def test_cb_admin_can_update_audit(self):
         """Test that CB Admin can update an audit."""
-        self.client.login(username="cbadmin", password="password")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         data = {
             "organization": self.org.id,
             "audit_type": "stage1",
@@ -1177,9 +1178,9 @@ class AuditUpdateViewTest(TestCase):
     def test_auditor_cannot_update_audit(self):
         """Test that unassigned Auditor cannot update an audit."""
         # Create another auditor
-        other_auditor = User.objects.create_user(username="other_auditor_update", password="password")
+        other_auditor = User.objects.create_user(username="other_auditor_update", password=TEST_PASSWORD)
         other_auditor.groups.add(self.auditor_group)
 
-        self.client.login(username="other_auditor_update", password="password")
+        self.client.login(username="other_auditor_update", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:audit_update", kwargs={"pk": self.audit.pk}))
         self.assertEqual(response.status_code, 403)

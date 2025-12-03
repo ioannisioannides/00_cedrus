@@ -16,6 +16,7 @@ from audits.forms import (
 )
 from audits.models import Audit
 from core.models import Certification, Organization, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class AuditFormsTest(TestCase):
@@ -39,8 +40,8 @@ class AuditFormsTest(TestCase):
             certificate_status="active",
         )
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)
 
         self.audit = Audit.objects.create(
             organization=self.org,

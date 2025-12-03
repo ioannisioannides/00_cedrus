@@ -25,6 +25,7 @@ from audits.finding_forms import NonconformityForm
 from audits.models import Audit, Nonconformity, Observation
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard
+from core.test_utils import TEST_PASSWORD
 
 User = get_user_model()
 
@@ -41,7 +42,7 @@ class NonconformityFormTests(TestCase):
             total_employee_count=10,
         )
         # Create an auditor for the created_by and lead_auditor fields
-        self.auditor = User.objects.create_user(username="auditor_setup", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor_setup", password=TEST_PASSWORD)  # nosec B106
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage1",
@@ -101,16 +102,16 @@ class NonconformityViewTests(TestCase):
 
         # Create users and groups
         self.auditor = User.objects.create_user(
-            username="auditor1", password="testpass123", first_name="Test", last_name="Auditor"  # nosec B106
+            username="auditor1", password=TEST_PASSWORD, first_name="Test", last_name="Auditor"  # nosec B106
         )
         self.auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(self.auditor_group)
 
-        self.client_user = User.objects.create_user(username="client1", password="testpass123")  # nosec B106
+        self.client_user = User.objects.create_user(username="client1", password=TEST_PASSWORD)  # nosec B106
         self.client_group = Group.objects.create(name="client")
         self.client_user.groups.add(self.client_group)
 
-        self.regular_user = User.objects.create_user(username="regular1", password="testpass123")  # nosec B106
+        self.regular_user = User.objects.create_user(username="regular1", password=TEST_PASSWORD)  # nosec B106
 
         # Create audit
         self.audit = Audit.objects.create(
@@ -135,28 +136,28 @@ class NonconformityViewTests(TestCase):
 
     def test_auditor_can_add_nc(self):
         """Test auditor can access NC add form."""
-        self.client.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_client_cannot_add_nc(self):
         """Test client cannot add findings."""
-        self.client.login(username="client1", password="testpass123")  # nosec B106
+        self.client.login(username="client1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_regular_user_cannot_add_nc(self):
         """Test regular user cannot add findings."""
-        self.client.login(username="regular1", password="testpass123")  # nosec B106
+        self.client.login(username="regular1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_add_nc_post(self):
         """Test creating NC via POST."""
-        self.client.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk})
         data = {
             "standard": self.standard.id,
@@ -184,7 +185,7 @@ class NonconformityViewTests(TestCase):
             verification_status="open",
         )
 
-        self.client.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_update", kwargs={"pk": nc.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -203,7 +204,7 @@ class NonconformityViewTests(TestCase):
             verification_status="client_responded",
         )
 
-        self.client.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_update", kwargs={"pk": nc.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)  # Forbidden - can't edit after client response
@@ -222,7 +223,7 @@ class NonconformityViewTests(TestCase):
             verification_status="open",
         )
 
-        self.client.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_delete", kwargs={"pk": nc.pk})
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
@@ -243,11 +244,11 @@ class ClientResponseTests(TestCase):
             total_employee_count=10,
         )
 
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
-        self.client_user = User.objects.create_user(username="client1", password="testpass123")  # nosec B106
+        self.client_user = User.objects.create_user(username="client1", password=TEST_PASSWORD)  # nosec B106
         client_group = Group.objects.create(name="client_user")
         self.client_user.groups.add(client_group)
         # Get or create profile and set organization
@@ -289,21 +290,21 @@ class ClientResponseTests(TestCase):
 
     def test_client_can_respond(self):
         """Test client can access response form."""
-        self.client_http.login(username="client1", password="testpass123")  # nosec B106
+        self.client_http.login(username="client1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_respond", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_auditor_cannot_respond(self):
         """Test auditor cannot submit client response."""
-        self.client_http.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client_http.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_respond", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
         self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_client_submit_response(self):
         """Test client can submit response."""
-        self.client_http.login(username="client1", password="testpass123")  # nosec B106
+        self.client_http.login(username="client1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_respond", kwargs={"pk": self.nc.pk})
         data = {
             "client_root_cause": "Lack of training on documentation requirements",
@@ -324,7 +325,7 @@ class ClientResponseTests(TestCase):
         self.nc.verification_status = "client_responded"
         self.nc.save()
 
-        self.client_http.login(username="client1", password="testpass123")  # nosec B106
+        self.client_http.login(username="client1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_respond", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
         self.assertEqual(response.status_code, 403)  # Forbidden - already responded
@@ -344,11 +345,11 @@ class AuditorVerificationTests(TestCase):
             total_employee_count=10,
         )
 
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
-        self.client_user = User.objects.create_user(username="client1", password="testpass123")  # nosec B106
+        self.client_user = User.objects.create_user(username="client1", password=TEST_PASSWORD)  # nosec B106
         client_group = Group.objects.create(name="client_user")
         self.client_user.groups.add(client_group)
         # Get or create profile and set organization
@@ -394,21 +395,21 @@ class AuditorVerificationTests(TestCase):
 
     def test_auditor_can_verify(self):
         """Test auditor can access verification form."""
-        self.client_http.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client_http.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_verify", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_client_cannot_verify(self):
         """Test client cannot verify responses."""
-        self.client_http.login(username="client1", password="testpass123")  # nosec B106
+        self.client_http.login(username="client1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_verify", kwargs={"pk": self.nc.pk})
         response = self.client_http.get(url)
         self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_auditor_accept_response(self):
         """Test auditor can accept response."""
-        self.client_http.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client_http.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:nonconformity_verify", kwargs={"pk": self.nc.pk})
         data = {
             "verification_action": "accept",
@@ -438,7 +439,7 @@ class ObservationViewTests(TestCase):
             total_employee_count=10,
         )
 
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
@@ -464,7 +465,7 @@ class ObservationViewTests(TestCase):
 
     def test_add_observation(self):
         """Test creating observation."""
-        self.client_http.login(username="auditor1", password="testpass123")  # nosec B106
+        self.client_http.login(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         url = reverse("audits:observation_create", kwargs={"audit_pk": self.audit.pk})
         data = {
             "standard": self.standard.id,
@@ -489,7 +490,7 @@ class WorkflowIntegrationTests(TestCase):
             total_employee_count=10,
         )
 
-        self.auditor = User.objects.create_user(username="auditor1", password="testpass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor1", password=TEST_PASSWORD)  # nosec B106
         lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.auditor.groups.add(lead_auditor_group)
 

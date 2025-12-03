@@ -6,12 +6,13 @@ from django.test import TestCase
 
 from audits.models import Audit, AuditProgram, Nonconformity, TechnicalReview
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.workflows.audit_workflow import AuditWorkflow
 
 
 class AuditWorkflowTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="password")
+        self.user = User.objects.create_user(username="testuser", password=TEST_PASSWORD)
         self.org = Organization.objects.create(name="Test Org", customer_id="CUST-001", total_employee_count=10)
         self.standard = Standard.objects.create(title="ISO 9001", code="ISO9001")
         self.cert = Certification.objects.create(

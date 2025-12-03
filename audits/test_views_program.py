@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from audits.models import AuditProgram
 from core.models import Organization
+from core.test_utils import TEST_PASSWORD
 
 
 class AuditProgramViewTest(TestCase):
@@ -20,21 +21,21 @@ class AuditProgramViewTest(TestCase):
         self.other_org = Organization.objects.create(name="Other Org", customer_id="OO1", total_employee_count=10)
 
         # Create Users
-        self.cb_admin = User.objects.create_user(username="cb_admin", password="password")
+        self.cb_admin = User.objects.create_user(username="cb_admin", password=TEST_PASSWORD)
         self.cb_admin.groups.add(self.cb_admin_group)
 
-        self.client_admin = User.objects.create_user(username="client_admin", password="password")
+        self.client_admin = User.objects.create_user(username="client_admin", password=TEST_PASSWORD)
         self.client_admin.groups.add(self.client_admin_group)
         # Profile is created by signal
         self.client_admin.profile.organization = self.org
         self.client_admin.profile.save()
 
-        self.other_client = User.objects.create_user(username="other_client", password="password")
+        self.other_client = User.objects.create_user(username="other_client", password=TEST_PASSWORD)
         self.other_client.groups.add(self.client_admin_group)
         self.other_client.profile.organization = self.other_org
         self.other_client.profile.save()
 
-        self.auditor = User.objects.create_user(username="auditor", password="password")
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         self.auditor.groups.add(self.auditor_group)
 
         # Create Audit Program
@@ -49,27 +50,27 @@ class AuditProgramViewTest(TestCase):
 
     def test_program_list_cb_admin(self):
         """CB Admin should see all programs."""
-        self.client.login(username="cb_admin", password="password")
+        self.client.login(username="cb_admin", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:program_list"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "2025 Program")
 
     def test_program_list_client_admin(self):
         """Client Admin should see only their organization's programs."""
-        self.client.login(username="client_admin", password="password")
+        self.client.login(username="client_admin", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:program_list"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "2025 Program")
 
         # Other client shouldn't see it
-        self.client.login(username="other_client", password="password")
+        self.client.login(username="other_client", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:program_list"))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "2025 Program")
 
     def test_program_create_cb_admin(self):
         """CB Admin can create program."""
-        self.client.login(username="cb_admin", password="password")
+        self.client.login(username="cb_admin", password=TEST_PASSWORD)
         # data = {
         #     "title": "New Program",
         #     "year": 2026,
@@ -80,7 +81,7 @@ class AuditProgramViewTest(TestCase):
 
     def test_program_create_client_admin(self):
         """Client Admin can create program for their org."""
-        self.client.login(username="client_admin", password="password")
+        self.client.login(username="client_admin", password=TEST_PASSWORD)
         data = {
             "title": "Client Program",
             "year": 2026,
@@ -94,14 +95,14 @@ class AuditProgramViewTest(TestCase):
 
     def test_program_detail(self):
         """Test program detail view."""
-        self.client.login(username="client_admin", password="password")
+        self.client.login(username="client_admin", password=TEST_PASSWORD)
         response = self.client.get(reverse("audits:program_detail", kwargs={"pk": self.program.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "2025 Program")
 
     def test_program_update(self):
         """Test program update."""
-        self.client.login(username="client_admin", password="password")
+        self.client.login(username="client_admin", password=TEST_PASSWORD)
         data = {
             "title": "Updated Program",
             "year": 2025,
@@ -116,7 +117,7 @@ class AuditProgramViewTest(TestCase):
 
     def test_program_delete(self):
         """Test program delete."""
-        self.client.login(username="client_admin", password="password")
+        self.client.login(username="client_admin", password=TEST_PASSWORD)
         response = self.client.post(reverse("audits:program_delete", kwargs={"pk": self.program.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(AuditProgram.objects.filter(pk=self.program.pk).exists())

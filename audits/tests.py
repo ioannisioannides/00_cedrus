@@ -21,6 +21,7 @@ from audits.models import (
     OpportunityForImprovement,
 )
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class AuditModelTest(TestCase):
@@ -41,10 +42,10 @@ class AuditModelTest(TestCase):
             certificate_status="active",
         )
         self.site = Site.objects.create(organization=self.org, site_name="Test Site", site_address="456 St")
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         lead_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_group)
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
 
@@ -154,11 +155,11 @@ class AuditViewPermissionTest(TestCase):
         self.client = Client()
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
-        self.auditor = User.objects.create_user(username="auditor", password="pass123")  # nosec B106
-        self.client_admin = User.objects.create_user(username="clientadmin", password="pass123")  # nosec B106
-        self.other_lead = User.objects.create_user(username="otherlead", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
+        self.client_admin = User.objects.create_user(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
+        self.other_lead = User.objects.create_user(username="otherlead", password=TEST_PASSWORD)  # nosec B106
 
         # Create groups
         cb_group = Group.objects.create(name="cb_admin")
@@ -204,26 +205,26 @@ class AuditViewPermissionTest(TestCase):
 
     def test_audit_list_cb_admin(self):
         """Test CB Admin can see all audits."""
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_list"))
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.audit, response.context["audits"])
 
     def test_audit_list_lead_auditor(self):
         """Test Lead Auditor sees only assigned audits."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_list"))
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.audit, response.context["audits"])
 
         # Other lead should not see this audit
-        self.client.login(username="otherlead", password="pass123")  # nosec B106
+        self.client.login(username="otherlead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_list"))
         self.assertNotIn(self.audit, response.context["audits"])
 
     def test_audit_list_client_admin(self):
         """Test Client Admin sees only their organization's audits."""
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_list"))
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.audit, response.context["audits"])
@@ -244,44 +245,44 @@ class AuditViewPermissionTest(TestCase):
 
     def test_audit_create_cb_admin(self):
         """Test CB Admin can create audit."""
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_create"))
         self.assertEqual(response.status_code, 200)
 
     def test_audit_create_lead_auditor(self):
         """Test Lead Auditor cannot create audit."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_create"))
         self.assertEqual(response.status_code, 403)
 
     def test_audit_create_client_admin(self):
         """Test Client Admin cannot create audit."""
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_create"))
         self.assertEqual(response.status_code, 403)
 
     def test_audit_detail_cb_admin(self):
         """Test CB Admin can view any audit."""
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["audit"], self.audit)
 
     def test_audit_detail_lead_auditor_own(self):
         """Test Lead Auditor can view own audit."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_audit_detail_lead_auditor_other(self):
         """Test Lead Auditor cannot view other's audit."""
-        self.client.login(username="otherlead", password="pass123")  # nosec B106
+        self.client.login(username="otherlead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 404)  # Queryset filtered
 
     def test_audit_detail_client_admin_own_org(self):
         """Test Client Admin can view their org's audit."""
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
@@ -297,59 +298,59 @@ class AuditViewPermissionTest(TestCase):
             created_by=self.cb_admin,
             lead_auditor=self.lead_auditor,
         )
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[audit2.pk]))
         self.assertEqual(response.status_code, 404)
 
     def test_audit_update_cb_admin(self):
         """Test CB Admin can update any audit."""
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_audit_update_lead_auditor_own(self):
         """Test Lead Auditor can update own audit."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_audit_update_lead_auditor_other(self):
         """Test Lead Auditor cannot update other's audit."""
-        self.client.login(username="otherlead", password="pass123")  # nosec B106
+        self.client.login(username="otherlead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_audit_update_auditor(self):
         """Test Auditor cannot update audit."""
-        self.client.login(username="auditor", password="pass123")  # nosec B106
+        self.client.login(username="auditor", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_audit_update_client_admin(self):
         """Test Client Admin cannot update audit."""
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_audit_print_permission(self):
         """Test audit print view permissions."""
         # CB Admin
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_print", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
         # Lead Auditor (own audit)
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_print", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
         # Client Admin (own org)
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_print", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
         # Other Lead Auditor
-        self.client.login(username="otherlead", password="pass123")  # nosec B106
+        self.client.login(username="otherlead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_print", args=[self.audit.pk]))
         self.assertRedirects(response, reverse("audits:audit_list"))
 
@@ -365,13 +366,13 @@ class FindingModelTest(TestCase):
             total_employee_count=10,
         )
         self.std = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
-        self.auditor = User.objects.create_user(username="auditor", password="pass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(auditor_group)
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         lead_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_group)
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
 
@@ -487,13 +488,13 @@ class AuditTeamMemberTest(TestCase):
             customer_id="ORG001",
             total_employee_count=10,
         )
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         lead_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_group)
-        self.auditor = User.objects.create_user(username="auditor", password="pass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(auditor_group)
 
@@ -576,10 +577,10 @@ class AuditMetadataTest(TestCase):
             customer_id="ORG001",
             total_employee_count=10,
         )
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         lead_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(lead_group)
 

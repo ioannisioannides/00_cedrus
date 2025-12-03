@@ -8,13 +8,14 @@ from django.urls import reverse
 
 from accounts.models import Profile
 from core.models import Organization
+from core.test_utils import TEST_PASSWORD
 
 
 class ProfileModelTest(TestCase):
     """Test Profile model methods and relationships."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        self.user = User.objects.create_user(username="testuser", email="test@example.com", password=TEST_PASSWORD)
         self.org = Organization.objects.create(
             name="Test Org",
             registered_address="123 Test St",
@@ -55,7 +56,7 @@ class ProfileModelTest(TestCase):
 
         # Also true for lead_auditor
         lead_group = Group.objects.create(name="lead_auditor")
-        user2 = User.objects.create_user(username="lead", password="pass")
+        user2 = User.objects.create_user(username="lead", password=TEST_PASSWORD)
         user2.groups.add(lead_group)
         self.assertTrue(user2.profile.is_auditor())
 
@@ -73,7 +74,7 @@ class ProfileModelTest(TestCase):
 
         # Also true for client_admin
         client_admin_group = Group.objects.create(name="client_admin")
-        user2 = User.objects.create_user(username="admin", password="pass")
+        user2 = User.objects.create_user(username="admin", password=TEST_PASSWORD)
         user2.groups.add(client_admin_group)
         self.assertTrue(user2.profile.is_client_user())
 
@@ -84,7 +85,7 @@ class ProfileModelTest(TestCase):
         self.assertEqual(self.user.profile.get_role_display(), "CB Admin")
 
         # Test no role
-        user2 = User.objects.create_user(username="norole", password="pass")
+        user2 = User.objects.create_user(username="norole", password=TEST_PASSWORD)
         self.assertEqual(user2.profile.get_role_display(), "No Role")
 
 
@@ -93,7 +94,7 @@ class AuthenticationTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(username="testuser", password=TEST_PASSWORD)
 
     def test_login_page_loads(self):
         """Test that login page is accessible."""
@@ -107,7 +108,7 @@ class AuthenticationTest(TestCase):
         """Test login with valid credentials."""
         response = self.client.post(
             reverse("accounts:login"),
-            {"username": "testuser", "password": "testpass123"},
+            {"username": "testuser", "password": TEST_PASSWORD},
             follow=True,
         )
         self.assertTrue(response.context["user"].is_authenticated)
@@ -133,14 +134,14 @@ class AuthenticationTest(TestCase):
 
     def test_logout(self):
         """Test logout functionality."""
-        self.client.login(username="testuser", password="testpass123")
+        self.client.login(username="testuser", password=TEST_PASSWORD)
         response = self.client.post(reverse("accounts:logout"), follow=True)
         self.assertFalse(response.context["user"].is_authenticated)
         self.assertRedirects(response, reverse("accounts:login"))
 
     def test_redirect_authenticated_user(self):
         """Test that authenticated users are redirected from login page."""
-        self.client.login(username="testuser", password="testpass123")
+        self.client.login(username="testuser", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:login"))
         self.assertRedirects(response, reverse("accounts:dashboard"))
 
@@ -150,12 +151,12 @@ class DashboardAccessTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")
-        self.auditor = User.objects.create_user(username="auditor", password="pass123")
-        self.client_admin = User.objects.create_user(username="clientadmin", password="pass123")
-        self.client_user = User.objects.create_user(username="clientuser", password="pass123")
-        self.no_role = User.objects.create_user(username="norole", password="pass123")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
+        self.client_admin = User.objects.create_user(username="clientadmin", password=TEST_PASSWORD)
+        self.client_user = User.objects.create_user(username="clientuser", password=TEST_PASSWORD)
+        self.no_role = User.objects.create_user(username="norole", password=TEST_PASSWORD)
 
         # Create groups and assign
         cb_group = Group.objects.create(name="cb_admin")
@@ -184,7 +185,7 @@ class DashboardAccessTest(TestCase):
 
     def test_cb_admin_dashboard_access(self):
         """Test CB Admin can access CB dashboard."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard"))
         self.assertRedirects(response, reverse("accounts:dashboard_cb"))
 
@@ -193,7 +194,7 @@ class DashboardAccessTest(TestCase):
 
     def test_cb_admin_cannot_access_other_dashboards(self):
         """Test CB Admin is redirected from other dashboards."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard_auditor"), follow=True)
         self.assertRedirects(response, reverse("accounts:dashboard_cb"))
 
@@ -202,7 +203,7 @@ class DashboardAccessTest(TestCase):
 
     def test_lead_auditor_dashboard_access(self):
         """Test Lead Auditor can access auditor dashboard."""
-        self.client.login(username="lead", password="pass123")
+        self.client.login(username="lead", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard"))
         self.assertRedirects(response, reverse("accounts:dashboard_auditor"))
 
@@ -211,7 +212,7 @@ class DashboardAccessTest(TestCase):
 
     def test_auditor_dashboard_access(self):
         """Test Auditor can access auditor dashboard."""
-        self.client.login(username="auditor", password="pass123")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard"))
         self.assertRedirects(response, reverse("accounts:dashboard_auditor"))
 
@@ -220,7 +221,7 @@ class DashboardAccessTest(TestCase):
 
     def test_client_admin_dashboard_access(self):
         """Test Client Admin can access client dashboard."""
-        self.client.login(username="clientadmin", password="pass123")
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard"))
         self.assertRedirects(response, reverse("accounts:dashboard_client"))
 
@@ -229,7 +230,7 @@ class DashboardAccessTest(TestCase):
 
     def test_client_user_dashboard_access(self):
         """Test Client User can access client dashboard."""
-        self.client.login(username="clientuser", password="pass123")
+        self.client.login(username="clientuser", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard"))
         self.assertRedirects(response, reverse("accounts:dashboard_client"))
 
@@ -238,7 +239,7 @@ class DashboardAccessTest(TestCase):
 
     def test_no_role_dashboard(self):
         """Test user with no role sees message."""
-        self.client.login(username="norole", password="pass123")
+        self.client.login(username="norole", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "No role assigned")
@@ -253,7 +254,7 @@ class DashboardAccessTest(TestCase):
 
     def test_cb_dashboard_shows_stats(self):
         """Test CB dashboard shows organization and audit counts."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("accounts:dashboard_cb"))
         self.assertEqual(response.status_code, 200)
         # Should contain stats (even if 0)
@@ -278,7 +279,7 @@ class ProfileOrganizationTest(TestCase):
             customer_id="ORG002",
             total_employee_count=20,
         )
-        self.user = User.objects.create_user(username="testuser", password="pass123")
+        self.user = User.objects.create_user(username="testuser", password=TEST_PASSWORD)
 
     def test_profile_can_have_no_organization(self):
         """Test that profile can exist without organization (for CB admins/auditors)."""

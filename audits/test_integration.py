@@ -13,6 +13,7 @@ from django.urls import reverse
 
 from audits.models import Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.services.audit_service import AuditService
 from trunk.services.finding_service import FindingService
 
@@ -29,13 +30,13 @@ class AuditWorkflowIntegrationTest(TestCase):
         self.client_admin_group = Group.objects.create(name="client_admin")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(self.cb_admin_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(self.lead_auditor_group)
 
-        self.client_admin = User.objects.create_user(username="clientadmin", password="pass123")  # nosec B106
+        self.client_admin = User.objects.create_user(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         self.client_admin.groups.add(self.client_admin_group)
 
         # Create organization
@@ -67,7 +68,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         self.client = Client()
 
     def _create_audit(self):
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         return AuditService.create_audit(
             organization=self.org,
             certifications=[self.cert],
@@ -84,7 +85,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         )
 
     def _create_findings(self, audit):
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         nc = FindingService.create_nonconformity(
             audit=audit,
             user=self.lead_auditor,
@@ -153,7 +154,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         self._transition_audit(audit, "client_review")
 
         # Step 5: Client responds to nonconformity
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
 
         FindingService.respond_to_nonconformity(
             nc=nc,
@@ -170,7 +171,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         self.assertIsNotNone(nc.client_root_cause)
 
         # Step 6: Lead Auditor verifies response (accepts)
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
 
         FindingService.verify_nonconformity(
             nc=nc,
@@ -198,7 +199,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         )
 
         # Step 8: CB Admin or Lead Auditor moves to submitted (after technical review)
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
 
         self._transition_audit(audit, "submitted")
 
@@ -231,7 +232,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         """Test workflow when auditor rejects client response."""
 
         # Create audit with NC
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
 
         audit = AuditService.create_audit(
             organization=self.org,
@@ -248,7 +249,7 @@ class AuditWorkflowIntegrationTest(TestCase):
             created_by=self.cb_admin,
         )
 
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
 
         nc = FindingService.create_nonconformity(
             audit=audit,
@@ -267,7 +268,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         self.client.post(reverse("audits:audit_transition_status", args=[audit.pk, "scheduled"]))
 
         # Client responds
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         FindingService.respond_to_nonconformity(
             nc=nc,
             response_data={
@@ -278,7 +279,7 @@ class AuditWorkflowIntegrationTest(TestCase):
         )
 
         # Lead Auditor rejects response
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         FindingService.verify_nonconformity(
             nc=nc,
             user=self.lead_auditor,

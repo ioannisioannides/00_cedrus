@@ -10,6 +10,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.events import EventType, event_dispatcher
 from trunk.services.audit_service import AuditService
 from trunk.services.finding_service import FindingService
@@ -21,7 +22,7 @@ class AuditServiceTest(TestCase):
     def setUp(self):
         """Set up test data."""
         cb_group = Group.objects.create(name="cb_admin")
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
         self.org = Organization.objects.create(
@@ -224,10 +225,10 @@ class FindingServiceTest(TestCase):
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(cb_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(lead_group)
 
         self.org = Organization.objects.create(

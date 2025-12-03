@@ -21,6 +21,7 @@ from audits.models import (
 )
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class AuditWorkflowTest(TestCase):
@@ -42,9 +43,9 @@ class AuditWorkflowTest(TestCase):
         )
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
-        self.auditor = User.objects.create_user(username="auditor", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
 
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
@@ -191,8 +192,8 @@ class AuditDocumentationViewTest(TestCase):
             total_employee_count=10,
         )
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
 
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
@@ -213,7 +214,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_changes_view_get(self):
         """Test GET audit changes edit view."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_changes_edit", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
@@ -221,7 +222,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_changes_view_post(self):
         """Test POST audit changes edit view."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         data = {
             "change_of_name": True,
             "change_of_scope": False,
@@ -244,7 +245,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_plan_review_view(self):
         """Test audit plan review edit view."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         data = {
             "deviations_yes_no": True,
             "deviations_details": "Deviation details here",
@@ -262,7 +263,7 @@ class AuditDocumentationViewTest(TestCase):
 
     def test_audit_summary_view(self):
         """Test audit summary edit view."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         data = {
             "objectives_met": True,
             "objectives_comments": "Objectives met",
@@ -310,8 +311,8 @@ class AuditRecommendationTest(TestCase):
             certificate_status="active",
         )
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
 
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
@@ -333,7 +334,7 @@ class AuditRecommendationTest(TestCase):
 
     def test_recommendation_view_lead_auditor(self):
         """Test lead auditor can edit recommendations."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         data = {
             "special_audit_required": True,
             "special_audit_details": "Special audit needed",
@@ -353,7 +354,7 @@ class AuditRecommendationTest(TestCase):
 
     def test_recommendation_view_cb_admin(self):
         """Test CB admin can edit recommendations."""
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_recommendation_edit", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
@@ -362,7 +363,7 @@ class AuditRecommendationTest(TestCase):
         self.audit.status = "draft"
         self.audit.save()
 
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:certification_decision_create", args=[self.audit.pk]))
         # Should return 403 Forbidden (UserPassesTestMixin returns False)
         self.assertEqual(response.status_code, 403)
@@ -372,7 +373,7 @@ class AuditRecommendationTest(TestCase):
         self.audit.status = "decision_pending"
         self.audit.save()
 
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:certification_decision_create", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 403)  # Forbidden
 
@@ -380,7 +381,7 @@ class AuditRecommendationTest(TestCase):
         """Test making decision changes audit status to closed."""
         from audits.models import TechnicalReview
 
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
 
         # Move audit to client_review
         self.audit.status = "client_review"
@@ -438,9 +439,9 @@ class EvidenceFileManagementTest(TestCase):
         )
         self.std = Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
-        self.client_user = User.objects.create_user(username="client", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
+        self.client_user = User.objects.create_user(username="client", password=TEST_PASSWORD)  # nosec B106
 
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
@@ -468,7 +469,7 @@ class EvidenceFileManagementTest(TestCase):
 
     def test_file_upload_auditor(self):
         """Test auditor can upload evidence files."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
 
         # Create a test file
         test_file = SimpleUploadedFile("test.pdf", b"file_content", content_type="application/pdf")
@@ -484,7 +485,7 @@ class EvidenceFileManagementTest(TestCase):
 
     def test_file_upload_client(self):
         """Test client can upload evidence files."""
-        self.client.login(username="client", password="pass123")  # nosec B106
+        self.client.login(username="client", password=TEST_PASSWORD)  # nosec B106
 
         test_file = SimpleUploadedFile("client_doc.pdf", b"client_content", content_type="application/pdf")
 
@@ -502,17 +503,17 @@ class EvidenceFileManagementTest(TestCase):
         evidence = EvidenceFile.objects.create(audit=self.audit, uploaded_by=self.lead_auditor, file=test_file)
 
         # CB Admin can download
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:evidence_file_download", args=[evidence.pk]))
         self.assertEqual(response.status_code, 200)
 
         # Lead auditor can download
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:evidence_file_download", args=[evidence.pk]))
         self.assertEqual(response.status_code, 200)
 
         # Client can download their org's files
-        self.client.login(username="client", password="pass123")  # nosec B106
+        self.client.login(username="client", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:evidence_file_download", args=[evidence.pk]))
         self.assertEqual(response.status_code, 200)
 
@@ -521,7 +522,7 @@ class EvidenceFileManagementTest(TestCase):
         test_file = SimpleUploadedFile("test.pdf", b"file_content", content_type="application/pdf")
         evidence = EvidenceFile.objects.create(audit=self.audit, uploaded_by=self.lead_auditor, file=test_file)
 
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.post(reverse("audits:evidence_file_delete", args=[evidence.pk]))
         self.assertEqual(response.status_code, 302)
 
@@ -533,7 +534,7 @@ class EvidenceFileManagementTest(TestCase):
         test_file = SimpleUploadedFile("test.pdf", b"file_content", content_type="application/pdf")
         evidence = EvidenceFile.objects.create(audit=self.audit, uploaded_by=self.lead_auditor, file=test_file)
 
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.post(reverse("audits:evidence_file_delete", args=[evidence.pk]))
         self.assertEqual(response.status_code, 302)
 
@@ -552,8 +553,8 @@ class StatusTransitionViewTest(TestCase):
             total_employee_count=10,
         )
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
 
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
@@ -574,7 +575,7 @@ class StatusTransitionViewTest(TestCase):
 
     def test_transition_draft_to_in_review(self):
         """Test transition from draft to in_review via view."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_transition_status", args=[self.audit.pk, "scheduled"]))
         self.assertEqual(response.status_code, 302)  # Redirect
 
@@ -583,7 +584,7 @@ class StatusTransitionViewTest(TestCase):
 
     def test_transition_invalid(self):
         """Test invalid transition shows error."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         # Try to go straight to decided (invalid)
         response = self.client.get(reverse("audits:audit_transition_status", args=[self.audit.pk, "decided"]))
         self.assertEqual(response.status_code, 302)
@@ -597,7 +598,7 @@ class StatusTransitionViewTest(TestCase):
         self.audit.save()
 
         # Lead auditor cannot make decision
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_transition_status", args=[self.audit.pk, "decided"]))
         self.assertEqual(response.status_code, 302)
 

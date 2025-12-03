@@ -16,6 +16,7 @@ from django.urls import reverse
 
 from audits.models import Audit
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 from trunk.permissions.predicates import PermissionPredicate
 
 
@@ -30,19 +31,19 @@ class PermissionPredicateTest(TestCase):
         self.client_admin_group = Group.objects.create(name="client_admin")
         self.client_user_group = Group.objects.create(name="client_user")
 
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(self.cb_admin_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(self.lead_auditor_group)
 
-        self.auditor = User.objects.create_user(username="auditor", password="pass")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor.groups.add(self.auditor_group)
 
-        self.client_admin = User.objects.create_user(username="clientadmin", password="pass")  # nosec B106
+        self.client_admin = User.objects.create_user(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         self.client_admin.groups.add(self.client_admin_group)
 
-        self.client_user = User.objects.create_user(username="clientuser", password="pass")  # nosec B106
+        self.client_user = User.objects.create_user(username="clientuser", password=TEST_PASSWORD)  # nosec B106
         self.client_user.groups.add(self.client_user_group)
 
         self.org = Organization.objects.create(
@@ -113,7 +114,7 @@ class PermissionPredicateTest(TestCase):
         self.assertTrue(PermissionPredicate.can_view_audit(self.client_admin, audit))
 
         # Other auditor cannot view
-        other_auditor = User.objects.create_user(username="other", password="pass")  # nosec B106
+        other_auditor = User.objects.create_user(username="other", password=TEST_PASSWORD)  # nosec B106
         other_auditor.groups.add(self.auditor_group)
         self.assertFalse(PermissionPredicate.can_view_audit(other_auditor, audit))
 
@@ -130,19 +131,19 @@ class RoleBasedAccessTest(TestCase):
         client_admin_group = Group.objects.create(name="client_admin")
 
         # Create users
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")  # nosec B106
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin.groups.add(cb_admin_group)
 
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)  # nosec B106
         self.lead_auditor.groups.add(lead_auditor_group)
 
-        self.auditor = User.objects.create_user(username="auditor", password="pass123")  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.auditor.groups.add(auditor_group)
 
-        self.client_admin = User.objects.create_user(username="clientadmin", password="pass123")  # nosec B106
+        self.client_admin = User.objects.create_user(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         self.client_admin.groups.add(client_admin_group)
 
-        self.other_client = User.objects.create_user(username="otherclient", password="pass123")  # nosec B106
+        self.other_client = User.objects.create_user(username="otherclient", password=TEST_PASSWORD)  # nosec B106
         self.other_client.groups.add(client_admin_group)
 
         # Create organizations
@@ -201,49 +202,49 @@ class RoleBasedAccessTest(TestCase):
 
     def test_cb_admin_can_create_audit(self):
         """CB Admin can create audits."""
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_create"))
         self.assertEqual(response.status_code, 200)
 
     def test_lead_auditor_cannot_create_audit(self):
         """Lead Auditor cannot create audits."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_create"))
         self.assertEqual(response.status_code, 403)
 
     def test_client_cannot_create_audit(self):
         """Client cannot create audits."""
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_create"))
         self.assertEqual(response.status_code, 403)
 
     def test_lead_auditor_can_view_own_audit(self):
         """Lead Auditor can view their assigned audits."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_client_can_view_own_org_audit(self):
         """Client can view their organization's audits."""
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_client_cannot_view_other_org_audit(self):
         """Client cannot view other organization's audits."""
-        self.client.login(username="otherclient", password="pass123")  # nosec B106
+        self.client.login(username="otherclient", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 404)
 
     def test_auditor_cannot_view_unassigned_audit(self):
         """Auditor cannot view audits they're not assigned to."""
-        self.client.login(username="auditor", password="pass123")  # nosec B106
+        self.client.login(username="auditor", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_detail", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 404)
 
     def test_lead_auditor_can_edit_draft_audit(self):
         """Lead Auditor can edit their draft audits."""
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 200)
 
@@ -252,13 +253,13 @@ class RoleBasedAccessTest(TestCase):
         self.audit1.status = "decided"
         self.audit1.save()
 
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_client_cannot_edit_audit(self):
         """Client cannot edit audits."""
-        self.client.login(username="clientadmin", password="pass123")  # nosec B106
+        self.client.login(username="clientadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_update", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 403)
 
@@ -268,7 +269,7 @@ class RoleBasedAccessTest(TestCase):
         self.audit1.status = "decision_pending"
         self.audit1.save()
 
-        self.client.login(username="cbadmin", password="pass123")  # nosec B106
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_make_decision", args=[self.audit1.pk]))
         self.assertEqual(response.status_code, 200)
 
@@ -277,6 +278,6 @@ class RoleBasedAccessTest(TestCase):
         self.audit1.status = "client_review"
         self.audit1.save()
 
-        self.client.login(username="lead", password="pass123")  # nosec B106
+        self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:audit_make_decision", args=[self.audit1.pk]))
         self.assertRedirects(response, reverse("audits:audit_detail", args=[self.audit1.pk]))

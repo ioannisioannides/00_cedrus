@@ -10,6 +10,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from core.models import CertificateHistory, Certification, Organization, Site, Standard, SurveillanceSchedule
+from core.test_utils import TEST_PASSWORD
 
 # ==============================================================================
 # HEALTH CHECK TESTS
@@ -111,8 +112,8 @@ class HealthCheckTest(TestCase):
     @override_settings(DEBUG=False)
     def test_detailed_status_production_superuser(self):
         """Test detailed status is accessible for superusers in production."""
-        User.objects.create_superuser(username="admin", email="admin@test.com", password="adminpass")
-        self.client.login(username="admin", password="adminpass")
+        User.objects.create_superuser(username="admin", email="admin@test.com", password=TEST_PASSWORD)
+        self.client.login(username="admin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:detailed_status"))
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -383,9 +384,9 @@ class OrganizationViewPermissionTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")
-        self.lead_auditor = User.objects.create_user(username="lead", password="pass123")
-        self.client_user = User.objects.create_user(username="client", password="pass123")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
+        self.lead_auditor = User.objects.create_user(username="lead", password=TEST_PASSWORD)
+        self.client_user = User.objects.create_user(username="client", password=TEST_PASSWORD)
 
         cb_group = Group.objects.create(name="cb_admin")
         lead_group = Group.objects.create(name="lead_auditor")
@@ -404,19 +405,19 @@ class OrganizationViewPermissionTest(TestCase):
 
     def test_organization_list_cb_admin(self):
         """Test CB Admin can access organization list."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:organization_list"))
         self.assertEqual(response.status_code, 200)
 
     def test_organization_list_lead_auditor(self):
         """Test Lead Auditor cannot access organization list."""
-        self.client.login(username="lead", password="pass123")
+        self.client.login(username="lead", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:organization_list"))
         self.assertEqual(response.status_code, 403)
 
     def test_organization_list_client_user(self):
         """Test Client User cannot access organization list."""
-        self.client.login(username="client", password="pass123")
+        self.client.login(username="client", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:organization_list"))
         self.assertEqual(response.status_code, 403)
 
@@ -427,7 +428,7 @@ class OrganizationViewPermissionTest(TestCase):
 
     def test_organization_create_cb_admin(self):
         """Test CB Admin can create organization."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:organization_create"))
         self.assertEqual(response.status_code, 200)
 
@@ -445,20 +446,20 @@ class OrganizationViewPermissionTest(TestCase):
 
     def test_organization_create_lead_auditor(self):
         """Test Lead Auditor cannot create organization."""
-        self.client.login(username="lead", password="pass123")
+        self.client.login(username="lead", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:organization_create"))
         self.assertEqual(response.status_code, 403)
 
     def test_organization_detail_cb_admin(self):
         """Test CB Admin can view organization detail."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:organization_detail", args=[self.org.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Test Org")
 
     def test_organization_update_cb_admin(self):
         """Test CB Admin can update organization."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:organization_update", args=[self.org.pk]),
             {
@@ -479,7 +480,7 @@ class SiteViewPermissionTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
 
@@ -493,13 +494,13 @@ class SiteViewPermissionTest(TestCase):
 
     def test_site_list_cb_admin(self):
         """Test CB Admin can access site list."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:site_list"))
         self.assertEqual(response.status_code, 200)
 
     def test_site_create_cb_admin(self):
         """Test CB Admin can create site."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:site_create"),
             {
@@ -520,7 +521,7 @@ class SiteViewPermissionTest(TestCase):
         )
         _ = Site.objects.create(organization=org2, site_name="Site 2", site_address="888 St")
 
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:site_list"), {"organization": self.org.pk})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Test Site")
@@ -528,7 +529,7 @@ class SiteViewPermissionTest(TestCase):
 
     def test_site_update_cb_admin(self):
         """Test CB Admin can update site."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:site_update", args=[self.site.pk]),
             {
@@ -549,7 +550,7 @@ class StandardViewPermissionTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
 
@@ -557,13 +558,13 @@ class StandardViewPermissionTest(TestCase):
 
     def test_standard_list_cb_admin(self):
         """Test CB Admin can access standard list."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:standard_list"))
         self.assertEqual(response.status_code, 200)
 
     def test_standard_create_cb_admin(self):
         """Test CB Admin can create standard."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:standard_create"),
             {
@@ -578,7 +579,7 @@ class StandardViewPermissionTest(TestCase):
 
     def test_standard_update_cb_admin(self):
         """Test CB Admin can update standard."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:standard_update", args=[self.std.pk]),
             {
@@ -598,7 +599,7 @@ class CertificationViewPermissionTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.cb_admin = User.objects.create_user(username="cbadmin", password="pass123")
+        self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)
         cb_group = Group.objects.create(name="cb_admin")
         self.cb_admin.groups.add(cb_group)
 
@@ -612,13 +613,13 @@ class CertificationViewPermissionTest(TestCase):
 
     def test_certification_list_cb_admin(self):
         """Test CB Admin can access certification list."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:certification_list"))
         self.assertEqual(response.status_code, 200)
 
     def test_certification_create_cb_admin(self):
         """Test CB Admin can create certification."""
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:certification_create"),
             {
@@ -640,7 +641,7 @@ class CertificationViewPermissionTest(TestCase):
             certificate_status="active",
         )
 
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:certification_create"),
             {
@@ -666,7 +667,7 @@ class CertificationViewPermissionTest(TestCase):
             certification_scope="Original Scope",
             certificate_status="active",
         )
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:certification_update", args=[cert.pk]),
             {
@@ -690,7 +691,7 @@ class CertificationViewPermissionTest(TestCase):
             certification_scope="Scope",
             certificate_status="active",
         )
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.get(reverse("core:certification_detail", args=[cert.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Scope")
@@ -703,7 +704,7 @@ class CertificationViewPermissionTest(TestCase):
             certification_scope="Scope",
             certificate_status="active",
         )
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         response = self.client.post(
             reverse("core:certificate_history_create", kwargs={"certification_pk": cert.pk}),
             {
@@ -735,7 +736,7 @@ class CertificationViewPermissionTest(TestCase):
         }
         schedule, _ = SurveillanceSchedule.objects.get_or_create(certification=cert, defaults=defaults)
 
-        self.client.login(username="cbadmin", password="pass123")
+        self.client.login(username="cbadmin", password=TEST_PASSWORD)
         new_s1_date = date.today() + timedelta(days=366)
         response = self.client.post(
             reverse("core:surveillance_schedule_update", args=[schedule.pk]),

@@ -5,16 +5,17 @@ from django.utils import timezone
 
 from audits.models import Audit
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class ReportingViewTests(TestCase):
     def setUp(self):
         # Create user with permissions
-        self.user = User.objects.create_user(username="auditor", password="password")
+        self.user = User.objects.create_user(username="auditor", password=TEST_PASSWORD)
         permission = Permission.objects.get(codename="view_audit")
         self.user.user_permissions.add(permission)
         self.client = Client()
-        self.client.login(username="auditor", password="password")
+        self.client.login(username="auditor", password=TEST_PASSWORD)
 
         # Create test data
         self.org = Organization.objects.create(name="Test Org", total_employee_count=100)

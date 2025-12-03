@@ -23,6 +23,7 @@ from audits.forms import NonconformityForm, NonconformityResponseForm, Nonconfor
 from audits.models import Audit, AuditStatusLog, Nonconformity, Observation, OpportunityForImprovement
 from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Site, Standard
+from core.test_utils import TEST_PASSWORD
 
 
 class NonconformityCreationTests(TestCase):
@@ -30,9 +31,9 @@ class NonconformityCreationTests(TestCase):
 
     def setUp(self):
         # Create users and groups
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
-        self.auditor = User.objects.create_user("auditor", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
+        self.auditor = User.objects.create_user("auditor", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
@@ -75,7 +76,7 @@ class NonconformityCreationTests(TestCase):
 
     def test_create_major_nonconformity(self):
         """Test creating a major nonconformity."""
-        self.client.login(username="leadaud", password="test")  # nosec B106
+        self.client.login(username="leadaud", password=TEST_PASSWORD)  # nosec B106
 
         response = self.client.post(
             reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk}),
@@ -101,7 +102,7 @@ class NonconformityCreationTests(TestCase):
 
     def test_create_minor_nonconformity(self):
         """Test creating a minor nonconformity."""
-        self.client.login(username="auditor", password="test")  # nosec B106
+        self.client.login(username="auditor", password=TEST_PASSWORD)  # nosec B106
 
         nc = Nonconformity.objects.create(
             audit=self.audit,
@@ -158,7 +159,7 @@ class NonconformityCreationTests(TestCase):
         self.audit.status = "closed"
         self.audit.save()
 
-        self.client.login(username="leadaud", password="test")  # nosec B106
+        self.client.login(username="leadaud", password=TEST_PASSWORD)  # nosec B106
         response = self.client.get(reverse("audits:nonconformity_create", kwargs={"audit_pk": self.audit.pk}))
 
         # Should be forbidden (403) - test_func blocks this
@@ -170,8 +171,8 @@ class ObservationCreationTests(TestCase):
     """Test US-013: Create Observation"""
 
     def setUp(self):
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
@@ -210,7 +211,7 @@ class ObservationCreationTests(TestCase):
 
     def test_create_observation(self):
         """Test creating an observation."""
-        self.client.login(username="leadaud", password="test")  # nosec B106
+        self.client.login(username="leadaud", password=TEST_PASSWORD)  # nosec B106
 
         response = self.client.post(
             reverse("audits:observation_create", kwargs={"audit_pk": self.audit.pk}),
@@ -249,8 +250,8 @@ class OpportunityForImprovementTests(TestCase):
     """Test US-014: Create Opportunity for Improvement"""
 
     def setUp(self):
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
@@ -319,9 +320,9 @@ class ClientResponsePortalTests(TestCase):
     """Test US-015: Client Response Portal"""
 
     def setUp(self):
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
-        self.client_user = User.objects.create_user("client", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
+        self.client_user = User.objects.create_user("client", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
@@ -425,8 +426,8 @@ class AuditorVerificationWorkflowTests(TestCase):
     """Test US-016: Auditor Verification Workflow"""
 
     def setUp(self):
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
@@ -522,8 +523,8 @@ class FindingsListViewTests(TestCase):
     """Test US-017: Findings List View"""
 
     def setUp(self):
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
@@ -602,7 +603,7 @@ class FindingsListViewTests(TestCase):
 
     def test_audit_detail_shows_all_findings(self):
         """Test that audit detail page displays all finding types."""
-        self.client.login(username="leadaud", password="test")  # nosec B106
+        self.client.login(username="leadaud", password=TEST_PASSWORD)  # nosec B106
 
         response = self.client.get(reverse("audits:audit_detail", kwargs={"pk": self.audit.pk}))
 
@@ -619,7 +620,7 @@ class FindingsListViewTests(TestCase):
 
     def test_findings_summary_counts(self):
         """Test findings summary displays correct counts."""
-        self.client.login(username="leadaud", password="test")  # nosec B106
+        self.client.login(username="leadaud", password=TEST_PASSWORD)  # nosec B106
 
         response = self.client.get(reverse("audits:audit_detail", kwargs={"pk": self.audit.pk}))
 
@@ -634,7 +635,7 @@ class FindingsListViewTests(TestCase):
         self.nc_major.verification_status = "client_responded"
         self.nc_major.save()
 
-        self.client.login(username="leadaud", password="test")  # nosec B106
+        self.client.login(username="leadaud", password=TEST_PASSWORD)  # nosec B106
 
         response = self.client.get(reverse("audits:audit_detail", kwargs={"pk": self.audit.pk}))
 
@@ -646,10 +647,10 @@ class StatusWorkflowEnforcementTests(TestCase):
     """Test US-009: Status Workflow Enforcement"""
 
     def setUp(self):
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
-        self.tech_reviewer = User.objects.create_user("techrev", password="test")  # nosec B106
-        self.decision_maker = User.objects.create_user("decmaker", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
+        self.tech_reviewer = User.objects.create_user("techrev", password=TEST_PASSWORD)  # nosec B106
+        self.decision_maker = User.objects.create_user("decmaker", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
@@ -801,10 +802,10 @@ class Phase3IntegrationTests(TestCase):
 
     def setUp(self):
         # Create all necessary users
-        self.cb_admin = User.objects.create_user("cbadmin", password="test")  # nosec B106
-        self.lead_auditor = User.objects.create_user("leadaud", password="test")  # nosec B106
-        self.client_user = User.objects.create_user("client", password="test")  # nosec B106
-        self.tech_reviewer = User.objects.create_user("techrev", password="test")  # nosec B106
+        self.cb_admin = User.objects.create_user("cbadmin", password=TEST_PASSWORD)  # nosec B106
+        self.lead_auditor = User.objects.create_user("leadaud", password=TEST_PASSWORD)  # nosec B106
+        self.client_user = User.objects.create_user("client", password=TEST_PASSWORD)  # nosec B106
+        self.tech_reviewer = User.objects.create_user("techrev", password=TEST_PASSWORD)  # nosec B106
 
         cb_admin_group = Group.objects.create(name="cb_admin")
         lead_auditor_group = Group.objects.create(name="lead_auditor")
