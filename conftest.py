@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.fixture(autouse=True)
 def enable_celery_always_eager(settings):
     """

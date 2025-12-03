@@ -135,7 +135,7 @@ class AuditWorkflowTest(TestCase):
         except Exception as e:
             allowed = False
             reason = str(e)
-            
+
         self.assertFalse(allowed)
         self.assertIn("major", reason.lower())
 
@@ -152,7 +152,7 @@ class AuditWorkflowTest(TestCase):
             allowed = True
         except Exception:
             allowed = False
-            
+
         self.assertTrue(allowed)
 
     def test_workflow_permission_checks(self):
@@ -163,15 +163,15 @@ class AuditWorkflowTest(TestCase):
         # Note: AuditWorkflow does NOT check permissions anymore. Permissions are checked in views/services.
         # So this test is testing the wrong thing if it expects AuditWorkflow to enforce permissions.
         # However, we can test that the transition is technically valid for the audit state.
-        
+
         allowed = workflow.can_transition_to("scheduled")
         self.assertTrue(allowed)
 
         # Regular auditor cannot submit to client - This part of the test is invalid for AuditWorkflow class now.
-        # We should probably remove the user permission checks from this unit test 
+        # We should probably remove the user permission checks from this unit test
         # or move them to a service/view test.
         # For now, I will comment out the permission checks that are not supported by AuditWorkflow.
-        
+
         # allowed, _ = workflow.can_transition("scheduled", self.auditor)
         # self.assertFalse(allowed)
 

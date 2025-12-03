@@ -47,9 +47,7 @@ class ReviewService:
         event_type = (
             EventType.TECHNICAL_REVIEW_COMPLETED if review.status == "approved" else EventType.TECHNICAL_REVIEW_UPDATED
         )
-        event_dispatcher.emit(
-            event_type, {"audit_id": audit.pk, "review_id": review.pk, "reviewer_id": reviewer.pk}
-        )
+        event_dispatcher.emit(event_type, {"audit_id": audit.pk, "review_id": review.pk, "reviewer_id": reviewer.pk})
 
         return review
 

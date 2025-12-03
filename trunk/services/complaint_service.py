@@ -19,7 +19,9 @@ class ComplaintService:
 
         complaint = Complaint.objects.create(complaint_number=complaint_number, submitted_by=created_by, **data)
 
-        event_dispatcher.emit(EventType.COMPLAINT_RECEIVED, {"complaint_id": complaint.id, "created_by_id": created_by.id})
+        event_dispatcher.emit(
+            EventType.COMPLAINT_RECEIVED, {"complaint_id": complaint.id, "created_by_id": created_by.id}
+        )
         return complaint
 
     @staticmethod
