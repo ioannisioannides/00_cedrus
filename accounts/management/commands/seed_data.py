@@ -37,6 +37,14 @@ class Command(BaseCommand):
         self._print_summary()
 
     def _create_groups(self):
+        """
+        Create or retrieve the default user groups required for initial development.
+        
+        Creates or fetches seven Group objects (cb_admin, lead_auditor, auditor, technical_reviewer, decision_maker, client_admin, client_user) and returns them in a dictionary keyed by the short names. Also writes a success message to stdout.
+        
+        Returns:
+            dict: Mapping of group key (str) to the corresponding django.contrib.auth.models.Group instance.
+        """
         groups = {
             "cb_admin": Group.objects.get_or_create(name="cb_admin")[0],
             "lead_auditor": Group.objects.get_or_create(name="lead_auditor")[0],
@@ -50,6 +58,21 @@ class Command(BaseCommand):
         return groups
 
     def _create_user(self, username, email, first_name, last_name, group):  # pylint: disable=too-many-positional-arguments
+        """
+        Create or retrieve a Django User and ensure the user belongs to the provided group.
+        
+        If a new user is created, assigns a default password ("password123"), attempts to validate it (validation failures are reported as warnings but do not prevent creation), saves the user, and adds them to the given group. If the user already exists, the existing user is returned unchanged.
+        
+        Parameters:
+            username (str): Username for the user.
+            email (str): Email address for the user.
+            first_name (str): User's first name.
+            last_name (str): User's last name.
+            group (django.contrib.auth.models.Group): Group to add the user to.
+        
+        Returns:
+            django.contrib.auth.models.User: The created or existing User instance.
+        """
         user, created = User.objects.get_or_create(
             username=username,
             defaults={

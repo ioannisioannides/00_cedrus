@@ -31,7 +31,14 @@ class AuditTeamMemberFormTests(TestCase):
     """Test AuditTeamMemberForm validation and behavior."""
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Create test fixtures: an Organization, an auditor User (assigned to the "auditor" group), and an Audit linked to that organization.
+        
+        Sets the following attributes on self:
+        - org: Organization instance with sample name, address, customer_id, and total_employee_count.
+        - user: User instance with username "auditor1" and assigned to the "auditor" group.
+        - audit: Audit instance associated with the organization and user, with a 7-day audit window starting today.
+        """
         self.org = Organization.objects.create(
             name="Test Organization",
             registered_address="123 Test St",

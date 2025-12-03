@@ -85,28 +85,20 @@ def calculate_complexity_factor(  # pylint: disable=too-many-arguments,too-many-
     previous_major_ncs: int = 0,
 ) -> Tuple[float, List[str]]:
     """
-    Calculate complexity adjustment factor per IAF MD5 Section 4.
-
-    IAF MD5 requires consideration of:
-    - Complexity of the organization
-    - Number and significance of processes
-    - Sites and multi-site considerations
-    - Level of regulatory requirements
-    - Outsourced processes
-    - Results of previous audits
-
-    Args:
-        number_of_sites: Number of sites to audit
-        scope_variation: Degree of scope variation
-        process_complexity: Complexity of processes
-        regulatory_environment: Level of regulatory requirements
-        has_outsourced_processes: Whether organization outsources key processes
-        previous_major_ncs: Count of major NCs from previous audit
-
+    Compute a multiplicative complexity adjustment factor for audit duration and provide textual reasons for each adjustment.
+    
+    Parameters:
+        number_of_sites (int): Total sites to be audited; additional sites increase the factor (1 means no multi-site adjustment).
+        scope_variation (str): Scope variation level; one of "uniform", "moderate", "high".
+        process_complexity (str): Process complexity level; one of "simple", "standard", "complex".
+        regulatory_environment (str): Regulatory pressure level; one of "low", "standard", "high".
+        has_outsourced_processes (bool): True if key processes are outsourced and require additional verification.
+        previous_major_ncs (int): Number of previous major nonconformities.
+    
     Returns:
-        Tuple of (adjustment_factor, list_of_reasons)
-        adjustment_factor: Multiplier to apply to base duration (0.8 - 1.3)
-        list_of_reasons: Explanations for adjustments
+        Tuple[float, List[str]]: adjustment_factor and reasons
+            adjustment_factor: Multiplier to apply to the base duration, clamped between 0.8 and 1.3.
+            reasons: Ordered list of human-readable explanations for each applied adjustment; contains a note if no adjustments were applied.
     """
     adjustment = 1.0
     reasons = []
@@ -175,31 +167,35 @@ def validate_audit_duration(  # pylint: disable=too-many-arguments,too-many-loca
     previous_major_ncs: int = 0,
 ) -> Dict[str, Any]:
     """
-    Validate whether planned audit duration meets IAF MD5 minimum requirements.
-
-    Args:
-        planned_hours: Planned audit duration in hours
-        employee_count: Number of employees in scope
-        standard_code: Standard being audited
-        is_initial_certification: True for Stage 1/2, False for surveillance
-        number_of_sites: Number of sites being audited
-        scope_variation: Degree of scope variation across sites
-        process_complexity: Complexity level of organization's processes
-        regulatory_environment: Level of regulatory requirements
-        has_outsourced_processes: Whether key processes are outsourced
-        previous_major_ncs: Count of major NCs from previous audit
-
+    Validate planned audit hours against IAF MD5 minimum requirements.
+    
+    Parameters:
+        planned_hours (float): Planned audit duration in hours.
+        employee_count (int): Number of employees in scope.
+        standard_code (str): Standard being audited (e.g., "ISO 9001").
+        is_initial_certification (bool): True for initial certification; False for surveillance.
+        number_of_sites (int): Number of sites being audited.
+        scope_variation (str): Degree of variation in scope across sites ("uniform", "moderate", "high").
+        process_complexity (str): Process complexity level ("simple", "standard", "complex").
+        regulatory_environment (str): Regulatory burden level ("low", "standard", "high").
+        has_outsourced_processes (bool): Whether key processes are outsourced.
+        previous_major_ncs (int): Number of major nonconformities from the previous audit.
+    
     Returns:
-        Dictionary containing:
-        - is_valid: True if planned duration meets minimum
-        - required_minimum: Minimum hours required by IAF MD5
-        - planned_hours: Hours currently planned
-        - shortfall_hours: Hours below minimum (0 if valid)
-        - base_duration: Base hours from IAF MD5 table
-        - complexity_factor: Adjustment factor applied
-        - adjustment_reasons: List of reasons for adjustments
-        - recommendation: Text recommendation for auditor
-        - severity: "compliant", "warning", or "critical"
+        dict: Validation result containing:
+            - is_valid (bool): True if planned duration meets the computed minimum.
+            - required_minimum (float): Minimum hours required (rounded to nearest 0.5 hour).
+            - planned_hours (float): The provided planned hours.
+            - shortfall_hours (float): Hours below the minimum (0 if compliant).
+            - base_duration (float): Base hours from the IAF MD5 table.
+            - complexity_factor (float): Multiplicative complexity adjustment applied.
+            - adjustment_reasons (list[str]): Textual reasons for applied adjustments.
+            - recommendation (str): Auditor guidance based on the result.
+            - severity (str): One of "compliant", "warning", or "critical".
+            - audit_type (str): "Initial Certification" or "Surveillance".
+            - percentage_difference (float): (planned - required) / required * 100.
+            - employee_count (int): Echo of the input employee count.
+            - standard (str): Echo of the input standard code.
     """
     # Get base duration from IAF MD5 tables
     base_duration = get_base_duration(employee_count, standard_code)

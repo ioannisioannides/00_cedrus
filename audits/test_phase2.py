@@ -413,7 +413,17 @@ class Phase2IntegrationTests(TestCase):
     """Integration tests combining Phase 2 features."""
 
     def setUp(self):
-        """Create comprehensive test scenario."""
+        """
+        Prepare a multi-site audit test fixture by creating users, an organization with ten sites, a standard, and a certification.
+        
+        Creates the following attributes on self:
+        - auditor: test user with username "auditor"
+        - cb_admin: test user with username "cbadmin"
+        - org: Organization named "Multi-Site Manufacturing Corp" with customer_id "C001" and total_employee_count 500
+        - sites: list of 10 Site instances (site_name "Site 1" through "Site 10", site_address "Address 1" through "Address 10", each with site_employee_count 50) linked to org
+        - standard: Standard with code "ISO 9001:2015" and title "Quality Management"
+        - cert: Certification linking org and standard with certification_scope "Manufacturing"
+        """
         self.auditor = User.objects.create_user(username="auditor", password=TEST_PASSWORD)  # nosec B106
         self.cb_admin = User.objects.create_user(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
 

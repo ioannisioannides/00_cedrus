@@ -89,7 +89,11 @@ class NonconformityViewTests(TestCase):
     """Test nonconformity CRUD views."""
 
     def setUp(self):
-        """Set up test fixtures."""
+        """
+        Initialize common test fixtures used by the findings management test cases.
+        
+        Creates a Django test client, an Organization, three users (auditor, client, regular) and their groups, an Audit linked to the organization with a lead auditor and a one-week window, a Standard, and a Certification attached to the audit.
+        """
         self.client = Client()
 
         # Create organization
