@@ -175,7 +175,7 @@ pygments==2.19.2
     # via
     #   -r requirements.in
     #   rich
-pylint==3.3.7
+pylint==4.0.4
     # via
     #   -r requirements.in
     #   pylint-django
