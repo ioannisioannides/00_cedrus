@@ -1,0 +1,20 @@
+-c requirements.txt
+
+# Testing
+pytest
+pytest-django
+pytest-cov
+coverage
+
+# Linting & Formatting
+black
+isort
+flake8
+pylint<4.0.0
+pylint-django
+django-stubs
+
+# Security & Debugging
+bandit
+safety
+django-debug-toolbar

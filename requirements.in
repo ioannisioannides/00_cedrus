@@ -1,0 +1,23 @@
+# Core Framework
+django>=5.2
+djangorestframework
+drf-spectacular
+
+# Production & Infrastructure
+gunicorn
+psycopg2-binary
+django-environ
+django-redis
+redis
+django-storages
+boto3
+sentry-sdk
+django-csp
+
+# Utilities
+Pillow
+weasyprint
+qrcode
+requests
+tenacity
+nltk
