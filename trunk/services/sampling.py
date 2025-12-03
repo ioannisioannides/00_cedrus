@@ -122,7 +122,7 @@ def _calculate_risk_adjustments(
         high_risk_addition = math.ceil(high_risk_sites / 5)
         risk_adjustment += high_risk_addition
         risk_factors.append(
-            f"High-risk sites: {high_risk_sites} sites identified, " f"adding {high_risk_addition} to sample"
+            f"High-risk sites: {high_risk_sites} sites identified, adding {high_risk_addition} to sample"
         )
 
     # Factor 2: Previous major nonconformities (add 20% if >3 major NCs)
@@ -130,7 +130,7 @@ def _calculate_risk_adjustments(
         nc_addition = math.ceil(base_sample * 0.2)
         risk_adjustment += nc_addition
         risk_factors.append(
-            f"Previous major NCs: {previous_findings_count} found, " f"adding {nc_addition} sites (20% increase)"
+            f"Previous major NCs: {previous_findings_count} found, adding {nc_addition} sites (20% increase)"
         )
 
     # Factor 3: High scope variation (add 1-2 sites)
@@ -138,7 +138,7 @@ def _calculate_risk_adjustments(
         variation_addition = 2
         risk_adjustment += variation_addition
         risk_factors.append(
-            f"High scope variation across sites, " f"adding {variation_addition} sites for representative coverage"
+            f"High scope variation across sites, adding {variation_addition} sites for representative coverage"
         )
     elif scope_variation == "moderate":
         variation_addition = 1

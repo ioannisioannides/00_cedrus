@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.13'
 
 permissions:
   contents: read
@@ -23,31 +23,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+        run: uv sync --all-extras --dev
 
-      - name: Check Formatting (Black)
-        run: black --check .
+      - name: Check Formatting (Ruff)
+        run: uv run ruff format --check .
 
-      - name: Check Imports (Isort)
-        run: isort --check-only --profile black .
-
-      - name: Lint (Flake8)
-        run: flake8 .
-
-      - name: Lint (Pylint)
-        # Running on specific apps to avoid noise from migrations/settings if not configured perfectly
-        run: |
-          pylint audits trunk core accounts || true
+      - name: Lint (Ruff)
+        run: uv run ruff check .
 
   # -----------------------------------------------------------------------------
   # JOB 2: Security (Static Analysis)
@@ -58,17 +50,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          version: "latest"
+          enable-cache: true
 
-      - name: Install Bandit
-        run: pip install bandit
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
 
-      - name: Run Bandit
-        run: bandit -r . -lll -x tests,*/tests.py
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run Bandit (via Ruff)
+        run: uv run ruff check --select S .
 
   # -----------------------------------------------------------------------------
   # JOB 3: Tests & Coverage
@@ -76,25 +71,25 @@ jobs:
   test:
     name: Tests & Coverage
     runs-on: ubuntu-latest
-    needs: [quality] # Run tests only if quality checks pass to save resources
+    needs: [quality]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+        run: uv sync --all-extras --dev
 
       - name: Run Tests
         run: |
-          pytest --cov=. --cov-report=xml --cov-report=term
+          uv run pytest --cov=. --cov-report=xml --cov-report=term
 
       - name: Upload Coverage
         uses: actions/upload-artifact@v5
@@ -112,16 +107,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        run: uv sync --all-extras --dev
 
       - name: Django Check (Deploy)
         env:
@@ -129,7 +125,7 @@ jobs:
           DJANGO_ALLOWED_HOSTS: 'localhost'
           DJANGO_SETTINGS_MODULE: 'cedrus.settings_production'
         run: |
-          python manage.py check --deploy --fail-level WARNING
+          uv run python manage.py check --deploy --fail-level WARNING
 
   # -----------------------------------------------------------------------------
   # JOB 5: Docker Build (Verification)

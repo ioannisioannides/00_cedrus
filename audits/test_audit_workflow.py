@@ -6,9 +6,8 @@ Sprint 8, Task 8.4: Workflow validation tests
 
 # pylint: disable=redefined-outer-name,unused-argument
 
-from django.core.exceptions import ValidationError
-
 import pytest
+from django.core.exceptions import ValidationError
 
 from audits.models import Audit, Nonconformity
 from core.models import Organization, Standard

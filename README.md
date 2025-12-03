@@ -188,47 +188,40 @@ git clone <repository-url>
 cd cedrus
 ```
 
-#### 2. Create Virtual Environment
+#### 2. Install uv and Sync Dependencies
+
+This project uses `uv` for dependency management.
 
 ```bash
-# Create virtual environment
-python3 -m venv venv
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Activate virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-venv\Scripts\activate
+# Sync dependencies (creates virtual environment automatically)
+uv sync
 ```
 
-#### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-#### 4. Configure Database
+#### 3. Configure Database
 
 ```bash
 # Create migrations
-python manage.py makemigrations
+uv run manage.py makemigrations
 
 # Apply migrations
-python manage.py migrate
+uv run manage.py migrate
 ```
 
-#### 5. Create Superuser
+#### 4. Create Superuser
 
 ```bash
-python manage.py createsuperuser
+uv run manage.py createsuperuser
 ```
 
 Follow the prompts to create an administrator account.
 
-#### 6. Seed Initial Data (Optional)
+#### 5. Seed Initial Data (Optional)
 
 ```bash
-python manage.py seed_data
+uv run manage.py seed_data
 ```
 
 This command creates:
@@ -246,10 +239,10 @@ This command creates:
 
 ⚠️ **Security Warning**: Change all default passwords in production!
 
-#### 7. Run Development Server
+#### 6. Run Development Server
 
 ```bash
-python manage.py runserver
+uv run manage.py runserver
 ```
 
 Visit `http://127.0.0.1:8000/` in your browser.
@@ -696,29 +689,27 @@ cedrus/
 
 ### Testing
 
-Currently, the project uses Django's built-in test framework. Test files are located in each app's `tests.py`.
+Currently, the project uses `pytest` for testing.
 
 **Current Status:**
 
-- 347 total tests (322 passing, 92.8% pass rate)
-- 76% test coverage
+- 500+ total tests
+- 83% test coverage
 - Comprehensive test suite for models, views, workflows, and validation
 
 **Run Tests:**
 
 ```bash
-# Run all tests
-python manage.py test
+# Run all tests (ensure development settings are used)
+DJANGO_SETTINGS_MODULE=cedrus.settings uv run pytest
 
 # Run specific app tests
-python manage.py test audits
-python manage.py test core
-python manage.py test accounts
+DJANGO_SETTINGS_MODULE=cedrus.settings uv run pytest audits/
+DJANGO_SETTINGS_MODULE=cedrus.settings uv run pytest core/
+DJANGO_SETTINGS_MODULE=cedrus.settings uv run pytest accounts/
 
 # Run with coverage
-coverage run --source='.' manage.py test
-coverage report
-coverage html
+DJANGO_SETTINGS_MODULE=cedrus.settings uv run pytest --cov=. --cov-report=html
 open htmlcov/index.html
 ```
 

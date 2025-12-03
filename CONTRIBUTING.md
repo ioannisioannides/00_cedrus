@@ -52,42 +52,39 @@ Thank you for your interest in contributing to Cedrus! This document provides gu
    cd cedrus
    ```
 
-3. **Create a virtual environment**:
+3. **Install uv and sync dependencies**:
 
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   # Install uv (if not already installed)
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+
+   # Sync dependencies (creates virtual environment automatically)
+   uv sync
    ```
 
-4. **Install dependencies**:
+4. **Set up the database**:
 
    ```bash
-   pip install -r requirements.txt
+   uv run manage.py makemigrations
+   uv run manage.py migrate
    ```
 
-5. **Set up the database**:
+5. **Create a superuser** (for testing):
 
    ```bash
-   python manage.py makemigrations
-   python manage.py migrate
+   uv run manage.py createsuperuser
    ```
 
-6. **Create a superuser** (for testing):
+6. **Seed test data** (optional):
 
    ```bash
-   python manage.py createsuperuser
+   uv run manage.py seed_data
    ```
 
-7. **Seed test data** (optional):
+7. **Run the development server**:
 
    ```bash
-   python manage.py seed_data
-   ```
-
-8. **Run the development server**:
-
-   ```bash
-   python manage.py runserver
+   uv run manage.py runserver
    ```
 
 ### Setting Up Your Development Branch
@@ -384,7 +381,7 @@ Describe how you tested your changes
 ### Running Tests (When Available)
 
 ```bash
-python manage.py test
+DJANGO_SETTINGS_MODULE=cedrus.settings uv run pytest
 ```
 
 ### Writing Tests

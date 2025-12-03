@@ -116,7 +116,7 @@ def calculate_complexity_factor(  # pylint: disable=too-many-arguments,too-many-
         site_factor = 0.05 * (number_of_sites - 1)  # 5% per additional site
         site_factor = min(site_factor, 0.15)  # Cap at 15% increase
         adjustment += site_factor
-        reasons.append(f"Multi-site organization: +{site_factor*100:.1f}% " f"({number_of_sites} sites being audited)")
+        reasons.append(f"Multi-site organization: +{site_factor * 100:.1f}% ({number_of_sites} sites being audited)")
 
     # Scope variation adjustment
     if scope_variation == "high":
@@ -151,7 +151,7 @@ def calculate_complexity_factor(  # pylint: disable=too-many-arguments,too-many-
     if previous_major_ncs >= 3:
         nc_factor = 0.10
         adjustment += nc_factor
-        reasons.append(f"Previous major NCs ({previous_major_ncs}): +{nc_factor*100:.1f}% " "for enhanced verification")
+        reasons.append(f"Previous major NCs ({previous_major_ncs}): +{nc_factor * 100:.1f}% for enhanced verification")
 
     # Apply limits: IAF MD5 allows ±20% adjustment typically
     adjustment = max(0.8, min(1.3, adjustment))
@@ -222,7 +222,7 @@ def validate_audit_duration(  # pylint: disable=too-many-arguments,too-many-loca
         surveillance_factor = 0.67
         adjusted_minimum = adjusted_minimum * surveillance_factor
         adjustment_reasons.append(
-            f"Surveillance audit: Apply {surveillance_factor*100:.0f}% factor " f"(IAF MD5 Section 5.2)"
+            f"Surveillance audit: Apply {surveillance_factor * 100:.0f}% factor (IAF MD5 Section 5.2)"
         )
 
     # Round to 0.5 hour increments

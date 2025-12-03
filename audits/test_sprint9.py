@@ -102,7 +102,10 @@ class NonconformityViewTests(TestCase):
 
         # Create users and groups
         self.auditor = User.objects.create_user(
-            username="auditor1", password=TEST_PASSWORD, first_name="Test", last_name="Auditor"  # nosec B106
+            username="auditor1",
+            password=TEST_PASSWORD,
+            first_name="Test",
+            last_name="Auditor",  # nosec B106
         )
         self.auditor_group = Group.objects.create(name="auditor")
         self.auditor.groups.add(self.auditor_group)

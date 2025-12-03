@@ -39,7 +39,10 @@ class AuditTeamMemberFormTests(TestCase):
             total_employee_count=10,
         )
         self.user = User.objects.create_user(
-            username="auditor1", password=TEST_PASSWORD, first_name="John", last_name="Auditor"  # nosec B106
+            username="auditor1",
+            password=TEST_PASSWORD,
+            first_name="John",
+            last_name="Auditor",  # nosec B106
         )
 
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
@@ -131,7 +134,10 @@ class TeamMemberViewTests(TestCase):
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.lead_auditor = User.objects.create_user(
-            username="leadauditor", password=TEST_PASSWORD, first_name="Lead", last_name="Auditor"  # nosec B106
+            username="leadauditor",
+            password=TEST_PASSWORD,
+            first_name="Lead",
+            last_name="Auditor",  # nosec B106
         )
         self.lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.lead_auditor.groups.add(self.lead_auditor_group)
@@ -139,7 +145,10 @@ class TeamMemberViewTests(TestCase):
         self.regular_user = User.objects.create_user(username="regularuser", password=TEST_PASSWORD)  # nosec B106
 
         self.auditor_user = User.objects.create_user(
-            username="auditor1", password=TEST_PASSWORD, first_name="John", last_name="Auditor"  # nosec B106
+            username="auditor1",
+            password=TEST_PASSWORD,
+            first_name="John",
+            last_name="Auditor",  # nosec B106
         )
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor_user.groups.add(auditor_group)
@@ -281,7 +290,10 @@ class CompetenceWarningTests(TestCase):
         self.cb_admin.groups.add(self.cb_admin_group)
 
         self.auditor = User.objects.create_user(
-            username="auditor1", password=TEST_PASSWORD, first_name="John", last_name="Auditor"  # nosec B106
+            username="auditor1",
+            password=TEST_PASSWORD,
+            first_name="John",
+            last_name="Auditor",  # nosec B106
         )
         auditor_group, _ = Group.objects.get_or_create(name="auditor")
         self.auditor.groups.add(auditor_group)
@@ -376,7 +388,7 @@ class MultiSiteSamplingTests(TestCase):
 
         # Add multiple sites
         for i in range(5):
-            site = Site.objects.create(organization=org, site_name=f"Site {i+1}", site_address=f"Address {i+1}")
+            site = Site.objects.create(organization=org, site_name=f"Site {i + 1}", site_address=f"Address {i + 1}")
             audit.sites.add(site)
 
         url = reverse("audits:audit_detail", kwargs={"pk": audit.pk})

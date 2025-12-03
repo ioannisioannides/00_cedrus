@@ -145,8 +145,7 @@ class AuditTeamMemberForm(forms.ModelForm):
                 raise ValidationError(
                     {
                         "date_to": (
-                            "Team member end date cannot be after audit end date "
-                            f"({self.audit.total_audit_date_to})."
+                            f"Team member end date cannot be after audit end date ({self.audit.total_audit_date_to})."
                         )
                     }
                 )

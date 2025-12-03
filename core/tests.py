@@ -6,10 +6,19 @@ from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import Group, User
+from django.db.models import ProtectedError
+from django.db.utils import IntegrityError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from core.models import CertificateHistory, Certification, Organization, Site, Standard, SurveillanceSchedule
+from core.models import (
+    CertificateHistory,
+    Certification,
+    Organization,
+    Site,
+    Standard,
+    SurveillanceSchedule,
+)
 from core.test_utils import TEST_PASSWORD
 
 # ==============================================================================
@@ -166,7 +175,7 @@ class OrganizationModelTest(TestCase):
     def test_organization_customer_id_unique(self):
         """Test that customer_id must be unique."""
         Organization.objects.create(**self.org_data)
-        with self.assertRaises(Exception):  # IntegrityError
+        with self.assertRaises(IntegrityError):
             Organization.objects.create(
                 name="Another Org",
                 registered_address="456 St",
@@ -271,7 +280,7 @@ class StandardModelTest(TestCase):
     def test_standard_code_unique(self):
         """Test that standard code must be unique."""
         Standard.objects.create(code="ISO 9001:2015", title="QMS")
-        with self.assertRaises(Exception):  # IntegrityError
+        with self.assertRaises(IntegrityError):
             Standard.objects.create(code="ISO 9001:2015", title="Duplicate")
 
     def test_standard_optional_fields(self):
@@ -319,7 +328,7 @@ class CertificationModelTest(TestCase):
             certification_scope="Scope 1",
             certificate_status="active",
         )
-        with self.assertRaises(Exception):  # IntegrityError
+        with self.assertRaises(IntegrityError):
             Certification.objects.create(
                 organization=self.org,
                 standard=self.std,
@@ -336,7 +345,7 @@ class CertificationModelTest(TestCase):
             certificate_status="active",
         )
         # Should raise ProtectedError
-        with self.assertRaises(Exception):
+        with self.assertRaises(ProtectedError):
             self.std.delete()
 
     def test_certification_cascade_organization(self):

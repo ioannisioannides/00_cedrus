@@ -6,6 +6,8 @@ from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
+from django.db.models import ProtectedError
+from django.db.utils import IntegrityError
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -98,7 +100,7 @@ class AuditModelTest(TestCase):
             created_by=self.cb_admin,
             lead_auditor=self.lead_auditor,
         )
-        with self.assertRaises(Exception):  # ProtectedError
+        with self.assertRaises(ProtectedError):
             self.cb_admin.delete()
 
     def test_audit_protect_lead_auditor(self):
@@ -113,7 +115,7 @@ class AuditModelTest(TestCase):
             created_by=self.cb_admin,
             lead_auditor=self.lead_auditor,
         )
-        with self.assertRaises(Exception):  # ProtectedError
+        with self.assertRaises(ProtectedError):
             self.lead_auditor.delete()
 
     def test_audit_duration_validation(self):
@@ -602,7 +604,7 @@ class AuditMetadataTest(TestCase):
         self.assertEqual(self.audit.changes, changes)
 
         # Should not be able to create duplicate
-        with self.assertRaises(Exception):  # IntegrityError
+        with self.assertRaises(IntegrityError):
             AuditChanges.objects.create(audit=self.audit)
 
     def test_audit_plan_review_one_to_one(self):
