@@ -217,8 +217,8 @@ class EvidenceService:
         if data.finding_id:
             try:
                 finding = Nonconformity.objects.get(id=data.finding_id, audit=audit)
-            except Nonconformity.DoesNotExist:
-                raise ValidationError(f"Nonconformity with id {data.finding_id} not found in this audit.")
+            except Nonconformity.DoesNotExist as err:
+                raise ValidationError(f"Nonconformity with id {data.finding_id} not found in this audit.") from err
 
         evidence = EvidenceFile(
             audit=audit,
