@@ -73,15 +73,12 @@ select = [
     "S",  # flake8-bandit
     "DJ", # flake8-django
 ]
-ignore = [
-    "S101", # Use of assert detected (pytest uses asserts)
-    "S105", # Hardcoded password string (common in tests/settings)
-    "S106", # Hardcoded password func arg
-]
+ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 "**/test_*.py" = ["S101", "S105", "S106"]
 "**/tests.py" = ["S101", "S105", "S106"]
+"**/settings*.py" = ["S101", "S105", "S106"]
 "**/migrations/*" = ["E501"]
 
 [tool.ruff.lint.isort]
