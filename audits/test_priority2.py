@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from audits.models import (
+from audit_management.models import (
     Audit,
     AuditChanges,
     AuditPlanReview,
@@ -18,10 +18,10 @@ from audits.models import (
     EvidenceFile,
     Nonconformity,
 )
-from audits.workflows import AuditWorkflow
 from core.models import Certification, Organization, Standard
 from core.test_utils import TEST_PASSWORD
 from identity.adapters.models import Profile
+from trunk.workflows.audit_workflow import AuditWorkflow
 
 
 class AuditWorkflowTest(TestCase):
@@ -102,7 +102,7 @@ class AuditWorkflowTest(TestCase):
         self.audit.refresh_from_db()
 
         # Try to submit - should fail without technical review and NC responses
-        from audits.models import TechnicalReview
+        from audit_management.models import TechnicalReview
 
         TechnicalReview.objects.create(
             audit=self.audit,
@@ -148,7 +148,7 @@ class AuditWorkflowTest(TestCase):
         self.audit.save()
 
         # Create approved technical review (required for transition)
-        from audits.models import TechnicalReview
+        from audit_management.models import TechnicalReview
 
         TechnicalReview.objects.create(
             audit=self.audit,
@@ -215,7 +215,7 @@ class AuditDocumentationViewTest(TestCase):
     def test_audit_changes_view_get(self):
         """Test GET audit changes edit view."""
         self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:audit_changes_edit", args=[self.audit.pk]))
+        response = self.client.get(reverse("audit_management:audit_changes_edit", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
         self.assertIn("audit", response.context)
@@ -234,7 +234,7 @@ class AuditDocumentationViewTest(TestCase):
             "other_has_change": True,
             "other_description": "Test description",
         }
-        response = self.client.post(reverse("audits:audit_changes_edit", args=[self.audit.pk]), data)
+        response = self.client.post(reverse("audit_management:audit_changes_edit", args=[self.audit.pk]), data)
         self.assertEqual(response.status_code, 302)  # Redirect after success
 
         changes = AuditChanges.objects.get(audit=self.audit)
@@ -254,7 +254,7 @@ class AuditDocumentationViewTest(TestCase):
             "next_audit_date_from": (date.today() + timedelta(days=365)).isoformat(),
             "next_audit_date_to": (date.today() + timedelta(days=368)).isoformat(),
         }
-        response = self.client.post(reverse("audits:audit_plan_review_edit", args=[self.audit.pk]), data)
+        response = self.client.post(reverse("audit_management:audit_plan_review_edit", args=[self.audit.pk]), data)
         self.assertEqual(response.status_code, 302)
 
         plan_review = AuditPlanReview.objects.get(audit=self.audit)
@@ -283,7 +283,7 @@ class AuditDocumentationViewTest(TestCase):
             "committee_comments": "",
             "general_commentary": "General commentary here",
         }
-        response = self.client.post(reverse("audits:audit_summary_edit", args=[self.audit.pk]), data)
+        response = self.client.post(reverse("audit_management:audit_summary_edit", args=[self.audit.pk]), data)
         self.assertEqual(response.status_code, 302)
 
         summary = AuditSummary.objects.get(audit=self.audit)
@@ -345,7 +345,7 @@ class AuditRecommendationTest(TestCase):
             "stage2_required": False,
             "decision_notes": "Additional notes",
         }
-        response = self.client.post(reverse("audits:audit_recommendation_edit", args=[self.audit.pk]), data)
+        response = self.client.post(reverse("audit_management:audit_recommendation_edit", args=[self.audit.pk]), data)
         self.assertEqual(response.status_code, 302)
 
         recommendation = AuditRecommendation.objects.get(audit=self.audit)
@@ -355,7 +355,7 @@ class AuditRecommendationTest(TestCase):
     def test_recommendation_view_cb_admin(self):
         """Test CB admin can edit recommendations."""
         self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:audit_recommendation_edit", args=[self.audit.pk]))
+        response = self.client.get(reverse("audit_management:audit_recommendation_edit", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_decision_view_requires_decision_pending_status(self):
@@ -364,7 +364,7 @@ class AuditRecommendationTest(TestCase):
         self.audit.save()
 
         self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:certification_decision_create", args=[self.audit.pk]))
+        response = self.client.get(reverse("audit_management:certification_decision_create", args=[self.audit.pk]))
         # Should return 403 Forbidden (UserPassesTestMixin returns False)
         self.assertEqual(response.status_code, 403)
 
@@ -374,12 +374,12 @@ class AuditRecommendationTest(TestCase):
         self.audit.save()
 
         self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:certification_decision_create", args=[self.audit.pk]))
+        response = self.client.get(reverse("audit_management:certification_decision_create", args=[self.audit.pk]))
         self.assertEqual(response.status_code, 403)  # Forbidden
 
     def test_make_decision_changes_status(self):
         """Test making decision changes audit status to closed."""
-        from audits.models import TechnicalReview
+        from audit_management.models import TechnicalReview
 
         self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
 
@@ -388,12 +388,12 @@ class AuditRecommendationTest(TestCase):
         self.audit.save()
 
         # Move to submitted
-        self.client.post(reverse("audits:audit_transition_status", args=[self.audit.pk, "submitted"]))
+        self.client.post(reverse("audit_management:audit_transition_status", args=[self.audit.pk, "submitted"]))
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "submitted")
 
         # Move to technical_review
-        self.client.post(reverse("audits:audit_transition_status", args=[self.audit.pk, "technical_review"]))
+        self.client.post(reverse("audit_management:audit_transition_status", args=[self.audit.pk, "technical_review"]))
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "technical_review")
 
@@ -409,7 +409,7 @@ class AuditRecommendationTest(TestCase):
         )
 
         # Move to decision_pending
-        self.client.post(reverse("audits:audit_transition_status", args=[self.audit.pk, "decision_pending"]))
+        self.client.post(reverse("audit_management:audit_transition_status", args=[self.audit.pk, "decision_pending"]))
         self.audit.refresh_from_db()
         self.assertEqual(self.audit.status, "decision_pending")
 
@@ -419,7 +419,7 @@ class AuditRecommendationTest(TestCase):
             "decision_notes": "Certification granted",
             "certifications_affected": [self.cert.pk],
         }
-        self.client.post(reverse("audits:certification_decision_create", args=[self.audit.pk]), data)
+        self.client.post(reverse("audit_management:certification_decision_create", args=[self.audit.pk]), data)
 
         # Verify status is closed
         self.audit.refresh_from_db()
@@ -475,7 +475,7 @@ class EvidenceFileManagementTest(TestCase):
         test_file = SimpleUploadedFile("test.pdf", b"file_content", content_type="application/pdf")
 
         data = {"file": test_file, "finding": ""}  # General evidence
-        response = self.client.post(reverse("audits:evidence_file_upload", args=[self.audit.pk]), data)
+        response = self.client.post(reverse("audit_management:evidence_file_upload", args=[self.audit.pk]), data)
         self.assertEqual(response.status_code, 302)  # Redirect after success
 
         # Check file was created
@@ -490,7 +490,7 @@ class EvidenceFileManagementTest(TestCase):
         test_file = SimpleUploadedFile("client_doc.pdf", b"client_content", content_type="application/pdf")
 
         data = {"file": test_file, "finding": ""}
-        response = self.client.post(reverse("audits:evidence_file_upload", args=[self.audit.pk]), data)
+        response = self.client.post(reverse("audit_management:evidence_file_upload", args=[self.audit.pk]), data)
         self.assertEqual(response.status_code, 302)
 
         files = EvidenceFile.objects.filter(audit=self.audit)
@@ -504,17 +504,17 @@ class EvidenceFileManagementTest(TestCase):
 
         # CB Admin can download
         self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:evidence_file_download", args=[evidence.pk]))
+        response = self.client.get(reverse("audit_management:evidence_file_download", args=[evidence.pk]))
         self.assertEqual(response.status_code, 200)
 
         # Lead auditor can download
         self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:evidence_file_download", args=[evidence.pk]))
+        response = self.client.get(reverse("audit_management:evidence_file_download", args=[evidence.pk]))
         self.assertEqual(response.status_code, 200)
 
         # Client can download their org's files
         self.client.login(username="client", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:evidence_file_download", args=[evidence.pk]))
+        response = self.client.get(reverse("audit_management:evidence_file_download", args=[evidence.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_file_delete_uploader(self):
@@ -523,7 +523,7 @@ class EvidenceFileManagementTest(TestCase):
         evidence = EvidenceFile.objects.create(audit=self.audit, uploaded_by=self.lead_auditor, file=test_file)
 
         self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.post(reverse("audits:evidence_file_delete", args=[evidence.pk]))
+        response = self.client.post(reverse("audit_management:evidence_file_delete", args=[evidence.pk]))
         self.assertEqual(response.status_code, 302)
 
         # File should be deleted
@@ -535,7 +535,7 @@ class EvidenceFileManagementTest(TestCase):
         evidence = EvidenceFile.objects.create(audit=self.audit, uploaded_by=self.lead_auditor, file=test_file)
 
         self.client.login(username="cbadmin", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.post(reverse("audits:evidence_file_delete", args=[evidence.pk]))
+        response = self.client.post(reverse("audit_management:evidence_file_delete", args=[evidence.pk]))
         self.assertEqual(response.status_code, 302)
 
         self.assertFalse(EvidenceFile.objects.filter(pk=evidence.pk).exists())
@@ -576,7 +576,9 @@ class StatusTransitionViewTest(TestCase):
     def test_transition_draft_to_in_review(self):
         """Test transition from draft to in_review via view."""
         self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:audit_transition_status", args=[self.audit.pk, "scheduled"]))
+        response = self.client.get(
+            reverse("audit_management:audit_transition_status", args=[self.audit.pk, "scheduled"])
+        )
         self.assertEqual(response.status_code, 302)  # Redirect
 
         self.audit.refresh_from_db()
@@ -586,7 +588,7 @@ class StatusTransitionViewTest(TestCase):
         """Test invalid transition shows error."""
         self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
         # Try to go straight to decided (invalid)
-        response = self.client.get(reverse("audits:audit_transition_status", args=[self.audit.pk, "decided"]))
+        response = self.client.get(reverse("audit_management:audit_transition_status", args=[self.audit.pk, "decided"]))
         self.assertEqual(response.status_code, 302)
 
         self.audit.refresh_from_db()
@@ -599,7 +601,7 @@ class StatusTransitionViewTest(TestCase):
 
         # Lead auditor cannot make decision
         self.client.login(username="lead", password=TEST_PASSWORD)  # nosec B106
-        response = self.client.get(reverse("audits:audit_transition_status", args=[self.audit.pk, "decided"]))
+        response = self.client.get(reverse("audit_management:audit_transition_status", args=[self.audit.pk, "decided"]))
         self.assertEqual(response.status_code, 302)
 
         self.audit.refresh_from_db()

@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group, User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from audits.models import AuditProgram
+from audit_management.models import AuditProgram
 from core.models import Organization
 from core.test_utils import TEST_PASSWORD
 
@@ -38,7 +38,7 @@ class AuditProgramTests(TestCase):
     def test_create_program_cb_admin(self):
         """Test CB Admin can create program."""
         self.client.login(username="cb_admin", password=TEST_PASSWORD)  # nosec B106
-        url = reverse("audits:program_create")
+        url = reverse("audit_management:program_create")
         data = {
             "title": "2025 Program",
             "year": 2025,
@@ -65,7 +65,7 @@ class AuditProgramTests(TestCase):
     def test_create_program_client_admin(self):
         """Test Client Admin can create program."""
         self.client.login(username="client_admin", password=TEST_PASSWORD)  # nosec B106
-        url = reverse("audits:program_create")
+        url = reverse("audit_management:program_create")
         data = {
             "title": "Client Program",
             "year": 2025,
@@ -84,7 +84,7 @@ class AuditProgramTests(TestCase):
             organization=self.org, title="Existing Program", year=2024, created_by=self.cb_admin
         )
         self.client.login(username="client_admin", password=TEST_PASSWORD)  # nosec B106
-        url = reverse("audits:program_list")
+        url = reverse("audit_management:program_list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Existing Program")

@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["cedrus", "identity", "audits", "core", "trunk", "reporting"]
+packages = ["cedrus", "identity", "audit_management", "core", "trunk", "reporting"]
 
 [tool.ruff]
 line-length = 120
@@ -63,6 +63,7 @@ exclude = [
     "site-packages",
     "venv",
     "**/migrations/*",
+    "uv.lock",
 ]
 
 [tool.ruff.lint]
@@ -84,11 +85,11 @@ ignore = []
 "**/migrations/*" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["cedrus", "identity", "audits", "core", "trunk", "reporting"]
+known-first-party = ["cedrus", "identity", "audit_management", "core", "trunk", "reporting"]
 
 [tool.coverage.run]
 branch = true
-source = ["identity", "audits", "core", "trunk", "reporting", "cedrus"]
+source = ["identity", "audit_management", "core", "trunk", "reporting", "cedrus"]
 omit = [
     "manage.py",
     "*/asgi.py",

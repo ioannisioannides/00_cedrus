@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
-from audits.models import Audit, Nonconformity, Observation, OpportunityForImprovement
+from audit_management.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Standard
 from core.test_utils import TEST_PASSWORD
 from identity.adapters.models import Profile
@@ -129,7 +129,7 @@ class TestNonconformityCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:nonconformity_create", kwargs={"audit_pk": audit_scheduled.pk})
+        url = reverse("audit_management:nonconformity_create", kwargs={"audit_pk": audit_scheduled.pk})
         response = client.post(
             url,
             {
@@ -155,7 +155,7 @@ class TestNonconformityCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:nonconformity_create", kwargs={"audit_pk": audit_decided.pk})
+        url = reverse("audit_management:nonconformity_create", kwargs={"audit_pk": audit_decided.pk})
         response = client.post(
             url,
             {
@@ -187,7 +187,7 @@ class TestNonconformityCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:nonconformity_detail", kwargs={"pk": nc.pk})
+        url = reverse("audit_management:nonconformity_detail", kwargs={"pk": nc.pk})
         response = client.get(url)
 
         assert response.status_code == 200
@@ -210,7 +210,7 @@ class TestNonconformityCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:nonconformity_update", kwargs={"pk": nc.pk})
+        url = reverse("audit_management:nonconformity_update", kwargs={"pk": nc.pk})
         response = client.post(
             url,
             {
@@ -245,7 +245,7 @@ class TestNonconformityCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:nonconformity_delete", kwargs={"pk": nc.pk})
+        url = reverse("audit_management:nonconformity_delete", kwargs={"pk": nc.pk})
         response = client.post(url)
 
         assert response.status_code == 302
@@ -256,7 +256,7 @@ class TestNonconformityCRUD:
         client = Client()
         client.force_login(client_user)
 
-        url = reverse("audits:nonconformity_create", kwargs={"audit_pk": audit_scheduled.pk})
+        url = reverse("audit_management:nonconformity_create", kwargs={"audit_pk": audit_scheduled.pk})
         response = client.post(
             url,
             {
@@ -282,7 +282,7 @@ class TestObservationCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:observation_create", kwargs={"audit_pk": audit_scheduled.pk})
+        url = reverse("audit_management:observation_create", kwargs={"audit_pk": audit_scheduled.pk})
         response = client.post(
             url,
             {
@@ -304,7 +304,7 @@ class TestObservationCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:observation_create", kwargs={"audit_pk": audit_decided.pk})
+        url = reverse("audit_management:observation_create", kwargs={"audit_pk": audit_decided.pk})
         response = client.post(
             url,
             {
@@ -332,7 +332,7 @@ class TestObservationCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:observation_detail", kwargs={"pk": obs.pk})
+        url = reverse("audit_management:observation_detail", kwargs={"pk": obs.pk})
         response = client.get(url)
 
         assert response.status_code == 200
@@ -353,7 +353,7 @@ class TestObservationCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:observation_update", kwargs={"pk": obs.pk})
+        url = reverse("audit_management:observation_update", kwargs={"pk": obs.pk})
         response = client.post(
             url,
             {
@@ -383,7 +383,7 @@ class TestObservationCRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:observation_delete", kwargs={"pk": obs.pk})
+        url = reverse("audit_management:observation_delete", kwargs={"pk": obs.pk})
         response = client.post(url)
 
         assert response.status_code == 302
@@ -399,7 +399,7 @@ class TestOFICRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:ofi_create", kwargs={"audit_pk": audit_scheduled.pk})
+        url = reverse("audit_management:ofi_create", kwargs={"audit_pk": audit_scheduled.pk})
         response = client.post(
             url,
             {
@@ -420,7 +420,7 @@ class TestOFICRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:ofi_create", kwargs={"audit_pk": audit_decided.pk})
+        url = reverse("audit_management:ofi_create", kwargs={"audit_pk": audit_decided.pk})
         response = client.post(
             url,
             {
@@ -446,7 +446,7 @@ class TestOFICRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:ofi_detail", kwargs={"pk": ofi.pk})
+        url = reverse("audit_management:ofi_detail", kwargs={"pk": ofi.pk})
         response = client.get(url)
 
         assert response.status_code == 200
@@ -466,7 +466,7 @@ class TestOFICRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:ofi_update", kwargs={"pk": ofi.pk})
+        url = reverse("audit_management:ofi_update", kwargs={"pk": ofi.pk})
         response = client.post(
             url,
             {
@@ -494,7 +494,7 @@ class TestOFICRUD:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:ofi_delete", kwargs={"pk": ofi.pk})
+        url = reverse("audit_management:ofi_delete", kwargs={"pk": ofi.pk})
         response = client.post(url)
 
         assert response.status_code == 302
@@ -539,7 +539,7 @@ class TestFindingsIntegration:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:audit_detail", kwargs={"pk": audit_scheduled.pk})
+        url = reverse("audit_management:audit_detail", kwargs={"pk": audit_scheduled.pk})
         response = client.get(url)
 
         assert response.status_code == 200
@@ -556,7 +556,7 @@ class TestFindingsIntegration:
         client = Client()
         client.force_login(auditor_user)
 
-        url = reverse("audits:audit_detail", kwargs={"pk": audit_decided.pk})
+        url = reverse("audit_management:audit_detail", kwargs={"pk": audit_decided.pk})
         response = client.get(url)
 
         assert response.status_code == 200
