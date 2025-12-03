@@ -7,12 +7,15 @@ This directory contains formal governance documents, board decisions, completion
 ## 📋 Document Index
 
 ### Board Meetings & Decisions
+
 - **`board_meeting_001_external_audit_module.md`** - Initial board approval for External Audit Module with 68-agent multi-agent system
 
 ### Design Documents
+
 - **`data_model_design_v1.md`** - Phase 1-3 data model design for ISO 17021 compliance
 
 ### Phase Completion Reports
+
 - **`phase_1_completion_report.md`** - Phase 1: 7-state workflow, technical review, certification decision
 - **`phase_2_completion_report.md`** - Phase 2: Root cause analysis, recurrence tracking, IAF MD1/MD5 compliance
 - **`sprint_6_completion_report.md`** - Sprint 6: Testing & QA baseline (125 tests)
@@ -20,9 +23,11 @@ This directory contains formal governance documents, board decisions, completion
 - **`priority_2_completion_summary.md`** - Executive summary of Priority 2 completion
 
 ### Quality Assurance
+
 - **`qa_test_report.md`** - Comprehensive QA test report
 
 ### Project Status
+
 - **`project_status_update.md`** - Latest project status and progress tracking
 
 ---
@@ -39,11 +44,13 @@ This directory contains formal governance documents, board decisions, completion
 ## 🎯 Governance Structure
 
 ### Decision Authority
+
 - **Board Meetings** - Strategic direction and major feature approval
 - **Phase Reports** - Implementation completion and acceptance criteria validation
 - **QA Reports** - Quality gates and production readiness
 
 ### Document Naming Convention
+
 - Board meetings: `board_meeting_XXX_topic.md`
 - Phase reports: `phase_X_completion_report.md`
 - Sprint reports: `sprint_X_completion_report.md`
@@ -67,16 +74,19 @@ This directory contains formal governance documents, board decisions, completion
 ## 🔍 How to Use This Directory
 
 ### For Project Managers
+
 - Review completion reports for milestone tracking
 - Check approval status for production readiness
 - Reference board decisions for strategic alignment
 
 ### For Developers
+
 - Consult data model design before schema changes
 - Review phase reports for implementation context
 - Check QA reports for quality requirements
 
 ### For Stakeholders
+
 - Read completion reports for progress updates
 - Review board meetings for strategic decisions
 - Check project status for current state

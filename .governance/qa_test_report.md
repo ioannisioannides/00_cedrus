@@ -61,6 +61,7 @@
 ## Bugs Found and Fixed
 
 ### Bug #1: Missing Return Statement in Status Transition View
+
 **Severity:** High  
 **File:** `audits/views.py`  
 **Function:** `audit_transition_status`  
@@ -70,6 +71,7 @@
 **Root Cause:** Return statement was incorrectly indented inside the except block.
 
 **Fix Applied:**
+
 ```python
 # BEFORE (incorrect):
 try:
@@ -94,6 +96,7 @@ return redirect("audits:audit_detail", pk=pk)  # Always returns
 ---
 
 ### Bug #2: Overly Restrictive Workflow Permission
+
 **Severity:** Medium  
 **File:** `audits/workflows.py`  
 **Function:** `_can_user_transition`  
@@ -103,6 +106,7 @@ return redirect("audits:audit_detail", pk=pk)  # Always returns
 **Root Cause:** Permission check did not account for Lead Auditor role.
 
 **Fix Applied:**
+
 ```python
 # BEFORE (too restrictive):
 if self.current_status == 'client_review' and new_status == 'submitted_to_cb':
@@ -122,6 +126,7 @@ if self.current_status == 'client_review' and new_status == 'submitted_to_cb':
 ---
 
 ### Bug #3: Workflow Instance Caching Issue in Test
+
 **Severity:** Low (test-only issue)  
 **File:** `audits/test_priority2.py`  
 **Function:** `test_workflow_permission_checks`  
@@ -131,6 +136,7 @@ if self.current_status == 'client_review' and new_status == 'submitted_to_cb':
 **Root Cause:** Workflow class stores `self.current_status = audit.status` at initialization time.
 
 **Fix Applied:**
+
 ```python
 # BEFORE (incorrect):
 self.audit.status = "submitted_to_cb"
@@ -152,6 +158,7 @@ allowed, _ = workflow.can_transition("decided", self.cb_admin)
 ## Feature Validation
 
 ### ✅ US-009: Status Workflow Validation
+
 - [x] Draft → Client Review requires lead auditor
 - [x] Client Review → Submitted to CB requires lead auditor or CB admin
 - [x] Submitted to CB → Decided requires CB admin only
@@ -159,6 +166,7 @@ allowed, _ = workflow.can_transition("decided", self.cb_admin)
 - [x] Decided status is final and cannot be changed
 
 ### ✅ EPIC-005: Audit Documentation UI
+
 - [x] Organization changes form displays and saves correctly
 - [x] Audit plan review form displays and saves correctly
 - [x] Audit summary form displays and saves correctly
@@ -166,6 +174,7 @@ allowed, _ = workflow.can_transition("decided", self.cb_admin)
 - [x] Forms preserve existing data when editing
 
 ### ✅ EPIC-007: Recommendations & Decision Workflow
+
 - [x] Lead auditor can create and edit recommendations
 - [x] Recommendations are required before CB admin decision
 - [x] Only CB admin can access decision form
@@ -173,6 +182,7 @@ allowed, _ = workflow.can_transition("decided", self.cb_admin)
 - [x] Decisions update audit status automatically
 
 ### ✅ EPIC-006: Evidence File Management
+
 - [x] File upload restricted to auditors only
 - [x] File size validation (10MB limit)
 - [x] File type validation (PDF, Word, Excel, Images)
@@ -210,10 +220,12 @@ Found 6 test failures in `accounts` app that pre-date Priority 2 implementation:
 ## Code Quality
 
 ### Lint Warnings
+
 - 2 minor warnings about unused function parameters in `workflows.py`
 - These are acceptable as the parameters are required by the function signature
 
 ### Code Standards
+
 - ✅ All new code follows Django best practices
 - ✅ Proper separation of concerns (forms, views, workflows)
 - ✅ Comprehensive docstrings and comments

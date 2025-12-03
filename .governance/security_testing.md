@@ -20,37 +20,37 @@ This document outlines security testing procedures, identified vulnerabilities, 
    - **Issue:** `SECRET_KEY` in `settings.py` is hardcoded and marked as "insecure"
    - **Risk:** CRITICAL - Compromises all session security
    - **Recommendation:** Use environment variables, never commit to version control
-   - **Status:** [ ] FIXED [ ] PENDING
+   - **Status:** \[ \] FIXED \[ \] PENDING
 
 2. **DEBUG Mode Enabled**
    - **Issue:** `DEBUG = True` in production settings
    - **Risk:** CRITICAL - Exposes sensitive error information
    - **Recommendation:** Set `DEBUG = False` in production, use separate settings file
-   - **Status:** [ ] FIXED [ ] PENDING
+   - **Status:** \[ \] FIXED \[ \] PENDING
 
 3. **No ALLOWED_HOSTS Configuration**
    - **Issue:** `ALLOWED_HOSTS = []` allows any host
    - **Risk:** HIGH - Host header injection vulnerability
    - **Recommendation:** Set `ALLOWED_HOSTS = ['yourdomain.com']` in production
-   - **Status:** [ ] FIXED [ ] PENDING
+   - **Status:** \[ \] FIXED \[ \] PENDING
 
 4. **No File Upload Validation**
    - **Issue:** No file size limits, type restrictions, or path sanitization
    - **Risk:** CRITICAL - File upload attacks, path traversal, DoS
    - **Recommendation:** Implement file validation (see Section 3.3)
-   - **Status:** [ ] FIXED [ ] PENDING [ ] NOT IMPLEMENTED
+   - **Status:** \[ \] FIXED \[ \] PENDING \[ \] NOT IMPLEMENTED
 
 5. **No Rate Limiting**
    - **Issue:** No protection against brute force attacks on login
    - **Risk:** MEDIUM - Account enumeration, brute force
    - **Recommendation:** Implement rate limiting (django-ratelimit)
-   - **Status:** [ ] FIXED [ ] PENDING
+   - **Status:** \[ \] FIXED \[ \] PENDING
 
 6. **No Password Policy Enforcement**
    - **Issue:** Using default Django password validators only
    - **Risk:** MEDIUM - Weak passwords
    - **Recommendation:** Enforce strong password policy
-   - **Status:** [ ] FIXED [ ] PENDING
+   - **Status:** \[ \] FIXED \[ \] PENDING
 
 ---
 
@@ -59,88 +59,95 @@ This document outlines security testing procedures, identified vulnerabilities, 
 ### 2.1 Authentication Security
 
 #### CSRF Protection
-- [ ] **SEC-001:** CSRF tokens present in all forms
-  - **Test:** Check all POST forms have `{% csrf_token %}`
-  - **Status:** [ ] PASS [ ] FAIL
-  - **Notes:** Forms checked: login, audit create/edit, organization create/edit
 
-- [ ] **SEC-002:** CSRF token validation
+- \[ \] **SEC-001:** CSRF tokens present in all forms
+  - **Test:** Check all POST forms have `{% csrf_token %}`
+  - **Status:** \[ \] PASS \[ \] FAIL
+  - **Notes:**
+ Forms checked: login, audit create/edit, organization create/edit
+
+- \[ \] **SEC-002:** CSRF token validation
   - **Test:** Submit form without CSRF token (curl/Postman)
   - **Expected:** 403 Forbidden
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-003:** CSRF token rotation
+- \[ \] **SEC-003:** CSRF token rotation
   - **Test:** Verify tokens are rotated on each request
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
 #### Session Security
-- [ ] **SEC-004:** Session cookie security
+
+- \[ \] **SEC-004:** Session cookie security
   - **Test:** Check `SESSION_COOKIE_SECURE = True` in production
   - **Test:** Check `SESSION_COOKIE_HTTPONLY = True`
   - **Test:** Check `SESSION_COOKIE_SAMESITE = 'Lax'` or 'Strict'
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT CONFIGURED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT CONFIGURED
 
-- [ ] **SEC-005:** Session timeout
+- \[ \] **SEC-005:** Session timeout
   - **Test:** Verify sessions expire after inactivity
   - **Expected:** Default Django session timeout (2 weeks) or custom timeout
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
-- [ ] **SEC-006:** Session fixation prevention
+- \[ \] **SEC-006:** Session fixation prevention
   - **Test:** Verify new session created on login
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
 #### Password Security
-- [ ] **SEC-007:** Password hashing
+
+- \[ \] **SEC-007:** Password hashing
   - **Test:** Verify passwords are hashed (PBKDF2 or Argon2)
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-008:** Password reset functionality
+- \[ \] **SEC-008:** Password reset functionality
   - **Test:** Check if password reset exists
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-009:** Account lockout
+- \[ \] **SEC-009:** Account lockout
   - **Test:** Verify account lockout after failed login attempts
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
 ### 2.2 Authorization Security
 
 #### Permission Checks
-- [ ] **SEC-010:** View-level permission checks
-  - **Test:** All views use `@login_required` or `LoginRequiredMixin`
-  - **Status:** [ ] PASS [ ] FAIL
-  - **Notes:** Checked: All views require login
 
-- [ ] **SEC-011:** Role-based access control
+- \[ \] **SEC-010:** View-level permission checks
+  - **Test:** All views use `@login_required` or `LoginRequiredMixin`
+  - **Status:** \[ \] PASS \[ \] FAIL
+  - **Notes:**
+ Checked: All views require login
+
+- \[ \] **SEC-011:** Role-based access control
   - **Test:** CB Admin cannot access client dashboard
   - **Test:** Client cannot access CB Admin URLs
   - **Test:** Auditor cannot create audits
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-012:** Object-level permissions
+- \[ \] **SEC-012:** Object-level permissions
   - **Test:** Client cannot view other organization's audits (via URL manipulation)
   - **Test:** Lead Auditor cannot edit other's audits
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-013:** Direct URL access (unauthorized)
+- \[ \] **SEC-013:** Direct URL access (unauthorized)
   - **Test:** Try to access `/audits/create/` as Client Admin
   - **Expected:** 403 Forbidden
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-014:** Permission escalation attempts
+- \[ \] **SEC-014:** Permission escalation attempts
   - **Test:** Try to change user role via form manipulation
   - **Test:** Try to access admin panel as regular user
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
 #### Data Leakage
-- [ ] **SEC-015:** Queryset filtering
+
+- \[ \] **SEC-015:** Queryset filtering
   - **Test:** Verify auditors only see assigned audits
   - **Test:** Verify clients only see their org's audits
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-016:** Information disclosure in errors
+- \[ \] **SEC-016:** Information disclosure in errors
   - **Test:** Trigger errors, check if sensitive info leaked
   - **Expected:** Generic error messages in production
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
 ---
 
@@ -148,70 +155,73 @@ This document outlines security testing procedures, identified vulnerabilities, 
 
 ### 3.1 SQL Injection
 
-- [ ] **SEC-017:** SQL injection in forms
+- \[ \] **SEC-017:** SQL injection in forms
   - **Test:** Enter SQL in text fields: `'; DROP TABLE audits--`
   - **Expected:** Treated as literal text, no SQL executed
-  - **Status:** [ ] PASS [ ] FAIL
-  - **Notes:** Django ORM protects against SQL injection by default
+  - **Status:** \[ \] PASS \[ \] FAIL
+  - **Notes:**
+ Django ORM protects against SQL injection by default
 
-- [ ] **SEC-018:** SQL injection in URL parameters
+- \[ \] **SEC-018:** SQL injection in URL parameters
   - **Test:** Try SQL in GET parameters: `?organization=1' OR '1'='1`
   - **Expected:** No SQL injection, proper filtering
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
 ### 3.2 Cross-Site Scripting (XSS)
 
-- [ ] **SEC-019:** Stored XSS
+- \[ \] **SEC-019:** Stored XSS
   - **Test:** Enter `<script>alert('XSS')</script>` in text fields
   - **Test:** View output, check if script executed
   - **Expected:** Script tags escaped in templates
-  - **Status:** [ ] PASS [ ] FAIL
-  - **Notes:** Django templates auto-escape by default
+  - **Status:** \[ \] PASS \[ \] FAIL
+  - **Notes:**
+ Django templates auto-escape by default
 
-- [ ] **SEC-020:** Reflected XSS
+- \[ \] **SEC-020:** Reflected XSS
   - **Test:** Enter XSS in URL parameters, check if reflected in output
   - **Expected:** Escaped in output
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-021:** XSS in user-generated content
+- \[ \] **SEC-021:** XSS in user-generated content
   - **Test:** Check all user input fields (organization name, audit notes, etc.)
   - **Expected:** All output escaped
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
 ### 3.3 File Upload Security
 
-- [ ] **SEC-022:** File type validation
+- \[ \] **SEC-022:** File type validation
   - **Test:** Try to upload executable (.exe, .sh, .bat)
   - **Expected:** Rejected (if validation implemented)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-023:** File size limits
+- \[ \] **SEC-023:** File size limits
   - **Test:** Try to upload very large file (>10MB)
   - **Expected:** Rejected or limited (if validation implemented)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-024:** Path traversal
+- \[ \] **SEC-024:** Path traversal
   - **Test:** Try to upload file with name `../../../etc/passwd`
   - **Expected:** Filename sanitized, file saved safely
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-025:** Malicious file content
+- \[ \] **SEC-025:** Malicious file content
   - **Test:** Upload file with malicious content (virus, malware)
   - **Expected:** Scanned or restricted (if implemented)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-026:** File storage location
+- \[ \] **SEC-026:** File storage location
   - **Test:** Verify files stored outside web root or properly secured
   - **Expected:** Files in `MEDIA_ROOT`, served securely
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
 ### 3.4 Mass Assignment
 
-- [ ] **SEC-027:** Mass assignment protection
+- \[ \] **SEC-027:** Mass assignment protection
   - **Test:** POST extra fields not in form (e.g., `is_superuser=True`)
   - **Expected:** Extra fields ignored
-  - **Status:** [ ] PASS [ ] FAIL
-  - **Notes:** Django forms only process declared fields
+  - **Status:** \[ \] PASS \[ \] FAIL
+  - **Notes:**
+ Django forms only process declared fields
 
 ---
 
@@ -219,31 +229,32 @@ This document outlines security testing procedures, identified vulnerabilities, 
 
 ### 4.1 Sensitive Data Exposure
 
-- [ ] **SEC-028:** Password in logs
+- \[ \] **SEC-028:** Password in logs
   - **Test:** Check logs for password exposure
   - **Expected:** No passwords in logs
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
-- [ ] **SEC-029:** Sensitive data in URLs
+- \[ \] **SEC-029:** Sensitive data in URLs
   - **Test:** Check if sensitive data passed in URLs
   - **Expected:** No passwords, tokens in URLs
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
-- [ ] **SEC-030:** Database backup security
+- \[ \] **SEC-030:** Database backup security
   - **Test:** Verify backups are encrypted
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
 ### 4.2 Data Integrity
 
-- [ ] **SEC-031:** CASCADE vs PROTECT relationships
+- \[ \] **SEC-031:** CASCADE vs PROTECT relationships
   - **Test:** Verify critical relationships use PROTECT
   - **Test:** Verify non-critical relationships use CASCADE appropriately
-  - **Status:** [ ] PASS [ ] FAIL
-  - **Notes:** Checked: User deletion protected if audits exist
+  - **Status:** \[ \] PASS \[ \] FAIL
+  - **Notes:**
+ Checked: User deletion protected if audits exist
 
-- [ ] **SEC-032:** Transaction integrity
+- \[ \] **SEC-032:** Transaction integrity
   - **Test:** Verify critical operations use transactions
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
 ---
 
@@ -251,44 +262,45 @@ This document outlines security testing procedures, identified vulnerabilities, 
 
 ### 5.1 HTTP Security Headers
 
-- [ ] **SEC-033:** Content Security Policy (CSP)
+- \[ \] **SEC-033:** Content Security Policy (CSP)
   - **Test:** Check if CSP headers set
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-034:** X-Frame-Options
+- \[ \] **SEC-034:** X-Frame-Options
   - **Test:** Check `X-Frame-Options: DENY` or `SAMEORIGIN`
-  - **Status:** [ ] PASS [ ] FAIL
-  - **Notes:** Django sets `XFrameOptionsMiddleware` by default
+  - **Status:** \[ \] PASS \[ \] FAIL
+  - **Notes:**
+ Django sets `XFrameOptionsMiddleware` by default
 
-- [ ] **SEC-035:** X-Content-Type-Options
+- \[ \] **SEC-035:** X-Content-Type-Options
   - **Test:** Check `X-Content-Type-Options: nosniff`
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-036:** Strict-Transport-Security (HSTS)
+- \[ \] **SEC-036:** Strict-Transport-Security (HSTS)
   - **Test:** Check HSTS header in production (HTTPS only)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
 ### 5.2 HTTPS
 
-- [ ] **SEC-037:** HTTPS enforcement
+- \[ \] **SEC-037:** HTTPS enforcement
   - **Test:** Verify HTTPS used in production
   - **Test:** Verify HTTP redirects to HTTPS
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
-- [ ] **SEC-038:** Mixed content
+- \[ \] **SEC-038:** Mixed content
   - **Test:** Check for HTTP resources on HTTPS pages
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
 ### 5.3 Error Handling
 
-- [ ] **SEC-039:** Error page information disclosure
+- \[ \] **SEC-039:** Error page information disclosure
   - **Test:** Trigger 500 error, check if sensitive info shown
   - **Expected:** Generic error page in production (DEBUG=False)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
-- [ ] **SEC-040:** Stack trace exposure
+- \[ \] **SEC-040:** Stack trace exposure
   - **Test:** Verify stack traces not shown in production
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT TESTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT TESTED
 
 ---
 
@@ -296,32 +308,32 @@ This document outlines security testing procedures, identified vulnerabilities, 
 
 ### 6.1 Workflow Security
 
-- [ ] **SEC-041:** Status transition validation
+- \[ \] **SEC-041:** Status transition validation
   - **Test:** Try invalid status transitions (skip steps, go backward)
   - **Expected:** Rejected (if validation implemented)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-042:** Workflow enforcement
+- \[ \] **SEC-042:** Workflow enforcement
   - **Test:** Try to edit audit in "decided" status
   - **Expected:** Restricted or allowed (business decision)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
 ### 6.2 Data Validation
 
-- [ ] **SEC-043:** Date validation
+- \[ \] **SEC-043:** Date validation
   - **Test:** Try end_date < start_date
   - **Expected:** Rejected (if validation implemented)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-044:** Business rule validation
+- \[ \] **SEC-044:** Business rule validation
   - **Test:** Try to assign certification from different org to audit
   - **Expected:** Rejected (if validation implemented)
-  - **Status:** [ ] PASS [ ] FAIL [ ] NOT IMPLEMENTED
+  - **Status:** \[ \] PASS \[ \] FAIL \[ \] NOT IMPLEMENTED
 
-- [ ] **SEC-045:** Required field validation
+- \[ \] **SEC-045:** Required field validation
   - **Test:** Try to submit forms with missing required fields
   - **Expected:** Form errors
-  - **Status:** [ ] PASS [ ] FAIL
+  - **Status:** \[ \] PASS \[ \] FAIL
 
 ---
 
@@ -330,12 +342,14 @@ This document outlines security testing procedures, identified vulnerabilities, 
 ### 7.1 Immediate Actions (Before Release)
 
 1. **Move SECRET_KEY to environment variable**
+
    ```python
    # settings.py
    SECRET_KEY = os.environ.get('SECRET_KEY')
    ```
 
 2. **Create production settings file**
+
    ```python
    # settings_production.py
    DEBUG = False
@@ -343,6 +357,7 @@ This document outlines security testing procedures, identified vulnerabilities, 
    ```
 
 3. **Implement file upload validation**
+
    ```python
    # In EvidenceFile model or form
    def validate_file(file):
@@ -356,6 +371,7 @@ This document outlines security testing procedures, identified vulnerabilities, 
    ```
 
 4. **Add rate limiting to login**
+
    ```python
    # Use django-ratelimit
    from django_ratelimit.decorators import ratelimit
@@ -366,6 +382,7 @@ This document outlines security testing procedures, identified vulnerabilities, 
    ```
 
 5. **Configure security headers**
+
    ```python
    # settings.py
    SECURE_SSL_REDIRECT = True
@@ -424,29 +441,29 @@ class SecurityTestCase(TestCase):
 
 ### Pre-Deployment
 
-- [ ] SECRET_KEY moved to environment variable
-- [ ] DEBUG = False in production
-- [ ] ALLOWED_HOSTS configured
-- [ ] HTTPS configured and enforced
-- [ ] Security headers configured
-- [ ] File upload validation implemented
-- [ ] Rate limiting on login
-- [ ] Password policy enforced
-- [ ] Database backups configured
-- [ ] Error logging configured (no sensitive data)
-- [ ] Security monitoring enabled
-- [ ] Dependencies updated (no known vulnerabilities)
+- \[ \] SECRET_KEY moved to environment variable
+- \[ \] DEBUG = False in production
+- \[ \] ALLOWED_HOSTS configured
+- \[ \] HTTPS configured and enforced
+- \[ \] Security headers configured
+- \[ \] File upload validation implemented
+- \[ \] Rate limiting on login
+- \[ \] Password policy enforced
+- \[ \] Database backups configured
+- \[ \] Error logging configured (no sensitive data)
+- \[ \] Security monitoring enabled
+- \[ \] Dependencies updated (no known vulnerabilities)
 
 ### Post-Deployment
 
-- [ ] Security headers verified (using securityheaders.com)
-- [ ] SSL certificate valid
-- [ ] No sensitive data in logs
-- [ ] File uploads working and secure
-- [ ] Rate limiting working
-- [ ] All permission checks verified
-- [ ] Penetration test completed
-- [ ] Security incident response plan in place
+- \[ \] Security headers verified (using securityheaders.com)
+- \[ \] SSL certificate valid
+- \[ \] No sensitive data in logs
+- \[ \] File uploads working and secure
+- \[ \] Rate limiting working
+- \[ \] All permission checks verified
+- \[ \] Penetration test completed
+- \[ \] Security incident response plan in place
 
 ---
 
@@ -454,19 +471,20 @@ class SecurityTestCase(TestCase):
 
 **Security Lead:** _________________  
 **Date:** _________________  
-**Status:** [ ] APPROVED [ ] REJECTED [ ] CONDITIONAL
+**Status:** \[ \] APPROVED \[ \] REJECTED \[ \] CONDITIONAL
 
 **Critical Issues Remaining:**
-1. _________________________________________________
-2. _________________________________________________
-3. _________________________________________________
+
+1. ---
+2. ---
+3. ---
 
 **Notes:**
-_________________________________________________
-_________________________________________________
-_________________________________________________
+
+---
+---
+---
 
 ---
 
 **END OF SECURITY TESTING REPORT**
-

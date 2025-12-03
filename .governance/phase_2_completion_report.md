@@ -16,12 +16,15 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 ## 🎯 Phase 2 Objectives Achieved
 
 ### 1. Root Cause Analysis System ✅
+
 **Implemented Models:**
+
 - `RootCauseCategory` - Hierarchical categorization system
 - `FindingRecurrence` - Recurring finding tracker
 - Updated `Nonconformity` model with M2M relationship to categories
 
 **Key Features:**
+
 - Hierarchical root cause categories (parent-child relationships)
 - Unique category codes (e.g., RC-001, RC-002)
 - Active/inactive status management
@@ -30,15 +33,19 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 - Historical audit references
 
 **Admin Interface:**
+
 - `RootCauseCategoryAdmin` with hierarchical display
 - `FindingRecurrenceAdmin` with recurrence metrics
 - Optimized queries with select_related()
 
 ### 2. Auditor Competence Management ✅
+
 **Implemented Model:**
+
 - `AuditorCompetenceWarning` - Track competence issues
 
 **Warning Types Supported:**
+
 - Scope mismatch
 - Insufficient experience
 - Expired qualification
@@ -47,9 +54,11 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 - Other
 
 **Severity Levels:**
+
 - Low, Medium, High, Critical
 
 **Tracking Features:**
+
 - Issue timestamp (auto-generated)
 - Resolution timestamp
 - Resolution notes
@@ -57,27 +66,32 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 - Issuer tracking (CB staff)
 
 **Admin Interface:**
+
 - `AuditorCompetenceWarningAdmin` with severity filters
 - Auto-population of issued_by field
 - Comprehensive search across auditor names and descriptions
 
 ### 3. IAF MD1 Multi-Site Sampling Algorithm ✅
+
 **Implementation:** `trunk/services/sampling.py`
 
 **Core Function:** `calculate_sample_size()`
 
 **IAF MD1 Compliance:**
+
 - Initial certification: y = √x
 - Surveillance: y = √x - 0.5 (minimum 1)
 - Results always rounded up
 
 **Risk-Based Adjustments:**
+
 - High-risk sites: +1 per 5 high-risk sites
 - Previous major NCs: +20% if >3 major NCs
 - Scope variation: +1-2 sites for moderate/high variation
 - Adjustment cap: 20% (IAF MD1 guidelines)
 
 **Output Provided:**
+
 - Minimum sites required
 - Base calculation breakdown
 - Risk adjustment explanation
@@ -86,11 +100,13 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 - Site selection recommendations
 
 **Helper Function:** `validate_site_selection()`
+
 - Validates selected sites meet minimum
 - Returns shortfall if insufficient
 - Prevents over-selection errors
 
 **Test Coverage:**
+
 - Small organizations (5 sites)
 - Medium organizations (25 sites)
 - Large organizations (100-1000 sites)
@@ -100,16 +116,19 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 - Scope variation impacts
 
 ### 4. IAF MD5 Duration Validation ✅
+
 **Implementation:** `trunk/services/duration_validator.py`
 
 **Core Function:** `validate_audit_duration()`
 
 **IAF MD5 Compliance:**
+
 - Base duration lookup table (1-10,500+ employees)
 - Automatic scaling for organizations >10,500 employees
 - Standard: ISO 9001 (extensible for other standards)
 
 **Complexity Factors:**
+
 - Multi-site: +5% per additional site (capped at 15%)
 - Scope variation: +0-10%
 - Process complexity: -10% to +15%
@@ -119,10 +138,12 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 - Overall factor range: 0.8x - 1.3x
 
 **Surveillance Adjustments:**
+
 - Automatic 67% factor (2/3 of initial certification)
 - Applied after complexity calculations
 
 **Validation Output:**
+
 - is_valid: Boolean compliance indicator
 - required_minimum: Hours required by IAF MD5
 - shortfall_hours: Deficit if non-compliant
@@ -131,11 +152,13 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 - percentage_difference: Over/under planning metric
 
 **Helper Functions:**
+
 - `get_base_duration()` - Table lookup
 - `calculate_complexity_factor()` - Multi-factor analysis
 - `format_duration_report()` - Human-readable output
 
 **Test Coverage:**
+
 - Small organizations (15 employees)
 - Medium organizations (100 employees)
 - Large organizations (>10,500 employees)
@@ -148,7 +171,8 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 
 ## 📊 Database Changes (Migration 0004)
 
-### New Tables Created:
+### New Tables Created
+
 1. **audits_rootcausecategory**
    - Fields: id, name, code (unique), description, parent_id, is_active, created_at, updated_at
    - Indexes: code, is_active
@@ -164,7 +188,8 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
    - Indexes: (audit_id, auditor_id), severity, resolved_at
    - Multiple FKs with appropriate cascade rules
 
-### Updated Tables:
+### Updated Tables
+
 1. **audits_nonconformity**
    - Added M2M relationship: root_cause_categories
    - Join table: audits_nonconformity_root_cause_categories
@@ -174,9 +199,11 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 ## 🧪 Testing Summary
 
 ### Test File: `audits/test_phase2.py`
+
 **Total Tests:** 34 Phase 2-specific tests
 
 **Test Classes:**
+
 1. **RootCauseCategoryTests** (4 tests)
    - Category creation and hierarchy
    - String representation
@@ -209,7 +236,8 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
    - Complete multi-site audit planning workflow
    - Root cause tracking across multiple audits
 
-### Overall Test Results:
+### Overall Test Results
+
 - **Total Tests:** 159 (125 Phase 1 + 34 Phase 2)
 - **Pass Rate:** 100%
 - **Execution Time:** ~53 seconds
@@ -219,7 +247,8 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 
 ## 📁 Files Created/Modified
 
-### New Files:
+### New Files
+
 1. `trunk/services/sampling.py` (230 lines)
    - IAF MD1 sampling algorithm
    - Site selection validation
@@ -240,7 +269,8 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
    - Database schema migration
    - 3 new models + M2M relationship
 
-### Modified Files:
+### Modified Files
+
 1. `audits/models.py` (+201 lines)
    - RootCauseCategory model (57 lines)
    - FindingRecurrence model (77 lines)
@@ -258,40 +288,50 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 ## 🔑 Key Design Decisions
 
 ### 1. Hierarchical Root Cause Categories
+
 **Decision:** Self-referential FK instead of adjacency list or nested sets
-**Rationale:** 
+**Rationale:**
+
 - Simpler implementation for expected depth (2-3 levels)
 - Easier maintenance and updates
 - Adequate performance for expected scale
 - Standard Django pattern
 
 ### 2. FindingRecurrence as OneToOne
+
 **Decision:** OneToOne relationship instead of separate tracking system
 **Rationale:**
+
 - Ensures data integrity (one recurrence record per finding)
 - Simplifies queries (direct access via finding.recurrence_data)
 - Prevents duplicate tracking
 - Cleaner data model
 
 ### 3. Competence Warning Severity Levels
+
 **Decision:** Four levels (low, medium, high, critical)
 **Rationale:**
+
 - Aligned with risk management best practices
 - Critical for blocking assignment decisions
 - Medium/high for monitoring and mitigation
 - Low for documentation purposes
 
 ### 4. IAF MD1 Sampling Algorithm
+
 **Decision:** Conservative approach with risk-based adjustments
 **Rationale:**
+
 - Compliance-first philosophy
 - Transparent calculation methodology
 - Auditable decision trail
 - Flexibility for CB-specific risk assessment
 
 ### 5. IAF MD5 Duration Validation
+
 **Decision:** Warning vs critical severity thresholds
 **Rationale:**
+
 - ≤2 hours shortfall: Warning (justifiable)
 - >2 hours shortfall: Critical (non-compliant)
 - Supports professional judgment
@@ -302,6 +342,7 @@ Phase 2 of the External Audit Module has been successfully implemented, adding c
 ## 🚀 Usage Examples
 
 ### Example 1: Calculate Multi-Site Sample
+
 ```python
 from trunk.services.sampling import calculate_sample_size
 
@@ -318,6 +359,7 @@ print(f"Justification: {result['justification']}")
 ```
 
 ### Example 2: Validate Audit Duration
+
 ```python
 from trunk.services.duration_validator import validate_audit_duration
 
@@ -334,6 +376,7 @@ if not result['is_valid']:
 ```
 
 ### Example 3: Track Finding Recurrence
+
 ```python
 from audits.models import FindingRecurrence
 
@@ -349,6 +392,7 @@ recurrence = FindingRecurrence.objects.create(
 ```
 
 ### Example 4: Issue Auditor Competence Warning
+
 ```python
 from audits.models import AuditorCompetenceWarning
 
@@ -385,17 +429,20 @@ warning = AuditorCompetenceWarning.objects.create(
 
 ## 🔒 Security & Compliance
 
-### Data Protection:
+### Data Protection
+
 - Immutable audit trails (AuditStatusLog)
 - Protected user deletion (PROTECT on FK)
 - Cascading deletes for dependent data
 
-### IAF Compliance:
+### IAF Compliance
+
 - **IAF MD1:2018** - Multi-site sampling requirements met
 - **IAF MD5:2019** - Duration validation tables implemented
 - **ISO 17021-1:2015** - Separation of duties maintained
 
-### Access Control:
+### Access Control
+
 - CB Admin: Full access to all Phase 2 features
 - Lead Auditor: Read access to competence warnings
 - Auditor: Limited visibility per assignment
@@ -405,7 +452,8 @@ warning = AuditorCompetenceWarning.objects.create(
 
 ## 📝 Documentation References
 
-### IAF Mandatory Documents:
+### IAF Mandatory Documents
+
 - **IAF MD1:2018** - "Audit and Certification of a Management System Operated by an Organization with Multiple Sites"
   - Annex A: Sampling methodology
   - Section 4: Multi-site considerations
@@ -415,7 +463,8 @@ warning = AuditorCompetenceWarning.objects.create(
   - Section 4: Complexity factors
   - Section 5: Surveillance audit adjustments
 
-### Code Documentation:
+### Code Documentation
+
 - All functions include comprehensive docstrings
 - Type hints for function parameters
 - Inline comments for complex algorithms
@@ -425,19 +474,22 @@ warning = AuditorCompetenceWarning.objects.create(
 
 ## 🎓 Training & Onboarding
 
-### For CB Administrators:
+### For CB Administrators
+
 1. Review root cause category setup in admin interface
 2. Understand sampling algorithm outputs for audit planning
 3. Learn duration validation severity thresholds
 4. Practice issuing and resolving competence warnings
 
-### For Lead Auditors:
+### For Lead Auditors
+
 1. Familiarize with root cause category selection
 2. Understand how recurrence tracking affects findings
 3. Review duration validation recommendations
 4. Check competence warnings before audit assignment
 
-### For Auditors:
+### For Auditors
+
 1. Learn to categorize findings by root cause
 2. Understand recurrence escalation triggers
 3. Review duration validation for audit planning
@@ -446,7 +498,8 @@ warning = AuditorCompetenceWarning.objects.create(
 
 ## 🔄 Future Enhancements (Phase 3 Candidates)
 
-### Potential Phase 3 Features:
+### Potential Phase 3 Features
+
 1. **Machine Learning Integration:**
    - Auto-suggest root cause categories based on finding text
    - Predict recurrence likelihood
@@ -480,7 +533,8 @@ warning = AuditorCompetenceWarning.objects.create(
 
 ## ✅ Acceptance Criteria - All Met
 
-### Phase 2 Requirements:
+### Phase 2 Requirements
+
 - ✅ Root cause category hierarchy implemented
 - ✅ Finding recurrence tracking operational
 - ✅ Auditor competence warning system functional
@@ -492,7 +546,8 @@ warning = AuditorCompetenceWarning.objects.create(
 - ✅ All 159 tests passing
 - ✅ Documentation complete
 
-### Technical Quality:
+### Technical Quality
+
 - ✅ Code follows Django best practices
 - ✅ Type hints on service functions
 - ✅ Comprehensive docstrings
@@ -508,6 +563,7 @@ warning = AuditorCompetenceWarning.objects.create(
 Phase 2 implementation is **COMPLETE** and **PRODUCTION-READY**. All features have been implemented according to IAF Mandatory Document requirements, thoroughly tested, and optimized for performance. The system now provides comprehensive root cause analysis, recurrence tracking, auditor competence management, and audit planning support.
 
 **Next Steps:**
+
 - User acceptance testing (UAT)
 - Staff training on Phase 2 features
 - Production deployment planning
@@ -516,8 +572,8 @@ Phase 2 implementation is **COMPLETE** and **PRODUCTION-READY**. All features ha
 ---
 
 **Prepared by:** GitHub Copilot (Multi-Agent System)  
-**Reviewed by:** [Pending stakeholder review]  
-**Approval:** [Pending]  
+**Reviewed by:** `[Pending stakeholder review]`  
+**Approval:** `[Pending]`  
 
 ---
 

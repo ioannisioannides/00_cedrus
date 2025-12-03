@@ -1,10 +1,13 @@
 # Cedrus Enhanced Data Model Design
+
 ## Architecture Meeting — Post Board Approval
+
 ### Date: 21 November 2025
 
 ---
 
 ## Participants
+
 - **Architecture Agent** (Lead)
 - **Data Modeling Agent** (Schema Design)
 - **ISO 17021 Agent** (Compliance Requirements)
@@ -29,6 +32,7 @@ Following Board Meeting #001 approvals, we must enhance the existing `audits` da
 ## 2. Current State Analysis
 
 ### Existing Models (Already Implemented)
+
 ✅ `Audit` - Main audit entity with workflow status
 ✅ `AuditTeamMember` - Team assignments
 ✅ `Finding` (Abstract) - Base class for all findings
@@ -40,6 +44,7 @@ Following Board Meeting #001 approvals, we must enhance the existing `audits` da
 ✅ `AuditChanges`, `AuditPlanReview`, `AuditSummary` - Audit metadata
 
 ### Gaps Identified
+
 ❌ Workflow states don't match approved model
 ❌ No Technical Review tracking
 ❌ No per-site finding association
@@ -58,6 +63,7 @@ Following Board Meeting #001 approvals, we must enhance the existing `audits` da
 ### 3.1 Workflow Enhancement
 
 **Current `Audit.STATUS_CHOICES`**:
+
 ```python
 ("draft", "Draft"),
 ("client_review", "Client Review"),
@@ -66,6 +72,7 @@ Following Board Meeting #001 approvals, we must enhance the existing `audits` da
 ```
 
 **Approved `Audit.STATUS_CHOICES`** (MUST IMPLEMENT):
+
 ```python
 ("draft", "Draft"),
 ("in_review", "In Review"),                          # NEW
@@ -77,6 +84,7 @@ Following Board Meeting #001 approvals, we must enhance the existing `audits` da
 ```
 
 **New Model: `AuditStatusLog`** (Audit Trail Requirement):
+
 ```python
 class AuditStatusLog(models.Model):
     """Immutable log of all status transitions."""
@@ -96,6 +104,7 @@ class AuditStatusLog(models.Model):
 ### 3.2 Technical Review & Decision Tracking
 
 **New Model: `TechnicalReview`**:
+
 ```python
 class TechnicalReview(models.Model):
     """Technical review before certification decision (ISO 17021 requirement)."""
@@ -122,6 +131,7 @@ class TechnicalReview(models.Model):
 ```
 
 **New Model: `CertificationDecision`**:
+
 ```python
 class CertificationDecision(models.Model):
     """Final certification decision (ISO 17021 separation of duties)."""
@@ -148,6 +158,7 @@ class CertificationDecision(models.Model):
 ### 3.3 Per-Site Findings
 
 **Enhancement to `Finding` (Abstract Base)**:
+
 ```python
 class Finding(models.Model):
     # ... existing fields ...
@@ -166,6 +177,7 @@ class Finding(models.Model):
 ### 3.4 Recurring Findings Tracking
 
 **New Model: `FindingRecurrence`**:
+
 ```python
 class FindingRecurrence(models.Model):
     """Track recurring findings across multiple audits."""
@@ -189,6 +201,7 @@ class FindingRecurrence(models.Model):
 ### 3.5 Root Cause Taxonomy
 
 **New Model: `RootCauseCategory`**:
+
 ```python
 class RootCauseCategory(models.Model):
     """Taxonomy for categorizing root causes (5 Whys, Fishbone, etc.)."""
@@ -210,6 +223,7 @@ class RootCauseCategory(models.Model):
 ```
 
 **Enhancement to `Nonconformity`**:
+
 ```python
 class Nonconformity(Finding):
     # ... existing fields ...
@@ -227,6 +241,7 @@ class Nonconformity(Finding):
 ### 3.6 Evidence Classification
 
 **Enhancement to `EvidenceFile`**:
+
 ```python
 class EvidenceFile(models.Model):
     # ... existing fields ...
@@ -256,6 +271,7 @@ class EvidenceFile(models.Model):
 ### 3.7 Audit Duration Justification (IAF MD5)
 
 **Enhancement to `Audit`**:
+
 ```python
 class Audit(models.Model):
     # ... existing fields ...
@@ -280,6 +296,7 @@ class Audit(models.Model):
 ### 3.8 Competence Validation
 
 **New Model: `AuditorCompetenceWarning`**:
+
 ```python
 class AuditorCompetenceWarning(models.Model):
     """Warnings when auditor assigned without proper competence."""
@@ -297,6 +314,7 @@ class AuditorCompetenceWarning(models.Model):
 ## 4. Migration Strategy
 
 ### Phase 1: Immediate (Sprint 7)
+
 1. Update `Audit.STATUS_CHOICES` with new workflow states
 2. Create `AuditStatusLog` model
 3. Create `TechnicalReview` model
@@ -305,6 +323,7 @@ class AuditorCompetenceWarning(models.Model):
 6. Update `EvidenceFile` with evidence type and retention
 
 ### Phase 2: Near-term (Sprint 8)
+
 1. Create `FindingRecurrence` model
 2. Create `RootCauseCategory` model
 3. Add `root_cause_category` to `Nonconformity`
@@ -312,6 +331,7 @@ class AuditorCompetenceWarning(models.Model):
 5. Add IAF MD5 duration fields to `Audit`
 
 ### Phase 3: Future (Post-MVP)
+
 1. Multi-site sampling algorithm (IAF MD1)
 2. Automated retention policy enforcement
 3. Integration with Competence Module
@@ -321,16 +341,19 @@ class AuditorCompetenceWarning(models.Model):
 ## 5. Compliance Validation
 
 ### ISO 17021-1:2015 Alignment
+
 ✅ **Clause 9.5**: Separation of duties enforced via `TechnicalReview` and `CertificationDecision` models
 ✅ **Clause 9.4.8**: Technical review checklist embedded in `TechnicalReview` model
 ✅ **Clause 9.6**: Decision-making independence tracked via `decision_maker` field
 
 ### IAF MD Requirements
+
 ✅ **MD1**: Per-site tracking via `Finding.site` field
 ✅ **MD5**: Duration justification via `Audit.duration_justification` field
 ✅ **MD22**: Recurring findings via `FindingRecurrence` model
 
 ### GDPR/Data Protection
+
 ✅ **Retention Policy**: 7-year default via `EvidenceFile.retention_years`
 ✅ **Automated Purging**: `EvidenceFile.purge_after` for scheduled deletion
 
@@ -339,12 +362,14 @@ class AuditorCompetenceWarning(models.Model):
 ## 6. Database Performance Considerations
 
 ### Indexes Required
+
 - `AuditStatusLog.audit_id` + `changed_at` (for audit trails)
 - `Finding.site_id` (for multi-site queries)
 - `FindingRecurrence.original_finding_id` (for recurrence tracking)
 - `EvidenceFile.purge_after` (for retention enforcement)
 
 ### Query Optimization
+
 - Use `select_related()` for `Audit` → `TechnicalReview` → `CertificationDecision`
 - Use `prefetch_related()` for `Audit.findings` with `site` join
 
@@ -353,12 +378,14 @@ class AuditorCompetenceWarning(models.Model):
 ## 7. API Surface Impact
 
 ### New Views Required
+
 - `TechnicalReviewView` (CB staff only)
 - `CertificationDecisionView` (Decision makers only)
 - `AuditStatusLogView` (Read-only audit trail)
 - `RecurringFindingsReportView` (Analytics)
 
 ### Permission Updates
+
 - `PermissionPredicate.can_conduct_technical_review(user, audit)`
 - `PermissionPredicate.can_make_certification_decision(user, audit)`
 - `PermissionPredicate.is_technical_reviewer(user)`
@@ -368,6 +395,7 @@ class AuditorCompetenceWarning(models.Model):
 ## 8. Next Steps
 
 ### Immediate Actions
+
 1. **Data Modeling Agent**: Create Django migration files for Phase 1 models
 2. **Architecture Agent**: Update `AuditWorkflow` to reflect new states
 3. **Security Agent**: Update `PermissionPredicate` for new roles
@@ -375,6 +403,7 @@ class AuditorCompetenceWarning(models.Model):
 5. **QA Agent**: Create test cases for workflow transitions
 
 ### Documentation Updates
+
 - Update `MODELS.md` with new entity relationships
 - Create ERD diagram showing all relationships
 - Document workflow state machine
@@ -387,6 +416,7 @@ class AuditorCompetenceWarning(models.Model):
 **Status**: ✅ **APPROVED FOR IMPLEMENTATION**
 
 This design fulfills all requirements from Board Meeting #001:
+
 - ✅ Scalable data model for future modules
 - ✅ Per-site findings support
 - ✅ Recurring findings tracking

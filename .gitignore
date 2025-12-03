@@ -63,3 +63,4 @@ security_*.json
 .github/secrets/
 logs/*.log
 snyk-code.sarif
+node_modules/

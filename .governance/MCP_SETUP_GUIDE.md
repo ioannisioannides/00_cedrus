@@ -1,4 +1,5 @@
 # 🔌 MCP SERVER SETUP GUIDE
+
 ## GitHub MCP Server Configuration for Cedrus
 
 **Date:** November 21, 2025  
@@ -16,9 +17,9 @@
 
 ## 🔑 STEP 1: CREATE GITHUB PERSONAL ACCESS TOKEN
 
-### Generate Token on GitHub:
+### Generate Token on GitHub
 
-1. Go to: https://github.com/settings/tokens/new
+1. Go to: <https://github.com/settings/tokens/new>
 2. Token name: `Cedrus MCP Server - Development`
 3. Expiration: `90 days` (or custom for MVP period)
 4. Select scopes:
@@ -31,7 +32,8 @@
 5. Click **Generate token**
 6. **Copy the token immediately** (you won't see it again!)
 
-### Example Token Format:
+### Example Token Format
+
 ```
 ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
@@ -82,6 +84,7 @@ export GITHUB_REPO="00_cedrus"
 ```
 
 Then in VS Code settings:
+
 ```json
 {
   "github.copilot.chat.mcp.servers": {
@@ -97,13 +100,14 @@ Then in VS Code settings:
 
 ## 🎯 STEP 3: VERIFY CONNECTION
 
-### Test MCP Server Connection:
+### Test MCP Server Connection
 
 1. **Restart VS Code** (required after config changes)
 2. Open GitHub Copilot Chat
 3. Try a test command:
 
 **Example Prompts:**
+
 ```
 @github list open issues
 @github create issue "Day 6-7: Monitoring & Observability" with label "week-1"
@@ -111,7 +115,8 @@ Then in VS Code settings:
 @github create branch "feature/monitoring-observability"
 ```
 
-### Expected Response:
+### Expected Response
+
 ```
 ✅ Connected to github/00_cedrus
 ✅ Found X open issues
@@ -125,6 +130,7 @@ Then in VS Code settings:
 ### 1. **30-Day Milestone Tracking**
 
 **Create Issues for Each Day:**
+
 ```
 Create GitHub issues for Week 2 tasks:
 - Day 8-9: Test Suite Overhaul
@@ -134,6 +140,7 @@ Create GitHub issues for Week 2 tasks:
 ```
 
 **Link Commits to Issues:**
+
 ```
 When committing Day 6-7 work, include:
 git commit -m "feat: Day 6-7 Monitoring (#6)"
@@ -142,6 +149,7 @@ git commit -m "feat: Day 6-7 Monitoring (#6)"
 ### 2. **CI/CD Monitoring**
 
 **Check Pipeline Status:**
+
 ```
 Show me the status of the latest CI/CD run
 Did the security scan pass?
@@ -151,6 +159,7 @@ What's the test coverage from the last run?
 ### 3. **Pull Request Workflow**
 
 **Create Feature Branches:**
+
 ```
 Create a new branch "feature/week2-testing" from main
 Create PR for Day 6-7 monitoring implementation
@@ -160,6 +169,7 @@ Review open PRs and check CI status
 ### 4. **Project Board Integration**
 
 **Track Progress:**
+
 ```
 Move "Day 5: Docker" to Done column
 Add "Day 6-7: Monitoring" to In Progress
@@ -169,6 +179,7 @@ Show project board status
 ### 5. **Issue Management**
 
 **Bug Tracking:**
+
 ```
 Create issue: "76 failing tests need fixtures update"
 Label it: bug, week-2, priority-high
@@ -179,7 +190,7 @@ Assign to: @ioannisioannides
 
 ## 🚀 IMMEDIATE ACTIONS (Post-Setup)
 
-### Once MCP Server is Connected:
+### Once MCP Server is Connected
 
 1. **Create Week 1 Milestone**
    - Title: "Week 1: Foundation & Security (Days 1-7)"
@@ -192,7 +203,7 @@ Assign to: @ioannisioannides
    - Week 4: UI/UX & Documentation (Days 22-28)
 
 3. **Generate Issue Template**
-   - Day X-Y: [Task Name]
+   - Day X-Y: `[Task Name]`
    - Assigned to: Elite agent team
    - Labels: week-N, priority-level
    - Checklist: Deliverables from 30-day plan
@@ -207,14 +218,18 @@ Assign to: @ioannisioannides
 ## 🔍 TROUBLESHOOTING
 
 ### Issue: "MCP Server not found"
+
 **Solution:** Verify installation
+
 ```bash
 which github-mcp-server
 npm list -g github-mcp-server
 ```
 
 ### Issue: "Authentication failed"
+
 **Solution:** Check token
+
 ```bash
 # Test token with curl
 curl -H "Authorization: token YOUR_TOKEN" \
@@ -222,43 +237,52 @@ curl -H "Authorization: token YOUR_TOKEN" \
 ```
 
 ### Issue: "VS Code not detecting MCP"
+
 **Solution:**
+
 1. Restart VS Code completely
 2. Check settings.json syntax (valid JSON)
 3. Verify Copilot Chat is enabled
 4. Check VS Code version (needs latest)
 
 ### Issue: "Permission denied"
+
 **Solution:** Token needs correct scopes
+
 - Regenerate token with `repo`, `workflow`, `project`
 
 ---
 
 ## 📚 AVAILABLE COMMANDS
 
-### Repository Operations:
+### Repository Operations
+
 - List files, branches, commits
 - Search code, issues, PRs
 - Clone, pull, push operations
 
-### Issue Management:
+### Issue Management
+
 - Create, update, close issues
 - Add labels, assignees, milestones
 - Comment on issues
 
-### Pull Request Workflow:
+### Pull Request Workflow
+
 - Create PRs from branches
 - Review code changes
 - Merge, close PRs
 - Check CI status
 
-### GitHub Actions:
+### GitHub Actions
+
 - List workflows
 - Trigger workflow runs
 - Check run status
 - View logs
 
-### Project Boards:
+### Project Boards
+
 - List projects
 - Move cards between columns
 - Add issues to projects
@@ -268,6 +292,7 @@ curl -H "Authorization: token YOUR_TOKEN" \
 ## 💡 TIPS & BEST PRACTICES
 
 ### 1. **Consistent Naming**
+
 ```
 Branches: feature/day-X-Y-description
 Issues: Day X-Y: Task Name
@@ -275,12 +300,14 @@ PRs: feat: Day X-Y implementation
 ```
 
 ### 2. **Linking**
+
 ```
 Commits: "feat: monitoring (#6)"
 PRs: "Closes #6, Resolves #7"
 ```
 
 ### 3. **Labels**
+
 ```
 week-1, week-2, week-3, week-4
 priority-high, priority-medium, priority-low
@@ -289,6 +316,7 @@ security, performance, testing
 ```
 
 ### 4. **Milestones**
+
 - Group by week (Week 1-4)
 - Set realistic due dates
 - Track completion percentage
@@ -310,10 +338,10 @@ security, performance, testing
 
 ## 📖 RESOURCES
 
-- **GitHub MCP Server:** https://github.com/github/github-mcp-server
-- **MCP Documentation:** https://modelcontextprotocol.io/
-- **GitHub API:** https://docs.github.com/en/rest
-- **Personal Access Tokens:** https://github.com/settings/tokens
+- **GitHub MCP Server:** <https://github.com/github/github-mcp-server>
+- **MCP Documentation:** <https://modelcontextprotocol.io/>
+- **GitHub API:** <https://docs.github.com/en/rest>
+- **Personal Access Tokens:** <https://github.com/settings/tokens>
 
 ---
 

@@ -72,6 +72,7 @@ pytest --numprocesses=4
 - **ProfileOrganizationTest:** Profile-organization relationships
 
 **Key Tests:**
+
 - Profile auto-creation
 - Role checking methods
 - Login with valid/invalid credentials
@@ -89,6 +90,7 @@ pytest --numprocesses=4
 - **CertificationViewPermissionTest:** Certification view permissions
 
 **Key Tests:**
+
 - Unique constraints (customer_id, standard code)
 - CASCADE vs PROTECT relationships
 - CB Admin-only access
@@ -103,6 +105,7 @@ pytest --numprocesses=4
 - **AuditMetadataTest:** Metadata models (Changes, PlanReview, Summary, Recommendation)
 
 **Key Tests:**
+
 - Audit creation and permissions
 - Role-based audit list filtering
 - Finding creation and relationships
@@ -266,6 +269,7 @@ class MyFeatureTest(TestCase):
 ### Tests Failing
 
 1. **Check database:** Tests use separate test database, ensure migrations are up to date
+
    ```bash
    python manage.py makemigrations
    python manage.py migrate
@@ -332,15 +336,15 @@ class QueryTest(TestCase):
 
 ## Sign-Off
 
-**Test Execution Status:** [ ] ALL TESTS PASSING [ ] SOME FAILURES [ ] BLOCKED
+**Test Execution Status:** \[ \] ALL TESTS PASSING \[ \] SOME FAILURES \[ \] BLOCKED
 
 **Coverage:** _____%
 
 **Notes:**
-_________________________________________________
-_________________________________________________
+
+---
+---
 
 ---
 
 **END OF TEST EXECUTION GUIDE**
-

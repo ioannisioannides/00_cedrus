@@ -318,12 +318,15 @@ This test plan covers all aspects of the Cedrus audit management platform MVP. T
 ## 3. TEST ENVIRONMENT SETUP
 
 ### 3.1 Test Database
+
 - Use separate test database (SQLite for speed)
 - Reset between test runs
 - Seed with test data
 
 ### 3.2 Test Users
+
 Create test users for each role:
+
 - `test_cb_admin` (cb_admin group)
 - `test_lead_auditor` (lead_auditor group)
 - `test_auditor` (auditor group)
@@ -332,6 +335,7 @@ Create test users for each role:
 - `test_no_role` (no groups)
 
 ### 3.3 Test Data
+
 - At least 3 organizations
 - At least 5 sites (across orgs)
 - At least 3 standards
@@ -345,18 +349,21 @@ Create test users for each role:
 ## 4. AUTOMATED TEST COVERAGE
 
 ### 4.1 Unit Tests
+
 - Model validation
 - Model methods
 - Form validation
 - Utility functions
 
 ### 4.2 Integration Tests
+
 - View permissions
 - Workflow transitions
 - Data relationships
 - Queryset filtering
 
 ### 4.3 End-to-End Tests
+
 - Complete audit creation flow
 - Complete finding workflow
 - Complete client response workflow
@@ -372,12 +379,14 @@ See `MANUAL_QA_CHECKLIST.md` for detailed manual testing procedures.
 ## 6. BUG TRACKING
 
 ### 6.1 Bug Severity
+
 - **Critical:** Blocks release, security issue, data loss
 - **High:** Major functionality broken, workflow blocked
 - **Medium:** Minor functionality issue, UX problem
 - **Low:** Cosmetic, documentation, nice-to-have
 
 ### 6.2 Bug Report Template
+
 ```
 BUG-XXX: [Title]
 Severity: [Critical/High/Medium/Low]
@@ -395,30 +404,34 @@ Screenshots/Logs:
 ## 7. RELEASE CRITERIA
 
 ### 7.1 Must Have (Blocking)
-- [ ] All Critical and High priority tests pass
-- [ ] All missing functionality implemented (Findings, Client Response, Workflow, Files, Team Members)
-- [ ] All security tests pass
-- [ ] No data integrity issues
-- [ ] All permission checks in place
-- [ ] Date validation implemented
-- [ ] Business logic validation implemented
+
+- \[ \] All Critical and High priority tests pass
+- \[ \] All missing functionality implemented (Findings, Client Response, Workflow, Files, Team Members)
+- \[ \] All security tests pass
+- \[ \] No data integrity issues
+- \[ \] All permission checks in place
+- \[ \] Date validation implemented
+- \[ \] Business logic validation implemented
 
 ### 7.2 Should Have
-- [ ] All Medium priority tests pass
-- [ ] Manual QA checklist completed
-- [ ] Performance acceptable (<2s page load)
-- [ ] Error messages user-friendly
+
+- \[ \] All Medium priority tests pass
+- \[ \] Manual QA checklist completed
+- \[ \] Performance acceptable (<2s page load)
+- \[ \] Error messages user-friendly
 
 ### 7.3 Nice to Have
-- [ ] All Low priority tests pass
-- [ ] Documentation complete
-- [ ] Code coverage >80%
+
+- \[ \] All Low priority tests pass
+- \[ \] Documentation complete
+- \[ \] Code coverage >80%
 
 ---
 
 ## 8. RISK ASSESSMENT
 
 ### 8.1 High Risk Areas
+
 1. **Permission System** - Complex role-based access, easy to miss edge cases
 2. **Workflow Transitions** - Status changes must be validated
 3. **Data Relationships** - CASCADE vs PROTECT must be correct
@@ -426,6 +439,7 @@ Screenshots/Logs:
 5. **Client Response Workflow** - Complex state machine
 
 ### 8.2 Mitigation
+
 - Comprehensive automated tests for permissions
 - Explicit workflow state machine
 - Careful review of model relationships
@@ -437,26 +451,31 @@ Screenshots/Logs:
 ## 9. TEST EXECUTION PLAN
 
 ### Phase 1: Unit Tests (Week 1)
+
 - Model tests
 - Form tests
 - Utility function tests
 
 ### Phase 2: Integration Tests (Week 1-2)
+
 - View permission tests
 - Workflow tests
 - Relationship tests
 
 ### Phase 3: Security Tests (Week 2)
+
 - Permission escalation tests
 - CSRF tests
 - XSS/SQL injection tests
 
 ### Phase 4: Manual Testing (Week 2-3)
+
 - Role-based workflows
 - End-to-end scenarios
 - Edge cases
 
 ### Phase 5: Bug Fixes & Retest (Week 3-4)
+
 - Fix identified bugs
 - Retest affected areas
 - Regression testing
@@ -467,14 +486,14 @@ Screenshots/Logs:
 
 **QA Lead:** _________________  
 **Date:** _________________  
-**Status:** [ ] APPROVED [ ] REJECTED [ ] CONDITIONAL
+**Status:** \[ \] APPROVED \[ \] REJECTED \[ \] CONDITIONAL
 
 **Conditions for Conditional Approval:**
-- [ ] List of blocking issues
-- [ ] Timeline for fixes
-- [ ] Retest plan
+
+- \[ \] List of blocking issues
+- \[ \] Timeline for fixes
+- \[ \] Retest plan
 
 ---
 
 **END OF TEST PLAN**
-
