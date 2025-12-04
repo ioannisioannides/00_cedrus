@@ -15,14 +15,12 @@ class TestPermissionPredicate:
     def setup_method(self):
         self.user = User.objects.create_user(username="testuser", password="password")
         # Profile is created by signal, but we ensure it exists
-        if not hasattr(self.user, 'profile'):
+        if not hasattr(self.user, "profile"):
             Profile.objects.create(user=self.user)
         self.profile = self.user.profile
 
         self.organization = Organization.objects.create(
-            name="Test Org",
-            total_employee_count=10,
-            customer_id="CUST-001"
+            name="Test Org", total_employee_count=10, customer_id="CUST-001"
         )
 
         self.cb_admin_group = Group.objects.create(name="cb_admin")
@@ -119,12 +117,10 @@ class TestPermissionPredicate:
 class TestPBACPolicy:
     def setup_method(self):
         self.user = User.objects.create_user(username="testuser", password="password")
-        if not hasattr(self.user, 'profile'):
+        if not hasattr(self.user, "profile"):
             Profile.objects.create(user=self.user)
         self.organization = Organization.objects.create(
-            name="Test Org",
-            total_employee_count=10,
-            customer_id="CUST-001"
+            name="Test Org", total_employee_count=10, customer_id="CUST-001"
         )
 
         self.cb_admin_group = Group.objects.create(name="cb_admin")
@@ -190,11 +186,7 @@ class TestPBACPolicy:
         assert allowed
 
         # Client User - Different Org
-        other_org = Organization.objects.create(
-            name="Other Org",
-            total_employee_count=10,
-            customer_id="CUST-002"
-        )
+        other_org = Organization.objects.create(name="Other Org", total_employee_count=10, customer_id="CUST-002")
         self.user.profile.organization = other_org
         self.user.profile.save()
         allowed, _ = PBACPolicy.can_user_access_organization(self.user, self.audit)
@@ -281,11 +273,7 @@ class TestMixins:
         self.auditor_group = Group.objects.create(name="auditor")
         self.client_group = Group.objects.create(name="client_user")
 
-        self.org = Organization.objects.create(
-            name="Test Org",
-            total_employee_count=10,
-            customer_id="CUST-MIXIN-001"
-        )
+        self.org = Organization.objects.create(name="Test Org", total_employee_count=10, customer_id="CUST-MIXIN-001")
 
         self.user = User.objects.create_user(username="mixin_user", password="password")
         # Profile is created by signal, so we update it

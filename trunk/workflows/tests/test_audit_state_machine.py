@@ -54,9 +54,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
     @patch("trunk.permissions.policies.PBACPolicy.is_assigned_to_audit")
-    def test_permission_draft_to_scheduled_success(
-        self, mock_assigned, mock_is_lead, mock_is_cb_admin, mock_log
-    ):
+    def test_permission_draft_to_scheduled_success(self, mock_assigned, mock_is_lead, mock_is_cb_admin, mock_log):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
@@ -71,9 +69,7 @@ class TestAuditStateMachine:
     @patch("audit_management.models.AuditStatusLog")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
-    def test_permission_draft_to_scheduled_fail_not_lead(
-        self, mock_is_lead, mock_is_cb_admin, mock_log
-    ):
+    def test_permission_draft_to_scheduled_fail_not_lead(self, mock_is_lead, mock_is_cb_admin, mock_log):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = False
         self.audit.lead_auditor = self.user
@@ -187,14 +183,14 @@ class TestAuditStateMachine:
     def test_guard_decision_pending_to_closed_open_major_nc(self, mock_is_cb_admin, mock_log):
         mock_is_cb_admin.return_value = True
         self.audit.status = "decision_pending"
-        self.audit.audit_type = "recertification" # Not stage2 or surveillance
+        self.audit.audit_type = "recertification"  # Not stage2 or surveillance
 
         nc = Mock()
         nc.clause = "9.2"
         qs = MagicMock()
         qs.exists.return_value = True
         qs.count.return_value = 1
-        qs.__getitem__.return_value = [nc] # For slicing [:3]
+        qs.__getitem__.return_value = [nc]  # For slicing [:3]
         qs.__iter__.return_value = iter([nc])
         self.audit.nonconformity_set.filter.return_value = qs
 
@@ -229,9 +225,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_decision_maker")
     @patch("trunk.permissions.policies.PBACPolicy.is_independent_for_decision")
-    def test_permission_decision_pending_to_decided_conflict(
-        self, mock_independent, mock_is_dm, mock_is_cb_admin
-    ):
+    def test_permission_decision_pending_to_decided_conflict(self, mock_independent, mock_is_dm, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_is_dm.return_value = True
         mock_independent.return_value = (False, "Conflict")
@@ -244,9 +238,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
     @patch("trunk.permissions.policies.PBACPolicy.is_assigned_to_audit")
-    def test_permission_scheduled_to_in_progress(
-        self, mock_assigned, mock_is_lead, mock_is_cb_admin
-    ):
+    def test_permission_scheduled_to_in_progress(self, mock_assigned, mock_is_lead, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
@@ -259,9 +251,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
     @patch("trunk.permissions.policies.PBACPolicy.is_assigned_to_audit")
-    def test_permission_in_progress_to_report_draft(
-        self, mock_assigned, mock_is_lead, mock_is_cb_admin
-    ):
+    def test_permission_in_progress_to_report_draft(self, mock_assigned, mock_is_lead, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
@@ -279,9 +269,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
     @patch("trunk.permissions.policies.PBACPolicy.is_assigned_to_audit")
-    def test_permission_report_draft_to_client_review(
-        self, mock_assigned, mock_is_lead, mock_is_cb_admin
-    ):
+    def test_permission_report_draft_to_client_review(self, mock_assigned, mock_is_lead, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
@@ -302,9 +290,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
     @patch("trunk.permissions.policies.PBACPolicy.is_assigned_to_audit")
-    def test_permission_report_draft_to_in_progress(
-        self, mock_assigned, mock_is_lead, mock_is_cb_admin
-    ):
+    def test_permission_report_draft_to_in_progress(self, mock_assigned, mock_is_lead, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
@@ -317,9 +303,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
     @patch("trunk.permissions.policies.PBACPolicy.is_assigned_to_audit")
-    def test_permission_client_review_to_submitted(
-        self, mock_assigned, mock_is_lead, mock_is_cb_admin
-    ):
+    def test_permission_client_review_to_submitted(self, mock_assigned, mock_is_lead, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
@@ -335,9 +319,7 @@ class TestAuditStateMachine:
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.is_lead_auditor")
     @patch("trunk.permissions.policies.PBACPolicy.is_assigned_to_audit")
-    def test_permission_client_review_to_report_draft(
-        self, mock_assigned, mock_is_lead, mock_is_cb_admin
-    ):
+    def test_permission_client_review_to_report_draft(self, mock_assigned, mock_is_lead, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
@@ -349,9 +331,7 @@ class TestAuditStateMachine:
 
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
     @patch("trunk.permissions.predicates.PermissionPredicate.can_conduct_technical_review")
-    def test_permission_technical_review_to_decision_pending(
-        self, mock_can_review, mock_is_cb_admin
-    ):
+    def test_permission_technical_review_to_decision_pending(self, mock_can_review, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         mock_can_review.return_value = True
         self.audit.status = "technical_review"
