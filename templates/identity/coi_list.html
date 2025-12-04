@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Conflicts of Interest</h1>
+  <ul>
+    {% for conflict in conflicts %}
+      <li>{{ conflict }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

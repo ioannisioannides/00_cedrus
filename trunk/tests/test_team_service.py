@@ -79,3 +79,16 @@ class TestTeamService:
     def test_check_competence(self):
         # It's a placeholder, just ensure it runs without error
         TeamService.check_competence(Mock(), Mock())
+
+    @patch("trunk.services.team_service.TeamService.check_competence")
+    def test_update_team_member_no_user_change(self, mock_check_competence):
+        mock_member = Mock(audit=Mock())
+        mock_member.user = Mock()
+        data = {"role": "Observer"}  # No user in data
+
+        result = TeamService.update_team_member(mock_member, data)
+
+        assert mock_member.role == "Observer"
+        mock_member.save.assert_called_once()
+        mock_check_competence.assert_not_called()
+        assert result == mock_member

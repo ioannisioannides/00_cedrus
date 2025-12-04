@@ -172,3 +172,54 @@ class TestReviewService:
             {"audit_id": 1, "decision_id": mock_decision.id, "maker_id": mock_user.id},
         )
         assert result == mock_decision
+
+    @patch("trunk.services.review_service.TechnicalReview")
+    @patch("trunk.services.review_service.AuditService")
+    @patch("trunk.services.review_service.event_dispatcher")
+    def test_conduct_technical_review_not_approved(
+        self, mock_dispatcher, mock_audit_service, mock_technical_review_class, mock_audit, mock_user
+    ):
+        # Setup
+        mock_review_instance = MagicMock()
+        mock_review_instance.status = "rejected"  # Not approved
+        mock_review_instance.id = 501
+        mock_technical_review_class.objects.create.return_value = mock_review_instance
+
+        data = {"status": "rejected", "comments": "Bad job"}
+
+        # Execute
+        result = ReviewService.conduct_technical_review(mock_audit, mock_user, data)
+
+        # Verify
+        mock_technical_review_class.objects.create.assert_called_once_with(audit=mock_audit, reviewer=mock_user, **data)
+
+        # Should NOT transition status
+        mock_audit_service.transition_status.assert_not_called()
+
+        # Should emit UPDATED event
+        mock_dispatcher.emit.assert_called_once_with(
+            EventType.TECHNICAL_REVIEW_UPDATED,
+            {"audit_id": mock_audit.id, "review_id": mock_review_instance.id, "reviewer_id": mock_user.id},
+        )
+        assert result == mock_review_instance
+
+    @patch("trunk.services.review_service.event_dispatcher")
+    def test_update_certification_decision_no_certifications(self, mock_dispatcher, mock_user):
+        # Setup
+        mock_decision = MagicMock()
+        mock_decision.audit.id = 1
+        mock_decision.id = 601
+
+        data = {"decision": "granted"}  # No certifications_affected
+
+        # Execute
+        ReviewService.update_certification_decision(mock_decision, mock_user, data)
+
+        # Verify
+        assert mock_decision.decision == "granted"
+        mock_decision.save.assert_called_once()
+
+        # Should NOT set certifications
+        mock_decision.certifications_affected.set.assert_not_called()
+
+        mock_dispatcher.emit.assert_called_once()

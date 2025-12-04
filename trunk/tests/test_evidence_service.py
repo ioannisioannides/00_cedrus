@@ -89,3 +89,36 @@ class TestEvidenceService:
         mock_dispatcher.emit.assert_called_once_with(
             EventType.EVIDENCE_DELETED, {"audit": mock_audit, "filename": "test_file.pdf", "deleted_by": mock_user}
         )
+
+    @patch("trunk.services.evidence_service.EvidenceFile")
+    @patch("trunk.services.evidence_service.event_dispatcher")
+    def test_upload_evidence_priority_argument(self, mock_dispatcher, mock_evidence_class):
+        # Setup
+        mock_audit = Mock()
+        mock_user = Mock()
+        mock_finding_arg = Mock(name="finding_arg")
+        mock_finding_data = Mock(name="finding_data")
+        file_data = {
+            "file": Mock(),
+            "evidence_type": "document",
+            "description": "Test evidence",
+            "finding": mock_finding_data,
+        }
+
+        mock_evidence_instance = Mock()
+        mock_evidence_class.return_value = mock_evidence_instance
+
+        # Execute
+        result = EvidenceService.upload_evidence(mock_audit, mock_user, file_data, finding=mock_finding_arg)
+
+        # Verify
+        # finding from argument should be used, finding from data should be ignored
+        mock_evidence_class.assert_called_once_with(
+            audit=mock_audit,
+            uploaded_by=mock_user,
+            finding=mock_finding_arg,
+            file=file_data["file"],
+            evidence_type="document",
+            description="Test evidence",
+        )
+        assert result == mock_evidence_instance

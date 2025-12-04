@@ -155,3 +155,58 @@ class TestAuditService:
         with pytest.raises(ValidationError) as exc:
             AuditService._validate_audit_data(audit_data)
         assert "cannot be more than 1 year in the future" in str(exc.value)
+
+    @patch("trunk.services.audit_service.AuditStateMachine")
+    @patch("trunk.services.audit_service.event_dispatcher.emit")
+    def test_transition_status(self, mock_emit, MockSM):
+        audit = Audit.objects.create(
+            organization=self.org,
+            created_by=self.user,
+            audit_type="stage1",
+            status="draft",
+            total_audit_date_from=date.today(),
+            total_audit_date_to=date.today(),
+            planned_duration_hours=8,
+        )
+
+        mock_sm_instance = MockSM.return_value
+
+        # Simulate transition changing status
+        def side_effect(new_status, user, notes):
+            audit.status = new_status
+            return audit
+
+        mock_sm_instance.transition.side_effect = side_effect
+
+        AuditService.transition_status(audit, "scheduled", self.user, "notes")
+
+        mock_sm_instance.transition.assert_called_with("scheduled", self.user, "notes")
+        mock_emit.assert_called_with(
+            EventType.AUDIT_STATUS_CHANGED,
+            {
+                "audit_id": audit.id,
+                "old_status": "draft",
+                "new_status": "scheduled",
+                "changed_by_id": self.user.id,
+                "notes": "notes",
+            },
+        )
+
+    @patch("trunk.services.audit_service.AuditStateMachine")
+    def test_get_available_transitions(self, MockSM):
+        audit = Audit.objects.create(
+            organization=self.org,
+            created_by=self.user,
+            audit_type="stage1",
+            status="draft",
+            total_audit_date_from=date.today(),
+            total_audit_date_to=date.today(),
+            planned_duration_hours=8,
+        )
+        mock_sm_instance = MockSM.return_value
+        mock_sm_instance.available_transitions.return_value = [("scheduled", "Schedule Audit")]
+
+        transitions = AuditService.get_available_transitions(audit, self.user)
+
+        assert transitions == [("scheduled", "Schedule Audit")]
+        mock_sm_instance.available_transitions.assert_called_with(self.user)

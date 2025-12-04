@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Competence Evaluations</h1>
+  <ul>
+    {% for evaluation in evaluations %}
+      <li>{{ evaluation }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

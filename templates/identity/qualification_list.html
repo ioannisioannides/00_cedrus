@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Qualifications</h1>
+  <ul>
+    {% for qualification in qualifications %}
+      <li>{{ qualification }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
