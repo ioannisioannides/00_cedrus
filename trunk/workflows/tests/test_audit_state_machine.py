@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -12,7 +12,7 @@ class TestAuditStateMachine:
         # Mock the class and objects manager for queries like self.audit.__class__.objects...
         self.audit.__class__ = Mock()
         self.audit.__class__.objects = Mock()
-        
+
         self.audit.status = "draft"
         self.audit.STATUS_CHOICES = [
             ("draft", "Draft"),
@@ -61,7 +61,7 @@ class TestAuditStateMachine:
         mock_is_lead.return_value = True
         mock_assigned.return_value = (True, "OK")
         self.audit.lead_auditor = self.user
-        
+
         # Satisfy guard
         self.audit.total_audit_date_from = "2023-01-01"
 
@@ -97,7 +97,7 @@ class TestAuditStateMachine:
     def test_guard_in_progress_to_report_draft_no_findings(self, mock_is_cb_admin, mock_log):
         mock_is_cb_admin.return_value = True
         self.audit.status = "in_progress"
-        
+
         # Mock findings counts
         self.audit.nonconformity_set.count.return_value = 0
         self.audit.observation_set.count.return_value = 0
@@ -111,7 +111,7 @@ class TestAuditStateMachine:
     def test_guard_in_progress_to_report_draft_success(self, mock_is_cb_admin, mock_log):
         mock_is_cb_admin.return_value = True
         self.audit.status = "in_progress"
-        
+
         # Mock findings counts
         self.audit.nonconformity_set.count.return_value = 1
         self.audit.observation_set.count.return_value = 0
@@ -125,7 +125,7 @@ class TestAuditStateMachine:
     def test_guard_client_review_to_submitted_missing_response(self, mock_is_cb_admin, mock_log):
         mock_is_cb_admin.return_value = True
         self.audit.status = "client_review"
-        
+
         nc = Mock()
         nc.category = "major"
         nc.client_root_cause = None
@@ -163,7 +163,7 @@ class TestAuditStateMachine:
         mock_is_cb_admin.return_value = True
         self.audit.status = "decision_pending"
         self.audit.audit_type = "stage2"
-        
+
         # Mock query for previous stage 1
         # self.audit.__class__.objects.filter...exists()
         self.audit.__class__.objects.filter.return_value.exclude.return_value.exists.return_value = False
@@ -188,7 +188,7 @@ class TestAuditStateMachine:
         mock_is_cb_admin.return_value = True
         self.audit.status = "decision_pending"
         self.audit.audit_type = "recertification" # Not stage2 or surveillance
-        
+
         nc = Mock()
         nc.clause = "9.2"
         qs = MagicMock()
@@ -198,7 +198,7 @@ class TestAuditStateMachine:
         qs.__iter__.return_value = iter([nc])
         self.audit.nonconformity_set.filter.return_value = qs
 
-        with pytest.raises(ValidationError, match="major NC\(s\) still open"):
+        with pytest.raises(ValidationError, match=r"major NC\(s\) still open"):
             self.sm.transition("closed", self.user)
 
     @patch("trunk.permissions.predicates.PermissionPredicate.is_cb_admin")
@@ -207,7 +207,7 @@ class TestAuditStateMachine:
         mock_is_cb_admin.return_value = False
         mock_can_review.return_value = True
         self.audit.status = "submitted"
-        
+
         can, _ = self.sm.can_transition("technical_review", self.user)
         assert can is True
         mock_can_review.assert_called_with(self.user)
@@ -222,7 +222,7 @@ class TestAuditStateMachine:
         mock_is_dm.return_value = True
         mock_independent.return_value = (True, "OK")
         self.audit.status = "decision_pending"
-        
+
         can, _ = self.sm.can_transition("decided", self.user)
         assert can is True
 
@@ -236,7 +236,7 @@ class TestAuditStateMachine:
         mock_is_dm.return_value = True
         mock_independent.return_value = (False, "Conflict")
         self.audit.status = "decision_pending"
-        
+
         can, reason = self.sm.can_transition("decided", self.user)
         assert can is False
         assert "You do not have permission" in reason
@@ -252,7 +252,7 @@ class TestAuditStateMachine:
         mock_assigned.return_value = (True, "OK")
         self.audit.lead_auditor = self.user
         self.audit.status = "scheduled"
-        
+
         can, _ = self.sm.can_transition("in_progress", self.user)
         assert can is True
 
@@ -267,12 +267,12 @@ class TestAuditStateMachine:
         mock_assigned.return_value = (True, "OK")
         self.audit.lead_auditor = self.user
         self.audit.status = "in_progress"
-        
+
         # Mock guards to pass
         self.audit.nonconformity_set.count.return_value = 1
         self.audit.observation_set.count.return_value = 0
         self.audit.opportunityforimprovement_set.count.return_value = 0
-        
+
         can, _ = self.sm.can_transition("report_draft", self.user)
         assert can is True
 
@@ -287,7 +287,7 @@ class TestAuditStateMachine:
         mock_assigned.return_value = (True, "OK")
         self.audit.lead_auditor = self.user
         self.audit.status = "report_draft"
-        
+
         can, _ = self.sm.can_transition("client_review", self.user)
         assert can is True
 
@@ -295,7 +295,7 @@ class TestAuditStateMachine:
     def test_permission_report_draft_to_client_review_cb_admin(self, mock_is_cb_admin):
         mock_is_cb_admin.return_value = True
         self.audit.status = "report_draft"
-        
+
         can, _ = self.sm.can_transition("client_review", self.user)
         assert can is True
 
@@ -310,7 +310,7 @@ class TestAuditStateMachine:
         mock_assigned.return_value = (True, "OK")
         self.audit.lead_auditor = self.user
         self.audit.status = "report_draft"
-        
+
         can, _ = self.sm.can_transition("in_progress", self.user)
         assert can is True
 
@@ -325,7 +325,7 @@ class TestAuditStateMachine:
         mock_assigned.return_value = (True, "OK")
         self.audit.lead_auditor = self.user
         self.audit.status = "client_review"
-        
+
         # Mock guards
         self.audit.nonconformity_set.filter.return_value = []
 
@@ -343,7 +343,7 @@ class TestAuditStateMachine:
         mock_assigned.return_value = (True, "OK")
         self.audit.lead_auditor = self.user
         self.audit.status = "client_review"
-        
+
         can, _ = self.sm.can_transition("report_draft", self.user)
         assert can is True
 
@@ -355,7 +355,7 @@ class TestAuditStateMachine:
         mock_is_cb_admin.return_value = False
         mock_can_review.return_value = True
         self.audit.status = "technical_review"
-        
+
         # Mock guards
         self.audit.technical_review.status = "approved"
 
@@ -366,7 +366,7 @@ class TestAuditStateMachine:
     def test_permission_decision_pending_to_decided_cb_admin(self, mock_is_cb_admin):
         mock_is_cb_admin.return_value = True
         self.audit.status = "decision_pending"
-        
+
         can, _ = self.sm.can_transition("decided", self.user)
         assert can is True
 
@@ -374,7 +374,7 @@ class TestAuditStateMachine:
     def test_permission_decided_to_closed(self, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         self.audit.status = "decided"
-        
+
         can, _ = self.sm.can_transition("closed", self.user)
         assert can is True
 
@@ -382,7 +382,7 @@ class TestAuditStateMachine:
     def test_permission_decision_pending_to_closed_cb_admin(self, mock_is_cb_admin):
         mock_is_cb_admin.return_value = True
         self.audit.status = "decision_pending"
-        
+
         # Mock guards
         self.audit.audit_type = "stage1"
         self.audit.nonconformity_set.filter.return_value.exists.return_value = False
@@ -394,7 +394,7 @@ class TestAuditStateMachine:
     def test_permission_to_cancelled_cb_admin(self, mock_is_cb_admin):
         mock_is_cb_admin.return_value = True
         self.audit.status = "draft"
-        
+
         can, _ = self.sm.can_transition("cancelled", self.user)
         assert can is True
 
@@ -402,6 +402,6 @@ class TestAuditStateMachine:
     def test_permission_to_cancelled_fail(self, mock_is_cb_admin):
         mock_is_cb_admin.return_value = False
         self.audit.status = "draft"
-        
+
         can, _ = self.sm.can_transition("cancelled", self.user)
         assert can is False

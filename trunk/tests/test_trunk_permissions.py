@@ -1,11 +1,14 @@
-import pytest
 from unittest.mock import MagicMock
-from django.contrib.auth.models import User, Group
-from identity.adapters.models import Profile
+
+import pytest
+from django.contrib.auth.models import Group, User
+
 from core.models import Organization
-from trunk.permissions.predicates import PermissionPredicate
+from identity.adapters.models import Profile
+from trunk.permissions.mixins import AuditorRequiredMixin, CBAdminRequiredMixin, ClientRequiredMixin
 from trunk.permissions.policies import PBACPolicy
-from trunk.permissions.mixins import CBAdminRequiredMixin, AuditorRequiredMixin, ClientRequiredMixin
+from trunk.permissions.predicates import PermissionPredicate
+
 
 @pytest.mark.django_db
 class TestPermissionPredicate:
@@ -15,13 +18,13 @@ class TestPermissionPredicate:
         if not hasattr(self.user, 'profile'):
             Profile.objects.create(user=self.user)
         self.profile = self.user.profile
-        
+
         self.organization = Organization.objects.create(
             name="Test Org",
             total_employee_count=10,
             customer_id="CUST-001"
         )
-        
+
         self.cb_admin_group = Group.objects.create(name="cb_admin")
         self.lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.auditor_group = Group.objects.create(name="auditor")
@@ -87,25 +90,25 @@ class TestPermissionPredicate:
         audit.lead_auditor = None
         audit.team_members.filter.return_value.exists.return_value = False
         audit.organization = self.organization
-        
+
         # No permission
         assert not PermissionPredicate.can_view_audit(self.user, audit)
-        
+
         # CB Admin
         self.user.groups.add(self.cb_admin_group)
         assert PermissionPredicate.can_view_audit(self.user, audit)
         self.user.groups.clear()
-        
+
         # Lead Auditor
         audit.lead_auditor = self.user
         assert PermissionPredicate.can_view_audit(self.user, audit)
         audit.lead_auditor = None
-        
+
         # Team Member
         audit.team_members.filter.return_value.exists.return_value = True
         assert PermissionPredicate.can_view_audit(self.user, audit)
         audit.team_members.filter.return_value.exists.return_value = False
-        
+
         # Organization Member
         self.user.profile.organization = audit.organization
         self.user.profile.save()
@@ -123,14 +126,14 @@ class TestPBACPolicy:
             total_employee_count=10,
             customer_id="CUST-001"
         )
-        
+
         self.cb_admin_group = Group.objects.create(name="cb_admin")
         self.lead_auditor_group = Group.objects.create(name="lead_auditor")
         self.auditor_group = Group.objects.create(name="auditor")
         self.client_user_group = Group.objects.create(name="client_user")
         self.technical_reviewer_group = Group.objects.create(name="technical_reviewer")
         self.decision_maker_group = Group.objects.create(name="decision_maker")
-        
+
         self.audit = MagicMock()
         self.audit.lead_auditor = None
         self.audit.team_members.filter.return_value.exists.return_value = False
@@ -185,7 +188,7 @@ class TestPBACPolicy:
         self.user.profile.save()
         allowed, _ = PBACPolicy.can_user_access_organization(self.user, self.audit)
         assert allowed
-        
+
         # Client User - Different Org
         other_org = Organization.objects.create(
             name="Other Org",
@@ -196,7 +199,7 @@ class TestPBACPolicy:
         self.user.profile.save()
         allowed, _ = PBACPolicy.can_user_access_organization(self.user, self.audit)
         assert not allowed
-        
+
         # No Role
         self.user.groups.clear()
         allowed, _ = PBACPolicy.can_user_access_organization(self.user, self.audit)
@@ -235,7 +238,7 @@ class TestPBACPolicy:
         self.user.groups.add(self.technical_reviewer_group)
         allowed, reason = PBACPolicy.can_conduct_technical_review(self.user, self.audit)
         assert allowed
-        
+
         # Conflict: Lead Auditor
         self.audit.lead_auditor = self.user
         allowed, reason = PBACPolicy.can_conduct_technical_review(self.user, self.audit)
@@ -249,7 +252,7 @@ class TestPBACPolicy:
         assert not allowed
         assert "cannot be a team member" in reason
         self.audit.team_members.filter.return_value.exists.return_value = False
-        
+
         self.user.groups.clear()
 
     def test_can_make_certification_decision(self):
@@ -262,12 +265,12 @@ class TestPBACPolicy:
         self.user.groups.add(self.decision_maker_group)
         allowed, reason = PBACPolicy.can_make_certification_decision(self.user, self.audit)
         assert allowed
-        
+
         # Conflict (delegated to is_independent_for_decision)
         self.audit.lead_auditor = self.user
         allowed, reason = PBACPolicy.can_make_certification_decision(self.user, self.audit)
         assert not allowed
-        
+
         self.user.groups.clear()
 
 
@@ -277,13 +280,13 @@ class TestMixins:
         self.cb_admin_group = Group.objects.create(name="cb_admin")
         self.auditor_group = Group.objects.create(name="auditor")
         self.client_group = Group.objects.create(name="client_user")
-        
+
         self.org = Organization.objects.create(
             name="Test Org",
             total_employee_count=10,
             customer_id="CUST-MIXIN-001"
         )
-        
+
         self.user = User.objects.create_user(username="mixin_user", password="password")
         # Profile is created by signal, so we update it
         self.user.profile.organization = self.org
@@ -299,7 +302,7 @@ class TestMixins:
         # Test with CB Admin
         self.user.groups.add(self.cb_admin_group)
         self._check_mixin(CBAdminRequiredMixin, self.user, True)
-        
+
         # Test without CB Admin
         self.user.groups.clear()
         self._check_mixin(CBAdminRequiredMixin, self.user, False)
@@ -308,7 +311,7 @@ class TestMixins:
         # Test with Auditor
         self.user.groups.add(self.auditor_group)
         self._check_mixin(AuditorRequiredMixin, self.user, True)
-        
+
         # Test without Auditor
         self.user.groups.clear()
         self._check_mixin(AuditorRequiredMixin, self.user, False)
@@ -317,7 +320,7 @@ class TestMixins:
         # Test with Client
         self.user.groups.add(self.client_group)
         self._check_mixin(ClientRequiredMixin, self.user, True)
-        
+
         # Test without Client
         self.user.groups.clear()
         self._check_mixin(ClientRequiredMixin, self.user, False)
