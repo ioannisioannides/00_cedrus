@@ -5,10 +5,11 @@ These forms handle creation and editing of findings, with validation to ensure
 standards belong to the audit's certifications.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import ModelChoiceField
 
 from audit_management.models import Nonconformity, Observation, OpportunityForImprovement
 
@@ -50,13 +51,13 @@ class NonconformityForm(forms.ModelForm):
             standards = audit.certifications.values_list("standard", flat=True).distinct()
             from core.models import Standard
 
-            self.fields["standard"].queryset = Standard.objects.filter(id__in=standards)
+            cast(ModelChoiceField, self.fields["standard"]).queryset = Standard.objects.filter(id__in=standards)
             self.fields["standard"].required = True
         else:
             # If no audit provided, allow all standards (shouldn't happen in practice)
             from core.models import Standard
 
-            self.fields["standard"].queryset = Standard.objects.all()
+            cast(ModelChoiceField, self.fields["standard"]).queryset = Standard.objects.all()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -93,12 +94,12 @@ class ObservationForm(forms.ModelForm):
             standards = audit.certifications.values_list("standard", flat=True).distinct()
             from core.models import Standard
 
-            self.fields["standard"].queryset = Standard.objects.filter(id__in=standards)
+            cast(ModelChoiceField, self.fields["standard"]).queryset = Standard.objects.filter(id__in=standards)
             self.fields["standard"].required = True
         else:
             from core.models import Standard
 
-            self.fields["standard"].queryset = Standard.objects.all()
+            cast(ModelChoiceField, self.fields["standard"]).queryset = Standard.objects.all()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -133,12 +134,12 @@ class OpportunityForImprovementForm(forms.ModelForm):
             standards = audit.certifications.values_list("standard", flat=True).distinct()
             from core.models import Standard
 
-            self.fields["standard"].queryset = Standard.objects.filter(id__in=standards)
+            cast(ModelChoiceField, self.fields["standard"]).queryset = Standard.objects.filter(id__in=standards)
             self.fields["standard"].required = True
         else:
             from core.models import Standard
 
-            self.fields["standard"].queryset = Standard.objects.all()
+            cast(ModelChoiceField, self.fields["standard"]).queryset = Standard.objects.all()
 
     def clean(self):
         cleaned_data = super().clean()

@@ -68,7 +68,6 @@ class TechnicalReviewView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def get_success_url(self):
         """Redirect to appropriate page after successful form submission."""
-        # TODO: Update URL name to point to audit detail in new app
         return reverse("audit_management:audit_detail", kwargs={"pk": self.kwargs["audit_pk"]})
 
 
