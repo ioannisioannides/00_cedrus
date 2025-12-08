@@ -1,10 +1,11 @@
 from unittest.mock import Mock, patch
+
 from trunk.events.handlers import (
-    on_audit_status_changed,
-    on_nc_verified,
-    on_complaint_received,
     on_appeal_received,
+    on_audit_status_changed,
     on_certificate_history_created,
+    on_complaint_received,
+    on_nc_verified,
     register_event_handlers,
 )
 
