@@ -64,3 +64,5 @@ security_*.json
 logs/*.log
 snyk-code.sarif
 node_modules/
+reports/
+_archive/
