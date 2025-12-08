@@ -8,6 +8,7 @@ from trunk.events.handlers import (
     register_event_handlers,
 )
 
+
 class TestTrunkHandlersCoverage:
     def test_on_audit_status_changed_missing_data(self):
         on_audit_status_changed({})
@@ -17,7 +18,7 @@ class TestTrunkHandlersCoverage:
     @patch("trunk.events.handlers.apps.get_model")
     def test_on_audit_status_changed_not_found(self, mock_get_model):
         mock_audit_model = Mock()
-        mock_audit_model.objects.get.side_effect = Exception("Audit.DoesNotExist") # Simulating DoesNotExist
+        mock_audit_model.objects.get.side_effect = Exception("Audit.DoesNotExist")  # Simulating DoesNotExist
         # We need to mock the DoesNotExist exception class on the model
         mock_audit_model.DoesNotExist = Exception
 
