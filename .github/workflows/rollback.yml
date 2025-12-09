@@ -12,6 +12,7 @@ name: Rollback Deployment
 on:
   # Manual trigger with environment selection
   workflow_dispatch:
+    # checkov:skip=CKV_GHA_7:Inputs are required for manual rollback selection
     inputs:
       environment:
         description: 'Environment to rollback'
@@ -305,6 +306,7 @@ jobs:
     
     steps:
     - name: Send notification
+      # checkov:skip=CKV_GHA_3:Curl is used in commented out examples for notification integrations
       env:
         STATUS: ${{ needs.verify.result }}
         ENVIRONMENT: ${{ inputs.environment }}

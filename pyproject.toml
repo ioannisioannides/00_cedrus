@@ -141,4 +141,11 @@ dev = [
     "pytest-django>=4.11.1",
     "pytest-playwright>=0.7.2",
     "ruff>=0.14.7",
+    "bandit>=1.7.8",
+    "checkov>=3.2.0",
+    "prospector>=1.10.3",
+    "pylint>=3.1.0",
+    "semgrep>=1.52.0",
+    "pylint-django>=2.6.1",
+    "pymarkdownlnt>=0.9.33",
 ]

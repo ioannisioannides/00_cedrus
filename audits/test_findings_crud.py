@@ -14,7 +14,7 @@ from django.urls import reverse
 
 from audit_management.models import Audit, Nonconformity, Observation, OpportunityForImprovement
 from core.models import Certification, Organization, Standard
-from core.test_utils import TEST_PASSWORD
+from core.test_utils import TEST_PASSWORD_DEFAULT
 from identity.adapters.models import Profile
 
 User = get_user_model()
@@ -40,7 +40,7 @@ def organization(db):
 @pytest.fixture
 def cb_admin_user(db, organization):
     """Create CB admin user."""
-    user = User.objects.create_user(username="cbadmin", email="admin@cb.com", password=TEST_PASSWORD)  # nosec B106
+    user = User.objects.create_user(username="cbadmin", email="admin@cb.com", password=TEST_PASSWORD_DEFAULT)  # nosec B106
     user.groups.create(name="CB Admin")
     Profile.objects.create(user=user, role="cb_admin", organization=organization)
     return user
@@ -51,7 +51,7 @@ def auditor_user(db, organization):
     """Create auditor user."""
     from django.contrib.auth.models import Group
 
-    user = User.objects.create_user(username="auditor", email="auditor@cb.com", password=TEST_PASSWORD)  # nosec B106
+    user = User.objects.create_user(username="auditor", email="auditor@cb.com", password=TEST_PASSWORD_DEFAULT)  # nosec B106
     auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
     user.groups.add(auditor_group)
     # Profile is auto-created via signal, just update it
@@ -64,7 +64,7 @@ def client_user(db, organization):
     """Create client user."""
     from django.contrib.auth.models import Group
 
-    user = User.objects.create_user(username="client", email="client@org.com", password=TEST_PASSWORD)  # nosec B106
+    user = User.objects.create_user(username="client", email="client@org.com", password=TEST_PASSWORD_DEFAULT)  # nosec B106
     client_group, _ = Group.objects.get_or_create(name="client_user")
     user.groups.add(client_group)
     # Profile is auto-created via signal, just update it

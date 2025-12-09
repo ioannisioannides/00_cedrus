@@ -2,4 +2,4 @@
 Test utilities and constants.
 """
 
-TEST_PASSWORD = "TestPassword123!"  # nosec
+TEST_PASSWORD_DEFAULT = "TestPassword123!"  # nosec

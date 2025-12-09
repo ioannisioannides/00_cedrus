@@ -149,7 +149,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 if DEBUG:
     try:
-        import debug_toolbar  # noqa: F401
+        import debug_toolbar  # noqa: F401 # pylint: disable=unused-import
 
         INSTALLED_APPS += ["debug_toolbar"]
         MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")

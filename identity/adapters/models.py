@@ -48,6 +48,7 @@ class Profile(models.Model):
         db_table = "accounts_profile"  # Preserve existing table name
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"{self.user.get_full_name() or self.user.username} ({self.organization or 'No Org'})"
 
     def is_cb_admin(self):
@@ -80,6 +81,7 @@ class Profile(models.Model):
 
     def get_role_display(self):
         """Get a human-readable role name."""
+        # pylint: disable=too-many-return-statements
         if self.is_cb_admin():
             return "CB Admin"
         if self.is_lead_auditor():
@@ -150,6 +152,7 @@ class AuditorQualification(models.Model):
         db_table = "accounts_auditorqualification"
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"{self.auditor.username} - {self.get_qualification_type_display()}"
 
 
@@ -178,6 +181,7 @@ class AuditorTrainingRecord(models.Model):
         db_table = "accounts_auditortrainingrecord"
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"Training: {self.course_title} ({self.auditor.username})"
 
 
@@ -219,6 +223,7 @@ class AuditorCompetenceEvaluation(models.Model):
         db_table = "accounts_auditorcompetenceevaluation"
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"Competence Eval {self.auditor.username} {self.evaluation_date}"
 
 
@@ -266,6 +271,7 @@ class ConflictOfInterest(models.Model):
         db_table = "accounts_conflictofinterest"
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"COI {self.auditor.username} → {self.organization.name} ({self.get_impartiality_risk_display()})"
 
 
@@ -292,6 +298,7 @@ class ImpartialityDeclaration(models.Model):
         db_table = "accounts_impartialitydeclaration"
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"Impartiality {self.user.username} {self.declaration_period_year}"
 
 

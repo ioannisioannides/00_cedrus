@@ -160,6 +160,7 @@ class Certification(models.Model):
         unique_together = [["organization", "standard"]]
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"{self.organization.name} - {self.standard.code} ({self.certificate_status})"
 
 

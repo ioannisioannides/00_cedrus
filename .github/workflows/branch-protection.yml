@@ -3,6 +3,9 @@ name: Configure Branch Protection (manual)
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   protect-main:
     runs-on: ubuntu-latest

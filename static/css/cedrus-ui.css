@@ -82,7 +82,7 @@ a:hover {
 
 .btn-primary {
   background-color: var(--action-primary);
-  color: #FFFFFF; /* Always white for contrast on blue */
+  color: #FFF; /* Always white for contrast on blue */
 }
 
 .btn-primary:hover {
@@ -143,6 +143,7 @@ a:hover {
   background-color: var(--void-800);
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 .nav-link:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: -2px;

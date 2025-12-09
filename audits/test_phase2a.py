@@ -17,7 +17,7 @@ from django.test import TestCase
 from audit_management.models import Audit
 from certification.models import Appeal, CertificationDecision, Complaint
 from core.models import CertificateHistory, Certification, Organization, Standard, SurveillanceSchedule
-from core.test_utils import TEST_PASSWORD
+from core.test_utils import TEST_PASSWORD_DEFAULT
 from identity.adapters.models import AuditorQualification, ConflictOfInterest
 from trunk.services.certificate_service import CertificateService
 from trunk.services.competence_service import CompetenceService
@@ -28,7 +28,7 @@ class AuditorCompetenceTests(TestCase):
     """Test Auditor Competence and Impartiality logic (Clause 7 & 5.2)."""
 
     def setUp(self):
-        self.auditor = User.objects.create_user(username="auditor_jane", password=TEST_PASSWORD)  # nosec B106
+        self.auditor = User.objects.create_user(username="auditor_jane", password=TEST_PASSWORD_DEFAULT)  # nosec B106
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="QMS")
         self.org = Organization.objects.create(name="Test Org", customer_id="C001", total_employee_count=10)
 
@@ -101,7 +101,7 @@ class CertificateLifecycleTests(TestCase):
     """Test Certificate Lifecycle logic (Clause 9.6)."""
 
     def setUp(self):
-        self.cb_admin = User.objects.create_user(username="admin", password=TEST_PASSWORD)  # nosec B106
+        self.cb_admin = User.objects.create_user(username="admin", password=TEST_PASSWORD_DEFAULT)  # nosec B106
         self.org = Organization.objects.create(name="Cert Org", customer_id="C002", total_employee_count=50)
         self.standard = Standard.objects.create(code="ISO 14001:2015", title="EMS")
         self.cert = Certification.objects.create(
@@ -157,7 +157,7 @@ class ComplaintsAndAppealsTests(TestCase):
     """Test Complaints and Appeals logic (Clause 9.8)."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="client_user", password=TEST_PASSWORD)  # nosec B106
+        self.user = User.objects.create_user(username="client_user", password=TEST_PASSWORD_DEFAULT)  # nosec B106
         self.org = Organization.objects.create(name="Complaint Org", customer_id="C003", total_employee_count=20)
 
     def test_complaint_creation_service(self):

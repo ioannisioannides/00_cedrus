@@ -12,20 +12,20 @@ from django.urls import reverse
 
 from audit_management.models import Audit, EvidenceFile, Nonconformity
 from core.models import Certification, Organization, Standard
-from core.test_utils import TEST_PASSWORD
+from core.test_utils import TEST_PASSWORD_DEFAULT
 from identity.adapters.models import Profile
 
 User = get_user_model()
 
 
 @pytest.fixture
-def standard(db):
+def standard(db):  # pylint: disable=unused-argument
     """Create test standard."""
     return Standard.objects.create(code="ISO 9001:2015", title="Quality Management Systems")
 
 
 @pytest.fixture
-def organization(db):
+def organization(db):  # pylint: disable=unused-argument
     """Create test organization."""
     return Organization.objects.create(
         name="Test Organization",
@@ -36,11 +36,11 @@ def organization(db):
 
 
 @pytest.fixture
-def auditor_user(db, organization):
+def auditor_user(db, organization):  # pylint: disable=unused-argument
     """Create auditor user."""
     from django.contrib.auth.models import Group
 
-    user = User.objects.create_user(username="auditor", email="auditor@cb.com", password=TEST_PASSWORD)
+    user = User.objects.create_user(username="auditor", email="auditor@cb.com", password=TEST_PASSWORD_DEFAULT)
     auditor_group, _ = Group.objects.get_or_create(name="lead_auditor")
     user.groups.add(auditor_group)
     Profile.objects.update_or_create(user=user, defaults={"organization": None})
@@ -48,7 +48,7 @@ def auditor_user(db, organization):
 
 
 @pytest.fixture
-def audit(db, organization, standard, auditor_user):
+def audit(db, organization, standard, auditor_user):  # pylint: disable=unused-argument
     """Create audit."""
     audit = Audit.objects.create(
         organization=organization,

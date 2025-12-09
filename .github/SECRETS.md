@@ -94,6 +94,7 @@ This document lists all GitHub Secrets required for the Cedrus CI/CD pipeline an
   ssh-keygen -t ed25519 -C "github-actions@cedrus-deploy" -f cedrus_deploy_key
   ```
 - **Format:** Full private key including headers
+  <!-- nosemgrep: generic.secrets.security.detected-private-key.detected-private-key -->
   ```
   -----BEGIN OPENSSH PRIVATE KEY-----
   b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtz...

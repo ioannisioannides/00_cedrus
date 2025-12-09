@@ -27,8 +27,8 @@ def on_audit_status_changed(payload):
     if not audit_id or not new_status:
         return
 
-    Audit = apps.get_model("audit_management", "Audit")
-    User = apps.get_model("auth", "User")
+    Audit = apps.get_model("audit_management", "Audit")  # pylint: disable=invalid-name
+    User = apps.get_model("auth", "User")  # pylint: disable=invalid-name
 
     try:
         audit = Audit.objects.get(id=audit_id)
@@ -72,7 +72,7 @@ def on_nc_verified(payload):
     if not nc_id or not verification_status:
         return
 
-    Nonconformity = apps.get_model("audit_management", "Nonconformity")
+    Nonconformity = apps.get_model("audit_management", "Nonconformity")  # pylint: disable=invalid-name
     try:
         nc = Nonconformity.objects.get(id=nc_id)
     except Nonconformity.DoesNotExist:
@@ -104,7 +104,7 @@ def on_nc_verified(payload):
 def on_complaint_received(payload):
     """Handler for complaint received events."""
     complaint_id = payload.get("complaint_id")
-    Complaint = apps.get_model("certification", "Complaint")
+    Complaint = apps.get_model("certification", "Complaint")  # pylint: disable=invalid-name
     try:
         complaint = Complaint.objects.get(id=complaint_id)
         logger.info("Complaint %s received from %s", complaint.complaint_number, complaint.complainant_name)
@@ -115,7 +115,7 @@ def on_complaint_received(payload):
 def on_appeal_received(payload):
     """Handler for appeal received events."""
     appeal_id = payload.get("appeal_id")
-    Appeal = apps.get_model("certification", "Appeal")
+    Appeal = apps.get_model("certification", "Appeal")  # pylint: disable=invalid-name
     try:
         appeal = Appeal.objects.get(id=appeal_id)
         logger.info("Appeal %s received from %s", appeal.appeal_number, appeal.appellant_name)
@@ -126,7 +126,7 @@ def on_appeal_received(payload):
 def on_certificate_history_created(payload):
     """Handler for certificate history creation."""
     history_id = payload.get("history_id")
-    CertificateHistory = apps.get_model("core", "CertificateHistory")
+    CertificateHistory = apps.get_model("core", "CertificateHistory")  # pylint: disable=invalid-name
     try:
         history = CertificateHistory.objects.get(id=history_id)
         logger.info("Certificate history created: %s for %s", history.action, history.certification.certificate_id)

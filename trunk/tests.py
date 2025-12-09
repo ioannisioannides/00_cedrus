@@ -14,7 +14,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
 from core.models import Certification, Organization, Site, Standard
-from core.test_utils import TEST_PASSWORD
+from core.test_utils import TEST_PASSWORD_DEFAULT
 from identity.adapters.models import Profile
 from trunk.events import EventType, event_dispatcher
 from trunk.events.dispatcher import EventDispatcher
@@ -78,7 +78,7 @@ class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
 
     def _create_user(self, username, group):
         """Helper to create user and assign group."""
-        user = User.objects.create_user(username=username, password=TEST_PASSWORD)  # nosec B106
+        user = User.objects.create_user(username=username, password=TEST_PASSWORD_DEFAULT)  # nosec B106
         user.groups.add(group)
         return user
 
@@ -185,7 +185,7 @@ class PBACPolicyTest(TestCase):  # pylint: disable=too-many-instance-attributes
 
     def test_can_user_access_organization_unknown_role(self):
         """Test unknown role cannot access organization."""
-        other_user = User.objects.create_user(username="other", password=TEST_PASSWORD)  # nosec B106
+        other_user = User.objects.create_user(username="other", password=TEST_PASSWORD_DEFAULT)  # nosec B106
         allowed, reason = PBACPolicy.can_user_access_organization(other_user, self.audit)
         self.assertFalse(allowed)
         self.assertIn("does not have permission", reason)
@@ -317,8 +317,8 @@ class EventHandlersTest(TestCase):
 
         from audit_management.models import Audit
 
-        self.user = User.objects.create_user(username="test", password=TEST_PASSWORD)  # nosec B106
-        self.lead_auditor = User.objects.create_user(username="lead_auditor", password=TEST_PASSWORD)  # nosec B106
+        self.user = User.objects.create_user(username="test", password=TEST_PASSWORD_DEFAULT)  # nosec B106
+        self.lead_auditor = User.objects.create_user(username="lead_auditor", password=TEST_PASSWORD_DEFAULT)  # nosec B106
         self.audit = Audit.objects.create(
             organization=self.org,
             audit_type="stage2",
