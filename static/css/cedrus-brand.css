@@ -97,8 +97,9 @@
 /* ============================================
    LIGHT MODE OVERRIDES (AAA Compliant)
    ============================================ */
+[data-theme="light"],
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --bg-app: #F4F4F4;
     --bg-card: #FFFFFF;
     --bg-overlay: rgba(255, 255, 255, 0.9);
@@ -124,5 +125,33 @@
     
     --shadow-lift: 0 2px 6px rgba(0,0,0,0.15);
   }
+}
+
+/* Explicit Light Mode Class (for toggle) */
+[data-theme="light"] {
+    --bg-app: #F4F4F4;
+    --bg-card: #FFFFFF;
+    --bg-overlay: rgba(255, 255, 255, 0.9);
+
+    --border-subtle: #E0E0E0;
+    --border-strong: #8D8D8D;
+    --border-focus: #0F62FE;
+
+    --text-primary: #161616;   /* ~19:1 Contrast */
+    --text-secondary: #525252; /* ~7:1 Contrast */
+    --text-tertiary: #6F6F6F;  /* ~4.5:1 Contrast */
+    --text-inverse: #FFFFFF;
+
+    --link-color: #0043CE; /* Darker blue for light bg */
+    --link-hover: #002D9C;
+
+    --action-primary: #0F62FE;
+    --action-hover: #0043CE;
+
+    --status-success: #0E6027; /* Darker green */
+    --status-warning: #8A6A00; /* Darker yellow/brown */
+    --status-danger: #A2191F;  /* Darker red */
+    
+    --shadow-lift: 0 2px 6px rgba(0,0,0,0.15);
 }
 
