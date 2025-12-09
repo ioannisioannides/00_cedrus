@@ -259,7 +259,7 @@ services:
     image: adminer:latest
     container_name: cedrus-adminer-dev
     restart: unless-stopped
-    read_only: true
+    # read_only: true # Disabled because it breaks adminer theme symlinking
     
     environment:
       ADMINER_DEFAULT_SERVER: postgres
