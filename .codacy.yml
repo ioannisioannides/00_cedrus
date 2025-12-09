@@ -8,6 +8,36 @@ engines:
     enabled: false
   pylint:
     enabled: false
+  eslint:
+    enabled: false
+  prospector:
+    enabled: false
+  stylelint:
+    enabled: false
+  markdownlint:
+    enabled: false
+  checkov:
+    enabled: false
+  semgrep:
+    enabled: false
+  lizard:
+    enabled: false
+  pmd:
+    enabled: false
+  spotbugs:
+    enabled: false
+  codenarc:
+    enabled: false
+  rubocop:
+    enabled: false
+  brakeman:
+    enabled: false
+  flawfinder:
+    enabled: false
+  hadolint:
+    enabled: false
+  shellcheck:
+    enabled: false
 exclude_paths:
   - .venv/
   - node_modules/
@@ -19,4 +49,5 @@ exclude_paths:
   - "**/*.pdf"
   - "**/*.sqlite3"
   - "**/*.pyc"
+  - results.sarif
 

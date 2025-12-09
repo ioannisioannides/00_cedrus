@@ -66,3 +66,4 @@ snyk-code.sarif
 node_modules/
 reports/
 _archive/
+results.sarif
