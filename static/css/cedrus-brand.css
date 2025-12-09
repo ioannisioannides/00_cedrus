@@ -86,12 +86,12 @@
   /* ============================================
      SPACING & LAYOUT
      ============================================ */
-  --radius-sm: 2px;   /* IBM Style: Sharper */
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  --radius-sm: 0px;   /* IBM Style: Sharp corners */
+  --radius-md: 2px;   /* Minimal rounding */
+  --radius-lg: 4px;
   
-  --shadow-lift: 0 4px 8px rgba(0,0,0,0.4);
-  --glass-blur: blur(8px);
+  --shadow-lift: 0 2px 6px rgba(0,0,0,0.3);
+  --glass-blur: blur(0px); /* Carbon avoids glassmorphism, prefers solid layers */
 }
 
 /* ============================================

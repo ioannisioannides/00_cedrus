@@ -204,22 +204,37 @@ a:hover {
 }
 
 /* ============================================
-   COMPONENTS: FORMS
+   COMPONENTS: FORMS (Carbon Style)
    ============================================ */
 input, select, textarea {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-strong); /* Stronger border for inputs */
+  background-color: var(--void-800); /* Darker background for inputs */
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
   color: var(--text-primary);
-  border-radius: var(--radius-sm);
+  border-radius: 0; /* Carbon inputs are square */
   padding: 0.75rem 1rem;
   width: 100%;
   font-family: var(--font-ui);
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+[data-theme="light"] input, 
+[data-theme="light"] select, 
+[data-theme="light"] textarea {
+  background-color: var(--void-100); /* Light gray background in light mode */
+  border-bottom: 1px solid var(--border-strong);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: 2px solid var(--border-focus);
-  outline-offset: -2px; /* Inner focus ring */
-  border-color: transparent;
+  outline-offset: -2px;
+  background-color: var(--void-700); /* Slightly lighter on focus */
+}
+
+[data-theme="light"] input:focus, 
+[data-theme="light"] select:focus, 
+[data-theme="light"] textarea:focus {
+  background-color: var(--void-0); /* White on focus in light mode */
 }
 
 label {
