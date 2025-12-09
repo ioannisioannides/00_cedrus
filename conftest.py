@@ -1,4 +1,9 @@
+import os
+
 import pytest
+
+# Allow synchronous Django DB operations in async contexts (like Playwright tests)
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 
 @pytest.fixture(autouse=True)
