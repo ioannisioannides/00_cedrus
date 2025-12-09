@@ -111,6 +111,99 @@ a:hover {
 }
 
 /* ============================================
+   COMPONENTS: NAVBAR (Accessibility Overrides)
+   ============================================ */
+.navbar {
+  background-color: var(--bg-card) !important;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.navbar-brand {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.nav-link {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  border-radius: var(--radius-sm);
+  transition: color 0.1s ease, background-color 0.1s ease;
+}
+
+.nav-link:hover {
+  color: var(--action-primary) !important;
+  background-color: var(--void-100); /* Subtle hover bg */
+}
+
+[data-theme="dark"] .nav-link:hover {
+  background-color: var(--void-800);
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+  background-color: var(--void-100);
+}
+
+.nav-link.active {
+  color: var(--action-primary) !important;
+  font-weight: 600;
+  background-color: transparent;
+}
+
+.navbar-toggler {
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 2px var(--border-focus);
+}
+
+.navbar-toggler-icon {
+  background-image: none !important; /* Remove default bootstrap SVG */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-toggler-icon::after {
+  content: "\2630"; /* Hamburger menu unicode */
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+/* ============================================
+   COMPONENTS: DROPDOWNS
+   ============================================ */
+.dropdown-menu {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: var(--shadow-lift) !important;
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
+  color: var(--text-primary) !important;
+  padding: 0.5rem 1rem;
+  font-weight: 400;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+  background-color: var(--void-100) !important;
+  color: var(--action-primary) !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover, 
+[data-theme="dark"] .dropdown-item:focus {
+  background-color: var(--void-800) !important;
+}
+
+/* ============================================
    COMPONENTS: FORMS
    ============================================ */
 input, select, textarea {
