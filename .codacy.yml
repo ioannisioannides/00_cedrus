@@ -44,6 +44,9 @@ exclude_paths:
   - htmlcov/
   - static/
   - staticfiles/
+  - media/
+  - logs/
+  - _archive/
   - .ruff_cache/
   - .coverage
   - "**/*.pdf"
