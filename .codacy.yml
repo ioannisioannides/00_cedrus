@@ -1,0 +1,16 @@
+---
+engines:
+  ruff:
+    enabled: true
+  trivy:
+    enabled: true
+  bandit:
+    enabled: false
+  pylint:
+    enabled: false
+exclude_paths:
+  - .venv/
+  - node_modules/
+  - htmlcov/
+  - static/
+  - staticfiles/
