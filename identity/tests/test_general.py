@@ -15,7 +15,9 @@ class ProfileModelTest(TestCase):
     """Test Profile model methods and relationships."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password=TEST_PASSWORD_DEFAULT)
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password=TEST_PASSWORD_DEFAULT
+        )
         self.org = Organization.objects.create(
             name="Test Org",
             registered_address="123 Test St",
