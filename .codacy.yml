@@ -5,21 +5,27 @@ engines:
     enabled: true
   trivy:
     enabled: true
-  bandit:
-    enabled: false
-  pylint:
-    enabled: false
   eslint:
     enabled: true
+  stylelint:
+    enabled: true
+  markdownlint:
+    enabled: true
+  hadolint:
+    enabled: true
+  shellcheck:
+    enabled: true
+  bandit:
+    enabled: true
+  semgrep:
+    enabled: true
+  
+  # Disabled / Redundant Tools
+  pylint:
+    enabled: false
   prospector:
     enabled: false
-  stylelint:
-    enabled: false
-  markdownlint:
-    enabled: false
   checkov:
-    enabled: false
-  semgrep:
     enabled: false
   lizard:
     enabled: false
@@ -34,10 +40,6 @@ engines:
   brakeman:
     enabled: false
   flawfinder:
-    enabled: false
-  hadolint:
-    enabled: false
-  shellcheck:
     enabled: false
   remark-lint:
     enabled: false
