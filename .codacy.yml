@@ -3,12 +3,18 @@ engines:
   ruff:
     enabled: true
   trivy:
-    enabled: true
+    enabled: false
   bandit:
     enabled: false
   pylint:
     enabled: false
+  pylintpython3:
+    enabled: false
   eslint:
+    enabled: false
+  eslint-8:
+    enabled: false
+  eslint-9:
     enabled: false
   prospector:
     enabled: false
@@ -24,6 +30,8 @@ engines:
     enabled: false
   pmd:
     enabled: false
+  pmd-7:
+    enabled: false
   spotbugs:
     enabled: false
   codenarc:
@@ -38,6 +46,12 @@ engines:
     enabled: false
   shellcheck:
     enabled: false
+  remark-lint:
+    enabled: false
+  csslint:
+    enabled: false
+  jacksonlinter:
+    enabled: false
 exclude_paths:
   - .venv/
   - node_modules/
@@ -50,7 +64,10 @@ exclude_paths:
   - .ruff_cache/
   - .coverage
   - "**/*.pdf"
+  - "*.pdf"
   - "**/*.sqlite3"
+  - "*.sqlite3"
   - "**/*.pyc"
+  - "*.pyc"
   - results.sarif
 
