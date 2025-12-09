@@ -66,7 +66,7 @@ jobs:
         run: uv run ruff check --select S .
 
       - name: Export requirements
-        run: uv export --format requirements-txt --output-file requirements.txt
+        run: uv export --format requirements-txt --no-emit-project --output-file requirements.txt
 
       - name: Run dependency vulnerability scan
         run: uvx pip-audit -r requirements.txt
