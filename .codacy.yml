@@ -4,13 +4,13 @@ engines:
   ruff:
     enabled: true
   trivy:
-    enabled: false
+    enabled: true
   bandit:
     enabled: false
   pylint:
     enabled: false
   eslint:
-    enabled: false
+    enabled: true
   prospector:
     enabled: false
   stylelint:

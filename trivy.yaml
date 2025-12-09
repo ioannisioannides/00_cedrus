@@ -1,0 +1,12 @@
+timeout: 10m
+format: table
+exit-code: 0
+scan:
+  security-checks:
+    - vuln
+    - config
+  scanners:
+    - vuln
+    - misconfig
+    - secret
+    - license
