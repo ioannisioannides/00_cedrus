@@ -8,13 +8,7 @@ engines:
     enabled: false
   pylint:
     enabled: false
-  pylintpython3:
-    enabled: false
   eslint:
-    enabled: false
-  eslint-8:
-    enabled: false
-  eslint-9:
     enabled: false
   prospector:
     enabled: false
@@ -29,8 +23,6 @@ engines:
   lizard:
     enabled: false
   pmd:
-    enabled: false
-  pmd-7:
     enabled: false
   spotbugs:
     enabled: false
