@@ -14,3 +14,9 @@ exclude_paths:
   - htmlcov/
   - static/
   - staticfiles/
+  - .ruff_cache/
+  - .coverage
+  - "**/*.pdf"
+  - "**/*.sqlite3"
+  - "**/*.pyc"
+
