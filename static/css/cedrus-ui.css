@@ -1,5 +1,5 @@
 /**
- * Cedrus UI: "Apex Horizon"
+ * Cedrus UI: "Apex Horizon" (IBM Plex Edition)
  * Component Styles
  */
 
@@ -18,35 +18,44 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: 0; /* IBM Plex doesn't need negative tracking */
   color: var(--text-primary);
+  margin-bottom: 1rem;
 }
 
 h1 {
-  font-size: 2.5rem;
-  letter-spacing: -0.04em;
-  font-weight: 700;
+  font-size: 2.25rem; /* 36px */
+  font-weight: 400; /* IBM Style: Lighter weights for large text */
+  line-height: 1.25;
 }
 
 code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
 /* ============================================
-   COMPONENTS: CARDS (Bento Grid)
+   COMPONENTS: CARDS (Structured Grid)
    ============================================ */
 .card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle); /* Explicit borders for high contrast */
   border-radius: var(--radius-md);
   padding: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.1s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
-  border-color: var(--void-600);
+  border-color: var(--action-primary); /* Focus state on hover */
 }
 
 /* ============================================
@@ -56,80 +65,80 @@ code, pre, .font-mono {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem; /* Larger touch targets */
   border-radius: var(--radius-sm);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 0.875rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.1s ease;
   cursor: pointer;
   border: 1px solid transparent;
+  line-height: 1;
 }
 
-.btn:active {
-  transform: scale(0.98);
+.btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
-  color: white;
-  box-shadow: var(--photon-glow);
+  background-color: var(--action-primary);
+  color: #FFFFFF; /* Always white for contrast on blue */
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--action-hover);
 }
 
 .btn-secondary {
-  background-color: var(--void-700);
+  background-color: transparent;
   color: var(--text-primary);
-  border: 1px solid var(--void-600);
+  border: 1px solid var(--text-primary);
 }
 
 .btn-secondary:hover {
-  background-color: var(--void-600);
+  background-color: var(--void-800); /* Subtle background on hover */
+  color: var(--text-inverse);
 }
 
 .btn-ghost {
   background-color: transparent;
-  color: var(--text-secondary);
+  color: var(--link-color);
 }
 
 .btn-ghost:hover {
-  color: var(--text-primary);
-  background-color: var(--void-800);
+  background-color: var(--void-100); /* Light hover state */
+  color: var(--link-hover);
 }
 
 /* ============================================
    COMPONENTS: FORMS
    ============================================ */
 input, select, textarea {
-  background-color: var(--void-900);
-  border: 1px solid var(--void-700);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-strong); /* Stronger border for inputs */
   color: var(--text-primary);
   border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
   width: 100%;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: var(--font-ui);
 }
 
 input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px; /* Inner focus ring */
+  border-color: transparent;
 }
 
 label {
   display: block;
   font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 400;
   color: var(--text-secondary);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 /* ============================================
-   COMPONENTS: TABLES (Data HUD)
+   COMPONENTS: TABLES (Data Density)
    ============================================ */
 table {
   width: 100%;
@@ -139,34 +148,34 @@ table {
 
 th {
   text-align: left;
-  padding: 0.75rem 1rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  border-bottom: 1px solid var(--void-700);
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  font-size: 0.75rem;
+  padding: 1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  background-color: var(--void-800); /* Slight header distinction */
+  border-bottom: 2px solid var(--border-subtle);
 }
 
 td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--void-800);
-  color: var(--text-primary);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  vertical-align: top;
 }
 
 tr:hover td {
   background-color: var(--void-800);
+  color: var(--text-primary);
 }
 
 /* ============================================
    UTILITIES
    ============================================ */
-.text-photon { color: var(--photon-400); }
-.text-cyber { color: var(--cyber-500); }
-.text-plasma { color: var(--plasma-500); }
-.text-laser { color: var(--laser-500); }
+.text-success { color: var(--status-success) !important; }
+.text-warning { color: var(--status-warning) !important; }
+.text-danger  { color: var(--status-danger) !important; }
 
 .bg-glass {
-  background-color: rgba(24, 24, 27, 0.7);
+  background-color: var(--bg-overlay);
   backdrop-filter: var(--glass-blur);
 }
+

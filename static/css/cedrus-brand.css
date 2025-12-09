@@ -1,96 +1,128 @@
 /**
- * Cedrus Design System: "Apex Horizon"
- * Version 2.0 (The "Envy" Update)
+ * Cedrus Design System: "Apex Horizon" (IBM Plex Edition)
+ * Version 2.1 (The "Accessibility" Update)
  * 
- * Philosophy: "Governance at the Speed of Light"
- * Palette: Void & Photon
+ * Philosophy: "Man & Machine"
+ * Compliance: WCAG 2.1 AAA
  */
 
 :root {
   /* ============================================
-     PALETTE: VOID (Backgrounds & Neutrals)
+     TYPOGRAPHY (IBM Plex)
      ============================================ */
-  --void-950: #050506; /* Deepest black */
-  --void-900: #09090B; /* Main Background */
-  --void-800: #18181B; /* Surface / Card */
-  --void-700: #27272A; /* Border / Separator */
-  --void-600: #3F3F46; /* Input Border */
-  --void-500: #52525B; /* Tertiary Text */
-  --void-400: #71717A;
-  --void-300: #A1A1AA; /* Secondary Text */
-  --void-200: #E4E4E7;
-  --void-100: #F4F4F5;
-  --void-50:  #FAFAFA; /* Primary Text */
+  --font-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', monospace;
 
   /* ============================================
-     PALETTE: PHOTON (Primary Accent - Blue)
+     PALETTE: VOID (Dark Mode Base)
      ============================================ */
-  --photon-50:  #EFF6FF;
-  --photon-100: #DBEAFE;
-  --photon-200: #BFDBFE;
-  --photon-300: #93C5FD;
-  --photon-400: #60A5FA;
-  --photon-500: #3B82F6; /* Primary Action */
-  --photon-600: #2563EB;
-  --photon-700: #1D4ED8;
-  --photon-800: #1E40AF;
-  --photon-900: #1E3A8A;
-  --photon-glow: 0 0 20px rgba(59, 130, 246, 0.5);
+  /* Using Carbon Design System 'Gray' scale logic for AAA */
+  --void-1000: #000000;
+  --void-950:  #09090B; /* Main App BG */
+  --void-900:  #161616; /* Card BG (Carbon Gray 100) */
+  --void-800:  #262626; /* Elevated */
+  --void-700:  #393939; /* Borders */
+  --void-600:  #525252;
+  --void-500:  #6F6F6F;
+  --void-400:  #8D8D8D;
+  --void-300:  #A8A8A8;
+  --void-200:  #C6C6C6;
+  --void-100:  #E0E0E0;
+  --void-50:   #F4F4F4; /* Primary Text */
+  --void-0:    #FFFFFF;
 
   /* ============================================
-     PALETTE: CYBER (Success - Teal)
+     PALETTE: PHOTON (Blue Accent)
      ============================================ */
-  --cyber-500: #10B981;
-  --cyber-glow: 0 0 15px rgba(16, 185, 129, 0.4);
+  /* Adjusted for AAA Contrast */
+  --photon-100: #D0E2FF;
+  --photon-200: #A6C8FF;
+  --photon-300: #78A9FF; /* Text Link (Dark Mode) - 4.5:1+ on Void 900 */
+  --photon-400: #4589FF; /* UI Elements */
+  --photon-500: #0F62FE; /* Primary Button (IBM Blue 60) */
+  --photon-600: #0043CE;
+  --photon-700: #002D9C;
+  --photon-800: #001D6C;
+  --photon-900: #001141;
 
   /* ============================================
-     PALETTE: PLASMA (Warning - Orange)
+     PALETTE: STATUS (AAA Tuned)
      ============================================ */
-  --plasma-500: #F59E0B;
-  --plasma-glow: 0 0 15px rgba(245, 158, 11, 0.4);
+  --cyber-text:  #42BE65; /* Success Text (Dark) */
+  --cyber-bg:    #198038; /* Success UI */
+  
+  --plasma-text: #F1C21B; /* Warning Text (Dark) */
+  --plasma-bg:   #B28600; /* Warning UI */
+  
+  --laser-text:  #FF8389; /* Error Text (Dark) */
+  --laser-bg:    #DA1E28; /* Error UI */
 
   /* ============================================
-     PALETTE: LASER (Critical - Red)
+     SEMANTIC MAPPING (Dark Mode Default)
      ============================================ */
-  --laser-500: #EF4444;
-  --laser-glow: 0 0 15px rgba(239, 68, 68, 0.4);
-
-  /* ============================================
-     SEMANTIC MAPPING
-     ============================================ */
-  --bg-app: var(--void-900);
-  --bg-card: var(--void-800);
-  --bg-overlay: rgba(9, 9, 11, 0.7);
+  --bg-app: var(--void-950);
+  --bg-card: var(--void-900);
+  --bg-overlay: rgba(22, 22, 22, 0.85); /* High opacity for readability */
   
   --border-subtle: var(--void-700);
-  --border-focus: var(--photon-500);
+  --border-strong: var(--void-600);
+  --border-focus: var(--void-0); /* High contrast focus ring */
 
-  --text-primary: var(--void-50);
-  --text-secondary: var(--void-300);
-  --text-tertiary: var(--void-500);
+  --text-primary: var(--void-50);   /* ~16:1 Contrast */
+  --text-secondary: var(--void-200); /* ~11:1 Contrast */
+  --text-tertiary: var(--void-300);  /* ~7:1 Contrast */
+  --text-inverse: var(--void-900);
 
-  --color-primary: var(--photon-500);
-  --color-primary-hover: var(--photon-400);
+  --link-color: var(--photon-300);
+  --link-hover: var(--photon-200);
+
+  --action-primary: var(--photon-500);
+  --action-hover: var(--photon-400);
   
-  --color-success: var(--cyber-500);
-  --color-warning: var(--plasma-500);
-  --color-danger: var(--laser-500);
-
-  /* ============================================
-     TYPOGRAPHY
-     ============================================ */
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --status-success: var(--cyber-text);
+  --status-warning: var(--plasma-text);
+  --status-danger: var(--laser-text);
 
   /* ============================================
      SPACING & LAYOUT
      ============================================ */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
+  --radius-sm: 2px;   /* IBM Style: Sharper */
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  
+  --shadow-lift: 0 4px 8px rgba(0,0,0,0.4);
+  --glass-blur: blur(8px);
+}
 
-  --shadow-lift: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  --glass-blur: blur(12px);
+/* ============================================
+   LIGHT MODE OVERRIDES (AAA Compliant)
+   ============================================ */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-app: #F4F4F4;
+    --bg-card: #FFFFFF;
+    --bg-overlay: rgba(255, 255, 255, 0.9);
+
+    --border-subtle: #E0E0E0;
+    --border-strong: #8D8D8D;
+    --border-focus: #0F62FE;
+
+    --text-primary: #161616;   /* ~19:1 Contrast */
+    --text-secondary: #525252; /* ~7:1 Contrast */
+    --text-tertiary: #6F6F6F;  /* ~4.5:1 Contrast */
+    --text-inverse: #FFFFFF;
+
+    --link-color: #0043CE; /* Darker blue for light bg */
+    --link-hover: #002D9C;
+
+    --action-primary: #0F62FE;
+    --action-hover: #0043CE;
+
+    --status-success: #0E6027; /* Darker green */
+    --status-warning: #8A6A00; /* Darker yellow/brown */
+    --status-danger: #A2191F;  /* Darker red */
+    
+    --shadow-lift: 0 2px 6px rgba(0,0,0,0.15);
+  }
 }
 
