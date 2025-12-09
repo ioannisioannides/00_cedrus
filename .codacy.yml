@@ -1,5 +1,4 @@
 ---
----
 engines:
   ruff:
     enabled: true
