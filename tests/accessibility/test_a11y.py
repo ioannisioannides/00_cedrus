@@ -20,10 +20,10 @@ def test_accessibility_login(live_server, page: Page):
 
     # Inject axe-core and run
     results = Axe().run(page)
-    
+
     # Filter for violations
     violations = results.response.get("violations", [])
-    
+
     if violations:
         report = []
         for v in violations:
@@ -32,10 +32,10 @@ def test_accessibility_login(live_server, page: Page):
             report.append(f"Help: {v['help']}")
             report.append(f"Nodes: {len(v['nodes'])}")
             report.append("-" * 40)
-        
+
         error_msg = "\n".join(report)
         pytest.fail(f"Accessibility Violations Found:\n{error_msg}")
-    
+
     if violations:
         report = []
         for v in violations:
@@ -44,6 +44,6 @@ def test_accessibility_login(live_server, page: Page):
             report.append(f"Help: {v.help}")
             report.append(f"Nodes: {len(v.nodes)}")
             report.append("-" * 40)
-        
+
         error_msg = "\n".join(report)
         pytest.fail(f"Accessibility Violations Found:\n{error_msg}")

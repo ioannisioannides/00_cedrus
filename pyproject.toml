@@ -131,6 +131,7 @@ django_settings_module = "cedrus.settings"
 
 [dependency-groups]
 dev = [
+    "axe-playwright-python>=0.1.7",
     "coverage>=7.12.0",
     "django-debug-toolbar>=6.1.0",
     "django-stubs>=5.2.8",
@@ -138,5 +139,6 @@ dev = [
     "pytest>=9.0.1",
     "pytest-cov>=7.0.0",
     "pytest-django>=4.11.1",
+    "pytest-playwright>=0.7.2",
     "ruff>=0.14.7",
 ]
