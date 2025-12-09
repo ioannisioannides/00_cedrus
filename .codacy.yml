@@ -1,4 +1,5 @@
 ---
+---
 engines:
   ruff:
     enabled: true
@@ -44,6 +45,7 @@ engines:
     enabled: false
   jacksonlinter:
     enabled: false
+
 exclude_paths:
   - .venv/
   - node_modules/
