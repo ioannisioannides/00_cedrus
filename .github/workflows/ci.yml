@@ -62,8 +62,14 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
-      - name: Run Bandit (via Ruff)
+      - name: Run security check
         run: uv run ruff check --select S .
+
+      - name: Export requirements
+        run: uv export --format requirements-txt --output-file requirements.txt
+
+      - name: Run dependency vulnerability scan
+        run: uvx pip-audit -r requirements.txt
 
   # -----------------------------------------------------------------------------
   # JOB 3: Tests & Coverage
