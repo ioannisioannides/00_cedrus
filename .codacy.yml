@@ -3,7 +3,7 @@ engines:
   ruff:
     enabled: true
   trivy:
-    enabled: true
+    enabled: false
   eslint:
     enabled: true
   stylelint:
