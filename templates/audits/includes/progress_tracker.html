@@ -1,56 +1,31 @@
 {% load audit_tags %}
 {% get_audit_progress audit as progress %}
 
-<div class="card mb-4 border-0 shadow-sm">
+<div class="card mb-4">
     <div class="card-body p-4">
         {% if progress.status == 'cancelled' %}
-            <div class="alert alert-danger mb-0 text-center">
-                <i class="bi bi-x-circle-fill"></i> This audit has been cancelled.
+            <div class="alert alert-danger mb-0 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-x-circle-fill"></i>
+                <span>This audit has been cancelled.</span>
             </div>
         {% else %}
-            <div class="position-relative my-2">
-                <!-- Progress Bar Background -->
-                <div class="progress bg-light" style="height: 4px; position: absolute; top: 14px; left: 10%; width: 80%; z-index: 0;">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress.progress_percent }}%; transition: width 1s ease;" aria-valuenow="{{ progress.progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-
-                <!-- Steps -->
-                <div class="d-flex justify-content-between position-relative" style="z-index: 1;">
-                    {% for step in progress.steps %}
-                        <div class="text-center" style="width: 20%;">
-                            <!-- Step Circle -->
-                            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2
-                                {% if step.id < progress.current_step %}
-                                    bg-success text-white
-                                {% elif step.id == progress.current_step %}
-                                    bg-primary text-white shadow-sm ring-offset
-                                {% else %}
-                                    bg-white text-muted border
-                                {% endif %}"
-                                style="width: 32px; height: 32px; transition: all 0.3s ease; {% if step.id == progress.current_step %}transform: scale(1.2);{% endif %}">
-                                
-                                {% if step.id < progress.current_step %}
-                                    <i class="bi bi-check-lg"></i>
-                                {% else %}
-                                    <span style="font-size: 0.8rem;">{{ step.id }}</span>
-                                {% endif %}
-                            </div>
-                            
-                            <!-- Step Label -->
-                            <div class="small fw-bold mt-2
-                                {% if step.id <= progress.current_step %}text-dark{% else %}text-muted{% endif %}">
-                                {{ step.label }}
-                            </div>
+            <div class="progress-tracker">
+                <!-- Background Track -->
+                <div class="progress-tracker-bar" style="width: {{ progress.progress_percent|floatformat:0 }}%;"></div>
+                
+                {% for step in progress.steps %}
+                    <div class="progress-step {% if step.id < progress.current_step %}completed{% elif step.id == progress.current_step %}active{% endif %}">
+                        <div class="progress-step-circle">
+                            {% if step.id < progress.current_step %}
+                                <i class="bi bi-check-lg"></i>
+                            {% else %}
+                                {{ step.id }}
+                            {% endif %}
                         </div>
-                    {% endfor %}
-                </div>
+                        <div class="progress-step-label">{{ step.label }}</div>
+                    </div>
+                {% endfor %}
             </div>
         {% endif %}
     </div>
 </div>
-
-<style>
-    .ring-offset {
-        box-shadow: 0 0 0 4px rgba(255, 255, 255, 1), 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-</style>

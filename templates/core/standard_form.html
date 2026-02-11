@@ -3,7 +3,12 @@
 {% block title %}{% if object %}Edit{% else %}Create{% endif %} Standard - Cedrus{% endblock %}
 
 {% block content %}
-<h1>{% if object %}Edit{% else %}Create{% endif %} Standard</h1>
+<div class="page-header">
+    <div>
+        <h1>{% if object %}Edit{% else %}Create{% endif %} Standard</h1>
+        <p class="page-subtitle">{% if object %}Update standard details{% else %}Add a new certification standard{% endif %}</p>
+    </div>
+</div>
 
 <form method="post">
     {% csrf_token %}
@@ -25,9 +30,9 @@
                 <label for="id_ea_code" class="form-label">EA Code</label>
                 <input type="text" class="form-control" id="id_ea_code" name="ea_code" value="{{ form.ea_code.value|default:'' }}">
             </div>
-            <div class="mt-3">
-                <button type="submit" class="btn btn-primary">Save</button>
-                <a href="{% url 'core:standard_list' %}" class="btn btn-secondary">Cancel</a>
+            <div class="d-flex justify-content-between align-items-center mt-4" style="padding-top: 1.5rem; border-top: 1px solid var(--border-secondary);">
+                <a href="{% url 'core:standard_list' %}" class="btn btn-ghost"><i class="bi bi-arrow-left me-1"></i> Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-1"></i> Save</button>
             </div>
         </div>
     </div>

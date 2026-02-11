@@ -6,7 +6,12 @@
 <div class="page-header">
     <div>
         <h1>{% if object %}Edit{% else %}Create{% endif %} Audit</h1>
-        <p class="page-subtitle">{% if object %}Update audit information{% else %}Create a new audit record{% endif %}</p>
+        <p class="page-subtitle">{% if object %}Update audit #{{ object.pk }} information{% else %}Set up a new audit record{% endif %}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% if object %}{% url 'audit_management:audit_detail' object.pk %}{% else %}{% url 'audit_management:audit_list' %}{% endif %}" class="btn btn-ghost btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
     </div>
 </div>
 
@@ -235,9 +240,13 @@
     </div>
     
     <!-- Form Actions -->
-    <div class="d-flex justify-content-end gap-2 mt-4">
-        <a href="{% if object %}{% url 'audit_management:audit_detail' object.pk %}{% else %}{% url 'audit_management:audit_list' %}{% endif %}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary">Save Audit</button>
+    <div class="d-flex justify-content-between align-items-center mt-4" style="padding-top: 1.5rem; border-top: 1px solid var(--border-secondary);">
+        <a href="{% if object %}{% url 'audit_management:audit_detail' object.pk %}{% else %}{% url 'audit_management:audit_list' %}{% endif %}" class="btn btn-ghost">
+            <i class="bi bi-arrow-left me-1"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check-lg me-1"></i> {% if object %}Save Changes{% else %}Create Audit{% endif %}
+        </button>
     </div>
 </form>
 {% endblock %}

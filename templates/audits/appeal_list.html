@@ -1,17 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Appeals</h2>
-        <a href="{% url 'certification:appeal_create' %}" class="btn btn-primary">Submit Appeal</a>
+<div class="page-header">
+    <div>
+        <h1>Appeals</h1>
+        <p class="page-subtitle">Submit and track appeal requests</p>
     </div>
+    <div class="page-actions">
+        <a href="{% url 'certification:appeal_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Submit Appeal
+        </a>
+    </div>
+</div>
 
     <div class="card">
-        <div class="card-body">
+        <div class="card-body p-0">
             {% if appeals %}
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Number</th>
@@ -35,7 +41,9 @@
                                     </td>
                                     <td>{{ appeal.received_date }}</td>
                                     <td>
-                                        <a href="{% url 'certification:appeal_detail' appeal.pk %}" class="btn btn-sm btn-info">View</a>
+                                        <a href="{% url 'certification:appeal_detail' appeal.pk %}" class="btn btn-ghost btn-sm" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -43,9 +51,11 @@
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted">No appeals found.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-clipboard2" style="font-size: 3rem; color: var(--text-tertiary);"></i></div>
+                    <p>No appeals found.</p>
+                </div>
             {% endif %}
         </div>
     </div>
-</div>
 {% endblock %}

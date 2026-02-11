@@ -1,138 +1,237 @@
 /**
- * Cedrus Design System: "Apex Horizon" (IBM Plex Edition)
- * Version 2.1 (The "Accessibility" Update)
- * 
- * Philosophy: "Man & Machine"
- * Compliance: WCAG 2.1 AAA
+ * Cedrus Design System - "Apex Horizon" v3.0
+ * ──────────────────────────────────────────
+ * A premium enterprise design language.
+ * WCAG 2.1 AAA · Inter · Fluid · Responsive
  */
 
-:root {
-  /* ============================================
-     TYPOGRAPHY (IBM Plex)
-     ============================================ */
-  --font-ui: 'IBM Plex Sans', -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'Menlo', 'DejaVu Sans Mono', monospace;
-
-  /* ============================================
-     PALETTE: VOID (Dark Mode Base)
-     ============================================ */
-
-  /* Using Carbon Design System 'Gray' scale logic for AAA */
-  --void-1000: #000;
-  --void-950:  #09090B; /* Main App BG */
-  --void-900:  #161616; /* Card BG (Carbon Gray 100) */
-  --void-800:  #262626; /* Elevated */
-  --void-700:  #393939; /* Borders */
-  --void-600:  #525252;
-  --void-500:  #6F6F6F;
-  --void-400:  #8D8D8D;
-  --void-300:  #A8A8A8;
-  --void-200:  #C6C6C6;
-  --void-100:  #E0E0E0;
-  --void-50:   #F4F4F4; /* Primary Text */
-  --void-0:    #FFF;
-
-  /* ============================================
-     PALETTE: PHOTON (Blue Accent)
-     ============================================ */
-
-  /* Adjusted for AAA Contrast */
-  --photon-100: #D0E2FF;
-  --photon-200: #A6C8FF;
-  --photon-300: #78A9FF; /* Text Link (Dark Mode) - 4.5:1+ on Void 900 */
-  --photon-400: #4589FF; /* UI Elements */
-  --photon-500: #0F62FE; /* Primary Button (IBM Blue 60) */
-  --photon-600: #0043CE;
-  --photon-700: #002D9C;
-  --photon-800: #001D6C;
-  --photon-900: #001141;
-
-  /* ============================================
-     PALETTE: STATUS (AAA Tuned)
-     ============================================ */
-  --cyber-text:  #42BE65; /* Success Text (Dark) */
-  --cyber-bg:    #198038; /* Success UI */
-  --plasma-text: #F1C21B; /* Warning Text (Dark) */
-  --plasma-bg:   #B28600; /* Warning UI */
-  --laser-text:  #FF8389; /* Error Text (Dark) */
-  --laser-bg:    #DA1E28; /* Error UI */
-
-  /* ============================================
-     SEMANTIC MAPPING (Dark Mode Default)
-     ============================================ */
-  --bg-app: var(--void-950);
-  --bg-card: var(--void-900);
-  --bg-overlay: rgb(22 22 22 / 85%); /* High opacity for readability */
-  --border-subtle: var(--void-700);
-  --border-strong: var(--void-600);
-  --border-focus: var(--void-0); /* High contrast focus ring */
-  --text-primary: var(--void-50);   /* ~16:1 Contrast */
-  --text-secondary: var(--void-200); /* ~11:1 Contrast */
-  --text-tertiary: var(--void-300);  /* ~7:1 Contrast */
-  --text-inverse: var(--void-900);
-  --link-color: var(--photon-300);
-  --link-hover: var(--photon-200);
-  --action-primary: var(--photon-500);
-  --action-hover: var(--photon-400);
-  --status-success: var(--cyber-text);
-  --status-warning: var(--plasma-text);
-  --status-danger: var(--laser-text);
-
-  /* ============================================
-     SPACING & LAYOUT
-     ============================================ */
-  --radius-sm: 0px;   /* IBM Style: Sharp corners */
-  --radius-md: 2px;   /* Minimal rounding */
-  --radius-lg: 4px;
-  --shadow-lift: 0 2px 6px rgb(0 0 0 / 30%);
-  --glass-blur: blur(0px); /* Carbon avoids glassmorphism, prefers solid layers */
-}
-
-/* ============================================
-   LIGHT MODE OVERRIDES (AAA Compliant)
-   ============================================ */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg-app: #F4F4F4;
-    --bg-card: #FFF;
-    --bg-overlay: rgb(255 255 255 / 90%);
-    --border-subtle: #E0E0E0;
-    --border-strong: #8D8D8D;
-    --border-focus: #0F62FE;
-    --text-primary: #161616;   /* ~19:1 Contrast */
-    --text-secondary: #525252; /* ~7:1 Contrast */
-    --text-tertiary: #6F6F6F;  /* ~4.5:1 Contrast */
-    --text-inverse: #FFF;
-    --link-color: #0043CE; /* Darker blue for light bg */
-    --link-hover: #002D9C;
-    --action-primary: #0F62FE;
-    --action-hover: #0043CE;
-    --status-success: #0E6027; /* Darker green */
-    --status-warning: #8A6A00; /* Darker yellow/brown */
-    --status-danger: #A2191F;  /* Darker red */
-    --shadow-lift: 0 2px 6px rgb(0 0 0 / 15%);
-  }
-}
-
-/* Explicit Light Mode Class (for toggle) */
+/* ══════════════════════════════════════════
+   LIGHT THEME (Default)
+   ══════════════════════════════════════════ */
+:root,
 [data-theme="light"] {
-    --bg-app: #F4F4F4;
-    --bg-card: #FFF;
-    --bg-overlay: rgb(255 255 255 / 90%);
-    --border-subtle: #E0E0E0;
-    --border-strong: #8D8D8D;
-    --border-focus: #0F62FE;
-    --text-primary: #161616;   /* ~19:1 Contrast */
-    --text-secondary: #525252; /* ~7:1 Contrast */
-    --text-tertiary: #6F6F6F;  /* ~4.5:1 Contrast */
-    --text-inverse: #FFF;
-    --link-color: #0043CE; /* Darker blue for light bg */
-    --link-hover: #002D9C;
-    --action-primary: #0F62FE;
-    --action-hover: #0043CE;
-    --status-success: #0E6027; /* Darker green */
-    --status-warning: #8A6A00; /* Darker yellow/brown */
-    --status-danger: #A2191F;  /* Darker red */
-    --shadow-lift: 0 2px 6px rgb(0 0 0 / 15%);
+    /* ── Typography ── */
+    --font-ui:   'Space Grotesk', 'Helvetica Neue', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+    /* ── Neutral Scale (Slate) ── */
+    --gray-25:   #FCFCFD;
+    --gray-50:   #F8FAFC;
+    --gray-100:  #F1F5F9;
+    --gray-200:  #E2E8F0;
+    --gray-300:  #CBD5E1;
+    --gray-400:  #94A3B8;
+    --gray-500:  #64748B;
+    --gray-600:  #475569;
+    --gray-700:  #334155;
+    --gray-800:  #1E293B;
+    --gray-900:  #0F172A;
+    --gray-950:  #020617;
+
+    /* ── Primary (Indigo) ── */
+    --primary-50:  #EEF2FF;
+    --primary-100: #E0E7FF;
+    --primary-200: #C7D2FE;
+    --primary-300: #A5B4FC;
+    --primary-400: #818CF8;
+    --primary-500: #6366F1;
+    --primary-600: #4F46E5;
+    --primary-700: #4338CA;
+    --primary-800: #3730A3;
+    --primary-900: #312E81;
+
+    /* ── Accent (Emerald) ── */
+    --accent-50:  #ECFDF5;
+    --accent-100: #D1FAE5;
+    --accent-400: #34D399;
+    --accent-500: #10B981;
+    --accent-600: #059669;
+    --accent-700: #047857;
+
+    /* ── Status ── */
+    --success-50:  #F0FDF4;
+    --success-100: #DCFCE7;
+    --success-500: #22C55E;
+    --success-600: #16A34A;
+    --success-700: #15803D;
+    --success-text: #15803D;
+
+    --warning-50:  #FFFBEB;
+    --warning-100: #FEF3C7;
+    --warning-500: #F59E0B;
+    --warning-600: #D97706;
+    --warning-text: #92400E;
+
+    --danger-50:  #FEF2F2;
+    --danger-100: #FEE2E2;
+    --danger-500: #EF4444;
+    --danger-600: #DC2626;
+    --danger-text: #991B1B;
+
+    --info-50:  #EFF6FF;
+    --info-100: #DBEAFE;
+    --info-500: #3B82F6;
+    --info-600: #2563EB;
+    --info-text: #1E40AF;
+
+    /* ── Semantic Tokens ── */
+    --bg-primary:     #FFFFFF;
+    --bg-secondary:   var(--gray-50);
+    --bg-tertiary:    var(--gray-100);
+    --bg-app:         var(--gray-50);
+    --bg-card:        #FFFFFF;
+    --bg-elevated:    #FFFFFF;
+    --bg-hover:       var(--gray-50);
+    --bg-active:      var(--primary-50);
+    --bg-sidebar:     #FFFFFF;
+    --bg-topbar:      rgba(255, 255, 255, 0.8);
+
+    --text-primary:   var(--gray-900);
+    --text-secondary: var(--gray-500);
+    --text-tertiary:  var(--gray-400);
+    --text-inverse:   #FFFFFF;
+    --text-brand:     var(--primary-600);
+
+    --border-primary:    var(--gray-200);
+    --border-secondary:  var(--gray-100);
+    --border-focus:      var(--primary-500);
+    --border-hover:      var(--gray-300);
+
+    --action-primary:       var(--primary-600);
+    --action-primary-hover: var(--primary-700);
+    --action-primary-text:  #FFFFFF;
+    --action-secondary:       var(--gray-100);
+    --action-secondary-hover: var(--gray-200);
+
+    /* ── Spacing ── */
+    --radius-xs:  4px;
+    --radius-sm:  6px;
+    --radius-md:  8px;
+    --radius-lg:  12px;
+    --radius-xl:  16px;
+    --radius-2xl: 20px;
+    --radius-full: 9999px;
+
+    /* ── Shadows ── */
+    --shadow-xs:   0 1px 2px rgba(0,0,0,0.05);
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --shadow-lg:   0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -4px rgba(0,0,0,0.05);
+    --shadow-xl:   0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+    --shadow-glow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+    --shadow-card-hover: 0 8px 25px -5px rgba(0,0,0,0.1), 0 4px 10px -5px rgba(0,0,0,0.04);
+
+    /* ── Sidebar ── */
+    --sidebar-width: 260px;
+    --sidebar-bg: var(--bg-sidebar);
+    --sidebar-border: var(--border-primary);
+    --sidebar-link-hover: var(--bg-hover);
+    --sidebar-link-active-bg: var(--primary-50);
+    --sidebar-link-active-text: var(--primary-700);
+    --sidebar-text: var(--text-secondary);
+    --sidebar-heading: var(--text-tertiary);
 }
 
+
+/* ══════════════════════════════════════════
+   DARK THEME
+   ══════════════════════════════════════════ */
+[data-theme="dark"] {
+    --bg-primary:     var(--gray-900);
+    --bg-secondary:   var(--gray-800);
+    --bg-tertiary:    var(--gray-700);
+    --bg-app:         var(--gray-950);
+    --bg-card:        var(--gray-900);
+    --bg-elevated:    var(--gray-800);
+    --bg-hover:       var(--gray-800);
+    --bg-active:      rgba(99, 102, 241, 0.15);
+    --bg-sidebar:     var(--gray-900);
+    --bg-topbar:      rgba(15, 23, 42, 0.85);
+
+    --text-primary:   var(--gray-50);
+    --text-secondary: var(--gray-400);
+    --text-tertiary:  var(--gray-500);
+    --text-inverse:   var(--gray-900);
+    --text-brand:     var(--primary-400);
+
+    --border-primary:   var(--gray-700);
+    --border-secondary: var(--gray-800);
+    --border-focus:     var(--primary-400);
+    --border-hover:     var(--gray-600);
+
+    --action-primary:       var(--primary-500);
+    --action-primary-hover: var(--primary-400);
+    --action-primary-text:  #FFFFFF;
+    --action-secondary:       var(--gray-800);
+    --action-secondary-hover: var(--gray-700);
+
+    --success-text: var(--accent-400);
+    --warning-text: #FBBF24;
+    --danger-text:  #FB7185;
+    --info-text:    var(--primary-300);
+
+    --shadow-xs:   0 1px 2px rgba(0,0,0,0.3);
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.2);
+    --shadow-lg:   0 10px 15px -3px rgba(0,0,0,0.35), 0 4px 6px -4px rgba(0,0,0,0.2);
+    --shadow-xl:   0 20px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.2);
+    --shadow-glow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15);
+    --shadow-card-hover: 0 8px 25px -5px rgba(0,0,0,0.4), 0 4px 10px -5px rgba(0,0,0,0.2);
+
+    --sidebar-bg: var(--gray-900);
+    --sidebar-border: var(--gray-800);
+    --sidebar-link-hover: var(--gray-800);
+    --sidebar-link-active-bg: rgba(99, 102, 241, 0.12);
+    --sidebar-link-active-text: var(--primary-300);
+    --sidebar-text: var(--gray-400);
+    --sidebar-heading: var(--gray-600);
+}
+
+/* Also handle prefers-color-scheme when no data-theme is set */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg-primary:     var(--gray-900);
+        --bg-secondary:   var(--gray-800);
+        --bg-tertiary:    var(--gray-700);
+        --bg-app:         var(--gray-950);
+        --bg-card:        var(--gray-900);
+        --bg-elevated:    var(--gray-800);
+        --bg-hover:       var(--gray-800);
+        --bg-active:      rgba(99, 102, 241, 0.15);
+        --bg-sidebar:     var(--gray-900);
+        --bg-topbar:      rgba(15, 23, 42, 0.85);
+        --text-primary:   var(--gray-50);
+        --text-secondary: var(--gray-400);
+        --text-tertiary:  var(--gray-500);
+        --text-inverse:   var(--gray-900);
+        --text-brand:     var(--primary-400);
+        --border-primary:   var(--gray-700);
+        --border-secondary: var(--gray-800);
+        --border-focus:     var(--primary-400);
+        --border-hover:     var(--gray-600);
+        --action-primary:       var(--primary-500);
+        --action-primary-hover: var(--primary-400);
+        --action-primary-text:  #FFFFFF;
+        --action-secondary:       var(--gray-800);
+        --action-secondary-hover: var(--gray-700);
+        --success-text: #34D399;
+        --warning-text: #FBBF24;
+        --danger-text:  #FB7185;
+        --info-text:    var(--primary-300);
+        --shadow-xs:   0 1px 2px rgba(0,0,0,0.3);
+        --shadow-sm:   0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2);
+        --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.2);
+        --shadow-lg:   0 10px 15px -3px rgba(0,0,0,0.35), 0 4px 6px -4px rgba(0,0,0,0.2);
+        --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15);
+        --shadow-card-hover: 0 8px 25px -5px rgba(0,0,0,0.4), 0 4px 10px -5px rgba(0,0,0,0.2);
+        --sidebar-bg: var(--gray-900);
+        --sidebar-border: var(--gray-800);
+        --sidebar-link-hover: var(--gray-800);
+        --sidebar-link-active-bg: rgba(99, 102, 241, 0.12);
+        --sidebar-link-active-text: var(--primary-300);
+        --sidebar-text: var(--gray-400);
+        --sidebar-heading: var(--gray-600);
+    }
+}

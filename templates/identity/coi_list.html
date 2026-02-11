@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Conflicts of Interest</h1>
-  <ul>
-    {% for conflict in conflicts %}
-      <li>{{ conflict }}</li>
-    {% endfor %}
-  </ul>
+<div class="page-header">
+  <div>
+    <h1>Conflicts of Interest</h1>
+    <p class="page-subtitle">Declared conflicts requiring review</p>
+  </div>
+</div>
+<div class="card">
+  <div class="card-body">
+    <ul class="mb-0">
+      {% for conflict in conflicts %}
+        <li>{{ conflict }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
 {% endblock %}

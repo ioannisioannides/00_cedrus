@@ -14,11 +14,11 @@
         <h1>{{ program.title }}</h1>
         <p class="page-subtitle">{{ program.organization.name }}</p>
     </div>
-    <div class="btn-group">
-        <a href="{% url 'audit_management:program_update' program.pk %}" class="btn btn-outline-primary">
+    <div class="page-actions">
+        <a href="{% url 'audit_management:program_update' program.pk %}" class="btn btn-primary">
             <i class="bi bi-pencil"></i> Edit
         </a>
-        <a href="{% url 'audit_management:program_delete' program.pk %}" class="btn btn-outline-danger">
+        <a href="{% url 'audit_management:program_delete' program.pk %}" class="btn btn-danger">
             <i class="bi bi-trash"></i> Delete
         </a>
     </div>
@@ -57,10 +57,10 @@
                 <!-- Ideally we would have a button to add an audit to this program -->
                 <!-- For now, audits are linked via the Audit edit form -->
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if audits %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
                                     <th>Type</th>
@@ -82,7 +82,9 @@
                                         </td>
                                         <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
                                         <td>
-                                            <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                            <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-ghost btn-sm" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -90,8 +92,8 @@
                         </table>
                     </div>
                 {% else %}
-                    <div class="text-center py-4 text-muted">
-                        <i class="bi bi-calendar-x display-4 d-block mb-2"></i>
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="bi bi-calendar-x" style="font-size: 3rem; color: var(--text-tertiary);"></i></div>
                         <p>No audits scheduled in this program yet.</p>
                     </div>
                 {% endif %}

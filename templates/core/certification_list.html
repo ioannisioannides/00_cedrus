@@ -10,16 +10,16 @@
     </div>
     <div class="page-actions">
         <a href="{% url 'core:certification_create' %}" class="btn btn-primary">
-            <span>+</span> Create Certification
+            <i class="bi bi-plus-lg"></i> New Certification
         </a>
     </div>
 </div>
 
 {% if certifications %}
     <div class="card">
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table mb-0">
                     <thead>
                         <tr>
                             <th>Organization</th>
@@ -65,7 +65,9 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'core:certification_update' cert.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'core:certification_update' cert.pk %}" class="btn btn-ghost btn-sm" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -78,9 +80,9 @@
     <div class="card">
         <div class="card-body">
             <div class="empty-state">
-                <div class="empty-state-icon">🏆</div>
+                <i class="bi bi-award" style="font-size: 3rem; color: var(--text-tertiary);"></i>
                 <p>No certifications yet.</p>
-                <a href="{% url 'core:certification_create' %}" class="btn btn-primary">Create First Certification</a>
+                <a href="{% url 'core:certification_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Certification</a>
             </div>
         </div>
     </div>

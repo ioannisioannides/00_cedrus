@@ -1,41 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}CB Admin Dashboard - Cedrus{% endblock %}
+{% block title %}Dashboard - Cedrus{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
         <h1>Dashboard</h1>
-        <p class="page-subtitle">Welcome back, {{ user.get_full_name|default:user.username }}</p>
+        <p class="page-subtitle">Welcome back, {{ user.get_full_name|default:user.username }}. Here's your overview.</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'audit_management:audit_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> New Audit
+        </a>
     </div>
 </div>
 
-<!-- Statistics Cards -->
+<!-- KPI Cards -->
 <div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card stat-card">
-            <div class="card-body">
-                <h5>Organizations</h5>
-                <h2>{{ organizations_count|default:0 }}</h2>
-                <a href="{% url 'core:organization_list' %}" class="btn btn-sm btn-outline-light">View All</a>
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card-wrapper">
+            <div class="stat-card">
+                <div class="stat-icon primary"><i class="bi bi-building"></i></div>
+                <div class="stat-label">Organizations</div>
+                <div class="stat-value">{{ organizations_count|default:0 }}</div>
+                <a href="{% url 'core:organization_list' %}" class="btn btn-ghost btn-sm mt-3" style="margin-left: -0.5rem;">
+                    View all <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card stat-card stat-card-secondary">
-            <div class="card-body">
-                <h5>Certifications</h5>
-                <h2>{{ certifications_count|default:0 }}</h2>
-                <a href="{% url 'core:certification_list' %}" class="btn btn-sm btn-outline-light">View All</a>
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card-wrapper">
+            <div class="stat-card stat-card-secondary">
+                <div class="stat-icon success"><i class="bi bi-patch-check"></i></div>
+                <div class="stat-label">Certifications</div>
+                <div class="stat-value">{{ certifications_count|default:0 }}</div>
+                <a href="{% url 'core:certification_list' %}" class="btn btn-ghost btn-sm mt-3" style="margin-left: -0.5rem;">
+                    View all <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card stat-card stat-card-success">
-            <div class="card-body">
-                <h5>Total Audits</h5>
-                <h2>{{ audits_count|default:0 }}</h2>
-                <a href="{% url 'audit_management:audit_list' %}" class="btn btn-sm btn-outline-light">View All</a>
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card-wrapper">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon info"><i class="bi bi-clipboard2-check"></i></div>
+                <div class="stat-label">Total Audits</div>
+                <div class="stat-value">{{ audits_count|default:0 }}</div>
+                <a href="{% url 'audit_management:audit_list' %}" class="btn btn-ghost btn-sm mt-3" style="margin-left: -0.5rem;">
+                    View all <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -44,13 +58,13 @@
 <!-- Recent Audits -->
 <div class="card">
     <div class="card-header">
-        <h5>Recent Audits</h5>
-        <a href="{% url 'audit_management:audit_list' %}" class="btn btn-sm btn-outline-primary">View All Audits</a>
+        <h5><i class="bi bi-clock-history me-2" style="opacity: 0.5;"></i>Recent Audits</h5>
+        <a href="{% url 'audit_management:audit_list' %}" class="btn btn-ghost btn-sm">View All <i class="bi bi-arrow-right"></i></a>
     </div>
-    <div class="card-body">
+    <div class="card-body p-0">
         {% if recent_audits %}
             <div class="table-responsive">
-                <table class="table">
+                <table class="table mb-0">
                     <thead>
                         <tr>
                             <th>Organization</th>
@@ -58,28 +72,31 @@
                             <th>Status</th>
                             <th>Dates</th>
                             <th>Lead Auditor</th>
-                            <th>Actions</th>
+                            <th style="width: 120px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for audit in recent_audits %}
                             <tr>
                                 <td>
-                                    <strong>{{ audit.organization.name }}</strong>
+                                    <span class="fw-semibold">{{ audit.organization.name }}</span>
                                 </td>
                                 <td>{{ audit.get_audit_type_display }}</td>
                                 <td>
                                     <span class="badge bg-secondary">{{ audit.get_status_display }}</span>
                                 </td>
                                 <td>
-                                    <small>{{ audit.total_audit_date_from|date:"M d, Y" }}<br>
-                                    to {{ audit.total_audit_date_to|date:"M d, Y" }}</small>
+                                    <span style="font-size: 0.8125rem; color: var(--text-secondary);">
+                                        {{ audit.total_audit_date_from|date:"M d" }} - {{ audit.total_audit_date_to|date:"M d, Y" }}
+                                    </span>
                                 </td>
                                 <td>{{ audit.lead_auditor.get_full_name|default:audit.lead_auditor.username }}</td>
                                 <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-outline-primary">View</a>
-                                        <a href="{% url 'reporting:audit_report_pdf' audit.pk %}" class="btn btn-outline-secondary" title="Download Report" target="_blank">
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-ghost btn-sm" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'reporting:audit_report_pdf' audit.pk %}" class="btn btn-ghost btn-sm" title="PDF Report" target="_blank">
                                             <i class="bi bi-file-earmark-pdf"></i>
                                         </a>
                                     </div>
@@ -91,12 +108,13 @@
             </div>
         {% else %}
             <div class="empty-state">
-                <div class="empty-state-icon">📋</div>
-                <p>No audits yet.</p>
-                <a href="{% url 'audit_management:audit_create' %}" class="btn btn-primary">Create First Audit</a>
+                <div class="empty-state-icon"><i class="bi bi-clipboard2" style="font-size: 3rem; color: var(--text-tertiary);"></i></div>
+                <p>No audits yet. Create your first audit to get started.</p>
+                <a href="{% url 'audit_management:audit_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Create First Audit
+                </a>
             </div>
         {% endif %}
     </div>
 </div>
 {% endblock %}
-

@@ -5,12 +5,12 @@
 {% block content %}
 <div class="page-header">
     <div>
-        <h1>Audit Details</h1>
-        <p class="page-subtitle">Audit #{{ audit.pk }} - {{ audit.organization.name }}</p>
+        <h1>Audit #{{ audit.pk }}</h1>
+        <p class="page-subtitle">{{ audit.organization.name }} &middot; {{ audit.get_audit_type_display }}</p>
     </div>
     <div class="page-actions">
         {% if can_edit %}
-            <a href="{% url 'audit_management:audit_update' audit.pk %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'audit_management:audit_update' audit.pk %}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Edit</a>
         {% endif %}
         {% if can_submit_to_client %}
             <a href="{% url 'audit_management:audit_transition_status' audit.pk 'client_review' %}" class="btn btn-success" onclick="return confirm('Submit this audit to the client for review?');">Submit to Client</a>
@@ -33,19 +33,20 @@
         {% endif %}
         
         <!-- Reporting Actions -->
-        <div class="btn-group me-2">
-            <a href="{% url 'reporting:audit_report_pdf' audit.pk %}" class="btn btn-outline-secondary" target="_blank">
-                <i class="bi bi-file-earmark-pdf"></i> PDF Report
+        <a href="{% url 'reporting:audit_report_pdf' audit.pk %}" class="btn btn-secondary" target="_blank">
+            <i class="bi bi-file-earmark-pdf"></i> PDF Report
+        </a>
+        {% if audit.status == 'decided' or audit.status == 'closed' %}
+            <a href="{% url 'reporting:certificate_pdf' audit.pk %}" class="btn btn-outline-success" target="_blank">
+                <i class="bi bi-award"></i> Certificate
             </a>
-            {% if audit.status == 'decided' or audit.status == 'closed' %}
-                <a href="{% url 'reporting:certificate_pdf' audit.pk %}" class="btn btn-outline-success" target="_blank">
-                    <i class="bi bi-award"></i> Certificate
-                </a>
-            {% endif %}
-        </div>
-
-        <a href="{% url 'audit_management:audit_print' audit.pk %}" class="btn btn-outline-secondary">Print</a>
-        <a href="{% url 'audit_management:audit_list' %}" class="btn btn-outline-secondary">Back to List</a>
+        {% endif %}
+        <a href="{% url 'audit_management:audit_print' audit.pk %}" class="btn btn-ghost btn-sm" title="Print">
+            <i class="bi bi-printer"></i>
+        </a>
+        <a href="{% url 'audit_management:audit_list' %}" class="btn btn-ghost btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
     </div>
 </div>
 
@@ -289,29 +290,29 @@
         <h5 class="mb-0">Findings Summary</h5>
     </div>
     <div class="card-body">
-        <div class="row text-center">
-            <div class="col-md-3">
-                <div class="border rounded p-3 bg-light">
-                    <h3 class="text-danger mb-1">{{ nonconformities|length }}</h3>
-                    <p class="mb-0 text-muted">Total NCs</p>
+        <div class="row g-3 text-center">
+            <div class="col-6 col-md-3">
+                <div style="padding: 1.25rem; border-radius: var(--radius-lg); background: var(--danger-50); border: 1px solid var(--danger-100);">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--danger-text); font-variant-numeric: tabular-nums;">{{ nonconformities|length }}</div>
+                    <div style="font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-top: 0.25rem;">Total NCs</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 bg-light">
-                    <h3 class="text-warning mb-1">{{ open_ncs_count }}</h3>
-                    <p class="mb-0 text-muted">Open NCs</p>
+            <div class="col-6 col-md-3">
+                <div style="padding: 1.25rem; border-radius: var(--radius-lg); background: var(--warning-50); border: 1px solid var(--warning-100);">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--warning-text); font-variant-numeric: tabular-nums;">{{ open_ncs_count }}</div>
+                    <div style="font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-top: 0.25rem;">Open NCs</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 bg-light">
-                    <h3 class="text-info mb-1">{{ observations|length }}</h3>
-                    <p class="mb-0 text-muted">Observations</p>
+            <div class="col-6 col-md-3">
+                <div style="padding: 1.25rem; border-radius: var(--radius-lg); background: var(--info-50); border: 1px solid var(--info-100);">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--info-text); font-variant-numeric: tabular-nums;">{{ observations|length }}</div>
+                    <div style="font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-top: 0.25rem;">Observations</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 bg-light">
-                    <h3 class="text-success mb-1">{{ ofis|length }}</h3>
-                    <p class="mb-0 text-muted">OFIs</p>
+            <div class="col-6 col-md-3">
+                <div style="padding: 1.25rem; border-radius: var(--radius-lg); background: var(--success-50); border: 1px solid var(--success-100);">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--success-text); font-variant-numeric: tabular-nums;">{{ ofis|length }}</div>
+                    <div style="font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-top: 0.25rem;">OFIs</div>
                 </div>
             </div>
         </div>

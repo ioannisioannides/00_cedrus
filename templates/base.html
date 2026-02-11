@@ -1,214 +1,310 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Cedrus - Professional Audit & Compliance Management Platform">
     <title>{% block title %}Cedrus - Audit & Compliance Platform{% endblock %}</title>
     
-    <!-- Bootstrap 5 CSS (for grid and utilities only, overridden by Cedrus UI) -->
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5YDi+/TCu" crossorigin="anonymous">
     
-    <!-- Cedrus UI Design System -->
-    <link href="{% static 'css/cedrus-ui.css' %}" rel="stylesheet">
-    
-    <!-- Google Fonts: IBM Plex Sans & IBM Plex Mono -->
+    <!-- Google Fonts: Space Grotesk + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Cedrus Premium Design System -->
+    <link href="{% static 'css/cedrus-brand.css' %}" rel="stylesheet">
+    <link href="{% static 'css/cedrus-ui.css' %}" rel="stylesheet">
     
     {% block extra_css %}{% endblock %}
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body>
     <!-- Skip to Content (Accessibility) -->
-    <a href="#main-content" class="visually-hidden-focusable p-3 position-absolute top-0 start-0 z-3 btn btn-primary rounded-0">Skip to main content</a>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'identity:dashboard' %}">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-success">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Cedrus
-            </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    {% if user.is_authenticated %}
-                        {% if user.groups.all %}
-                            {% for group in user.groups.all %}
-                                {% if group.name == "cb_admin" %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_cb' %}active{% endif %}" href="{% url 'identity:dashboard_cb' %}">Dashboard</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if 'organization' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:organization_list' %}">Organizations</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audit_management:audit_list' %}">Audits</a>
-                                    </li>
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Management
-                                        </a>
-                                        <ul class="dropdown-menu border-0 shadow-lg">
-                                            <li><a class="dropdown-item" href="{% url 'core:site_list' %}">Sites</a></li>
-                                            <li><a class="dropdown-item" href="{% url 'core:standard_list' %}">Standards</a></li>
-                                            <li><a class="dropdown-item" href="{% url 'core:certification_list' %}">Certifications</a></li>
-                                        </ul>
-                                    </li>
-                                {% elif group.name == "lead_auditor" or group.name == "auditor" %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_auditor' %}active{% endif %}" href="{% url 'identity:dashboard_auditor' %}">Dashboard</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audit_management:audit_list' %}">My Audits</a>
-                                    </li>
-                                {% elif group.name == "client_admin" or group.name == "client_user" %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_client' %}active{% endif %}" href="{% url 'identity:dashboard_client' %}">Dashboard</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'audit_management:audit_list' %}">Our Audits</a>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
+    {% if user.is_authenticated %}
+    <!-- ======================== AUTHENTICATED LAYOUT ======================== -->
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="{% url 'identity:dashboard' %}" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" opacity="0.3"/>
+                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="sidebar-brand-text">Cedrus</span>
+                </a>
+                <button class="sidebar-toggle d-lg-none" id="sidebar-close" aria-label="Close sidebar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                {% if user.groups.all %}
+                    {% for group in user.groups.all %}
+                        {% if group.name == "cb_admin" %}
+                            <div class="sidebar-section">
+                                <div class="sidebar-section-label">Overview</div>
+                                <a href="{% url 'identity:dashboard_cb' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_cb' %}active{% endif %}">
+                                    <i class="bi bi-grid-1x2"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-section-label">Audit Operations</div>
+                                <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-clipboard2-check"></i>
+                                    <span>Audits</span>
+                                </a>
+                                <a href="{% url 'audit_management:program_list' %}" class="sidebar-link {% if 'program' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-calendar3"></i>
+                                    <span>Programs</span>
+                                </a>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-section-label">Management</div>
+                                <a href="{% url 'core:organization_list' %}" class="sidebar-link {% if 'organization' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-building"></i>
+                                    <span>Organizations</span>
+                                </a>
+                                <a href="{% url 'core:site_list' %}" class="sidebar-link {% if 'site' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span>Sites</span>
+                                </a>
+                                <a href="{% url 'core:standard_list' %}" class="sidebar-link {% if 'standard' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-file-earmark-ruled"></i>
+                                    <span>Standards</span>
+                                </a>
+                                <a href="{% url 'core:certification_list' %}" class="sidebar-link {% if 'certification' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-patch-check"></i>
+                                    <span>Certifications</span>
+                                </a>
+                            </div>
+                        {% elif group.name == "lead_auditor" or group.name == "auditor" %}
+                            <div class="sidebar-section">
+                                <div class="sidebar-section-label">Overview</div>
+                                <a href="{% url 'identity:dashboard_auditor' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_auditor' %}active{% endif %}">
+                                    <i class="bi bi-grid-1x2"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-section-label">Work</div>
+                                <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-clipboard2-check"></i>
+                                    <span>My Audits</span>
+                                </a>
+                            </div>
+                        {% elif group.name == "client_admin" or group.name == "client_user" %}
+                            <div class="sidebar-section">
+                                <div class="sidebar-section-label">Overview</div>
+                                <a href="{% url 'identity:dashboard_client' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_client' %}active{% endif %}">
+                                    <i class="bi bi-grid-1x2"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-section-label">Compliance</div>
+                                <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-clipboard2-check"></i>
+                                    <span>Our Audits</span>
+                                </a>
+                            </div>
                         {% endif %}
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <!-- Theme Toggle -->
-                    <li class="nav-item d-flex align-items-center me-3">
-                        <button class="btn btn-ghost p-2" id="theme-toggle" aria-label="Toggle dark mode">
-                            <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="d-none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                            <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        </button>
-                    </li>
+                    {% endfor %}
+                {% endif %}
+            </nav>
 
-                    {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.875rem;">
-                                    {{ user.username|make_list|first|upper }}
-                                </div>
-                                <div class="d-none d-md-block text-start">
-                                    <div class="fw-medium lh-1">{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</div>
-                                    {% if user.profile %}
-                                        <small class="text-muted" style="font-size: 0.75rem;">{{ user.profile.get_role_display }}</small>
+            <!-- Sidebar Footer: User -->
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="user-dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="sidebar-user-avatar">
+                        {{ user.username|make_list|first|upper }}
+                    </div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</div>
+                        {% if user.profile %}
+                            <div class="sidebar-user-role">{{ user.profile.get_role_display }}</div>
+                        {% endif %}
+                    </div>
+                    <i class="bi bi-chevron-expand sidebar-user-chevron"></i>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-dark sidebar-dropdown" aria-labelledby="user-dropdown-toggle">
+                    <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Admin Panel</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'identity:logout' %}"><i class="bi bi-box-arrow-left me-2"></i>Sign Out</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="topbar-toggle d-lg-none" id="sidebar-open" aria-label="Open sidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    {% block breadcrumb %}{% endblock %}
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
+                        <i class="bi bi-sun-fill" id="theme-icon-sun" style="display:none;"></i>
+                        <i class="bi bi-moon-fill" id="theme-icon-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main id="main-content" class="page-content">
+                {% if messages %}
+                    <div class="toast-stack" id="toast-container">
+                        {% for message in messages %}
+                            <div class="cedrus-toast cedrus-toast-{{ message.tags }}" role="alert">
+                                <div class="cedrus-toast-icon">
+                                    {% if message.tags == 'success' %}
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    {% elif message.tags == 'error' or message.tags == 'danger' %}
+                                        <i class="bi bi-exclamation-circle-fill"></i>
+                                    {% elif message.tags == 'warning' %}
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle-fill"></i>
                                     {% endif %}
                                 </div>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="{% url 'identity:logout' %}">Sign Out</a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="btn btn-primary btn-sm" href="{% url 'identity:login' %}">Sign In</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+                                <div class="cedrus-toast-body">{{ message }}</div>
+                                <button type="button" class="cedrus-toast-close" aria-label="Close" onclick="this.parentElement.remove()">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-    <!-- Main Content -->
-    <main id="main-content" class="main-content flex-grow-1">
-        <div class="container">
-            {% if messages %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    {% else %}
+    <!-- ======================== UNAUTHENTICATED LAYOUT ======================== -->
+    <main id="main-content" class="unauthenticated-layout">
+        {% if messages %}
+            <div class="container">
                 {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0" role="alert">
-                        <div class="d-flex align-items-center gap-2">
+                    <div class="cedrus-toast cedrus-toast-{{ message.tags }}" role="alert">
+                        <div class="cedrus-toast-icon">
                             {% if message.tags == 'success' %}
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                                <i class="bi bi-check-circle-fill"></i>
                             {% elif message.tags == 'error' or message.tags == 'danger' %}
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <i class="bi bi-exclamation-circle-fill"></i>
                             {% endif %}
-                            {{ message }}
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <div class="cedrus-toast-body">{{ message }}</div>
+                        <button type="button" class="cedrus-toast-close" aria-label="Close" onclick="this.parentElement.remove()">
+                            <i class="bi bi-x"></i>
+                        </button>
                     </div>
                 {% endfor %}
-            {% endif %}
-
-            {% block content %}{% endblock %}
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="py-4 mt-auto bg-white border-top">
-        <div class="container">
-            <div class="row align-items-center justify-content-between">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0 text-muted small">&copy; {% now "Y" %} Cedrus Platform. Enterprise Audit & Compliance.</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <ul class="list-inline mb-0 small">
-                        <li class="list-inline-item"><a href="#" class="text-muted text-decoration-none">Privacy</a></li>
-                        <li class="list-inline-item"><span class="text-muted">&middot;</span></li>
-                        <li class="list-inline-item"><a href="#" class="text-muted text-decoration-none">Terms</a></li>
-                        <li class="list-inline-item"><span class="text-muted">&middot;</span></li>
-                        <li class="list-inline-item"><a href="#" class="text-muted text-decoration-none">Support</a></li>
-                    </ul>
-                </div>
             </div>
-        </div>
-    </footer>
+        {% endif %}
+        {% block content_unauthenticated %}{% endblock %}
+        {% block content_public %}{% endblock %}
+    </main>
+    {% endif %}
 
     <!-- Bootstrap 5 JS -->
-        <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     
-    <!-- Theme Toggle Script -->
     <script>
-        (function() {
-            const toggleBtn = document.getElementById('theme-toggle');
-            const sunIcon = document.getElementById('theme-icon-sun');
-            const moonIcon = document.getElementById('theme-icon-moon');
-            
-            // Check for saved preference or system preference
-            const savedTheme = localStorage.getItem('theme');
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            let currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-            
-            // Apply theme
-            function applyTheme(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                if (theme === 'dark') {
-                    sunIcon.classList.remove('d-none');
-                    moonIcon.classList.add('d-none');
-                } else {
-                    sunIcon.classList.add('d-none');
-                    moonIcon.classList.remove('d-none');
-                }
+    (function() {
+        /* ── Theme Toggle ── */
+        var toggle = document.getElementById('theme-toggle');
+        var sun = document.getElementById('theme-icon-sun');
+        var moon = document.getElementById('theme-icon-moon');
+        var html = document.documentElement;
+        
+        var saved = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        
+        function applyTheme(t) {
+            html.setAttribute('data-theme', t);
+            if (t === 'dark') {
+                if (sun) sun.style.display = '';
+                if (moon) moon.style.display = 'none';
+            } else {
+                if (sun) sun.style.display = 'none';
+                if (moon) moon.style.display = '';
             }
-            
-            // Initial apply
-            applyTheme(currentTheme);
-            
-            // Toggle handler
-            toggleBtn.addEventListener('click', () => {
-                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                localStorage.setItem('theme', currentTheme);
-                applyTheme(currentTheme);
+        }
+        applyTheme(theme);
+        
+        if (toggle) {
+            toggle.addEventListener('click', function() {
+                theme = theme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
             });
-        })();
+        }
+
+        /* ── Sidebar Toggle (Mobile) ── */
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebar-overlay');
+        var openBtn = document.getElementById('sidebar-open');
+        var closeBtn = document.getElementById('sidebar-close');
+
+        function openSidebar() {
+            if (sidebar) sidebar.classList.add('open');
+            if (overlay) overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            if (sidebar) sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        if (openBtn) openBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+
+        /* ── Auto-dismiss toasts ── */
+        document.querySelectorAll('.cedrus-toast').forEach(function(toast) {
+            toast.style.animation = 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 5000);
+        });
+
+        /* ── Staggered page-load animation ── */
+        var animTargets = document.querySelectorAll('.page-content .cedrus-card, .page-content .stat-card-wrapper, .page-content .page-header');
+        animTargets.forEach(function(el, i) {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(12px)';
+            setTimeout(function() {
+                el.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, 50 * i);
+        });
+    })();
     </script>
-</body>
-</html>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-

@@ -3,8 +3,19 @@
 {% block title %}Dashboard - Cedrus{% endblock %}
 
 {% block content %}
-<div class="alert alert-warning">
-    {{ message|default:"No role assigned. Please contact an administrator." }}
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="page-subtitle">Welcome to Cedrus</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="bi bi-person-gear" style="font-size: 3rem; color: var(--text-tertiary);"></i></div>
+            <p>{{ message|default:"No role assigned. Please contact an administrator to get started." }}</p>
+        </div>
+    </div>
 </div>
 {% endblock %}
-

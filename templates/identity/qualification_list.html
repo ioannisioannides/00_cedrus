@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Qualifications</h1>
-  <ul>
-    {% for qualification in qualifications %}
-      <li>{{ qualification }}</li>
-    {% endfor %}
-  </ul>
+<div class="page-header">
+  <div>
+    <h1>Qualifications</h1>
+    <p class="page-subtitle">Professional certifications and approvals</p>
+  </div>
+</div>
+<div class="card">
+  <div class="card-body">
+    <ul class="mb-0">
+      {% for qualification in qualifications %}
+        <li>{{ qualification }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
 {% endblock %}
