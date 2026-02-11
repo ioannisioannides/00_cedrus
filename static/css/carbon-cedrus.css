@@ -150,6 +150,387 @@ cds-icon:not(:defined) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   CARBON BASE STYLES (g10 Theme)
+   Applied to override custom styles and match Carbon look
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Global Reset & Theme */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    background-color: #f4f4f4; /* Carbon g10 background */
+    color: #161616; /* Carbon text-primary */
+}
+
+/* ─── Carbon Side Navigation (Override custom sidebar) ─── */
+.sidebar {
+    background: #161616 !important; /* Carbon gray-100 */
+    box-shadow: none !important;
+    border-right: none !important;
+}
+
+.sidebar-header {
+    background: #161616 !important;
+    border-bottom: 1px solid #393939 !important;
+    padding: 1rem !important;
+}
+
+.sidebar-brand-icon {
+    background: #0f62fe !important; /* Carbon interactive */
+    box-shadow: none !important;
+    border-radius: 4px !important;
+}
+
+.sidebar-brand-text {
+    color: #f4f4f4 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Sidebar Navigation Groups */
+.sidebar-nav {
+    padding: 0 !important;
+}
+
+.sidebar-group {
+    border-bottom: 1px solid #393939;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.sidebar-group-title {
+    color: #c6c6c6 !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.32px !important;
+    text-transform: uppercase !important;
+    padding: 1rem 1rem 0.5rem !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+/* Sidebar Links */
+.sidebar-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    padding: 0.875rem 1rem !important;
+    color: #c6c6c6 !important;
+    text-decoration: none !important;
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    border-left: 4px solid transparent !important;
+    background: transparent !important;
+    transition: background-color 0.15s, border-color 0.15s !important;
+}
+
+.sidebar-link:hover {
+    background: #353535 !important;
+    color: #f4f4f4 !important;
+}
+
+.sidebar-link.active {
+    background: #393939 !important;
+    border-left-color: #0f62fe !important;
+    color: #f4f4f4 !important;
+    font-weight: 600 !important;
+}
+
+.sidebar-link i {
+    font-size: 1rem !important;
+    color: inherit !important;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    background: #161616 !important;
+    border-top: 1px solid #393939 !important;
+    padding: 1rem !important;
+}
+
+.sidebar-footer .sidebar-user-name {
+    color: #f4f4f4 !important;
+    font-weight: 600 !important;
+}
+
+.sidebar-footer .sidebar-user-role {
+    color: #8d8d8d !important;
+    font-size: 0.75rem !important;
+}
+
+/* ─── Carbon Main Content Area ─── */
+.app-main {
+    background: #f4f4f4 !important;
+    min-height: 100vh;
+}
+
+.main-content {
+    padding: 2rem !important;
+}
+
+/* ─── Carbon Page Headers ─── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.page-header h1,
+.page-header .page-title {
+    font-size: 1.75rem !important;
+    font-weight: 400 !important;
+    color: #161616 !important;
+    letter-spacing: 0 !important;
+    margin: 0 !important;
+}
+
+.page-header .page-subtitle,
+.page-header p {
+    color: #525252 !important;
+    font-size: 0.875rem !important;
+    margin: 0.25rem 0 0 !important;
+}
+
+/* ─── Carbon Cards ─── */
+.card {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+}
+
+.card-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    padding: 1rem !important;
+    font-weight: 600 !important;
+}
+
+.card-body {
+    padding: 1rem !important;
+}
+
+/* ─── Carbon Tables ─── */
+.table {
+    font-size: 0.875rem;
+    background: #ffffff;
+}
+
+.table thead th {
+    background: #e0e0e0 !important;
+    color: #161616 !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    letter-spacing: 0.16px !important;
+    text-transform: none !important;
+    padding: 0.875rem 1rem !important;
+    border-bottom: 1px solid #c6c6c6 !important;
+}
+
+.table tbody td {
+    padding: 0.875rem 1rem !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    vertical-align: middle !important;
+    color: #161616 !important;
+}
+
+.table tbody tr:hover {
+    background: #e8e8e8 !important;
+}
+
+/* ─── Carbon Buttons (Override custom buttons) ─── */
+.btn-primary {
+    background: #0f62fe !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: #ffffff !important;
+    font-weight: 400 !important;
+    padding: 0.875rem 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.125rem !important;
+    min-height: 48px !important;
+    transition: background-color 0.15s !important;
+}
+
+.btn-primary:hover {
+    background: #0353e9 !important;
+}
+
+.btn-secondary {
+    background: #393939 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: #ffffff !important;
+    padding: 0.875rem 1rem !important;
+    min-height: 48px !important;
+}
+
+.btn-secondary:hover {
+    background: #474747 !important;
+}
+
+.btn-outline-primary {
+    background: transparent !important;
+    border: 1px solid #0f62fe !important;
+    border-radius: 0 !important;
+    color: #0f62fe !important;
+    padding: calc(0.875rem - 1px) calc(1rem - 1px) !important;
+    min-height: 48px !important;
+}
+
+.btn-outline-primary:hover {
+    background: #0f62fe !important;
+    color: #ffffff !important;
+}
+
+.btn-danger {
+    background: #da1e28 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: #ffffff !important;
+    padding: 0.875rem 1rem !important;
+    min-height: 48px !important;
+}
+
+.btn-danger:hover {
+    background: #b81921 !important;
+}
+
+/* ─── Carbon Form Inputs ─── */
+.form-control {
+    background: #ffffff !important;
+    border: none !important;
+    border-bottom: 1px solid #8d8d8d !important;
+    border-radius: 0 !important;
+    padding: 0.6875rem 1rem !important;
+    font-size: 0.875rem !important;
+    color: #161616 !important;
+    outline: none !important;
+}
+
+.form-control:focus {
+    border-bottom: 2px solid #0f62fe !important;
+    box-shadow: none !important;
+}
+
+.form-label {
+    color: #525252 !important;
+    font-size: 0.75rem !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.32px !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.form-select {
+    background-color: #ffffff !important;
+    border: none !important;
+    border-bottom: 1px solid #8d8d8d !important;
+    border-radius: 0 !important;
+    padding: 0.6875rem 2.5rem 0.6875rem 1rem !important;
+}
+
+/* ─── Carbon Badges/Tags ─── */
+.badge {
+    border-radius: 1000px !important;
+    font-size: 0.75rem !important;
+    font-weight: 400 !important;
+    padding: 0.125rem 0.5rem !important;
+}
+
+.badge-success, .bg-success {
+    background: #198038 !important;
+    color: #ffffff !important;
+}
+
+.badge-warning, .bg-warning {
+    background: #f1c21b !important;
+    color: #161616 !important;
+}
+
+.badge-danger, .bg-danger {
+    background: #da1e28 !important;
+    color: #ffffff !important;
+}
+
+.badge-info, .bg-info {
+    background: #0043ce !important;
+    color: #ffffff !important;
+}
+
+/* ─── Carbon Breadcrumbs ─── */
+.breadcrumb {
+    background: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 1rem !important;
+    font-size: 0.875rem !important;
+}
+
+.breadcrumb-item a {
+    color: #0f62fe !important;
+    text-decoration: none !important;
+}
+
+.breadcrumb-item a:hover {
+    text-decoration: underline !important;
+}
+
+.breadcrumb-item.active {
+    color: #525252 !important;
+}
+
+/* ─── Carbon Alerts/Notifications ─── */
+.alert {
+    border-radius: 0 !important;
+    border-left: 3px solid !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+}
+
+.alert-success {
+    background: #defbe6 !important;
+    border-left-color: #198038 !important;
+    color: #161616 !important;
+}
+
+.alert-warning {
+    background: #fcf4d6 !important;
+    border-left-color: #f1c21b !important;
+    color: #161616 !important;
+}
+
+.alert-danger {
+    background: #fff1f1 !important;
+    border-left-color: #da1e28 !important;
+    color: #161616 !important;
+}
+
+.alert-info {
+    background: #edf5ff !important;
+    border-left-color: #0f62fe !important;
+    color: #161616 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    CARBON + CEDRUS LAYOUT INTEGRATION
    ═══════════════════════════════════════════════════════════════════ */
 
