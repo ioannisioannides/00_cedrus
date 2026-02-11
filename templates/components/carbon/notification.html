@@ -1,0 +1,33 @@
+{# Carbon Design System - Notification Components #}
+{# Apache-2.0 License | https://github.com/carbon-design-system/carbon #}
+
+{# ═══════════════════════════════════════════════════════════════════
+   CARBON TOAST NOTIFICATION
+   Usage: {% include "components/carbon/notification.html" with kind="success" title="Success" message="Saved" %}
+   
+   Parameters:
+   - kind: success|info|warning|error (required)
+   - title: Notification title (required)
+   - message: Notification message (optional)
+   - caption: Timestamp or caption (optional)
+   - low_contrast: true|false (default: false)
+   - hide_close: true|false (default: false)
+   ═══════════════════════════════════════════════════════════════════ #}
+
+<cds-toast-notification 
+    kind="{{ kind }}" 
+    title="{{ title }}"
+    {% if message %}subtitle="{{ message }}"{% endif %}
+    {% if caption %}caption="{{ caption }}"{% endif %}
+    {% if low_contrast %}low-contrast{% endif %}
+    {% if hide_close %}hide-close-button{% endif %}
+    open>
+</cds-toast-notification>
+
+
+{# ═══════════════════════════════════════════════════════════════════
+   CARBON INLINE NOTIFICATION
+   Usage: {% include "components/carbon/inline_notification.html" with kind="info" title="Note" message="Details" %}
+   ═══════════════════════════════════════════════════════════════════ #}
+
+{# For inline usage, use cds-inline-notification instead #}

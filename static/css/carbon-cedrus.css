@@ -1,0 +1,192 @@
+/**
+ * Carbon Design System - Cedrus Brand Customization
+ * ═══════════════════════════════════════════════════════════════════
+ * Maps Cedrus brand colors to Carbon design tokens
+ * Apache-2.0 License | https://github.com/carbon-design-system/carbon
+ * 
+ * Theme: g10 (Gray 10) - Professional light theme
+ * Reference: https://carbondesignsystem.com/elements/themes/overview/
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARBON WEB COMPONENTS - Hide Until Defined (Prevents FOUC)
+   ═══════════════════════════════════════════════════════════════════ */
+cds-header:not(:defined),
+cds-header-name:not(:defined),
+cds-header-nav:not(:defined),
+cds-header-nav-item:not(:defined),
+cds-header-menu:not(:defined),
+cds-header-menu-item:not(:defined),
+cds-side-nav:not(:defined),
+cds-side-nav-items:not(:defined),
+cds-side-nav-menu:not(:defined),
+cds-side-nav-menu-item:not(:defined),
+cds-side-nav-link:not(:defined),
+cds-button:not(:defined),
+cds-modal:not(:defined),
+cds-modal-header:not(:defined),
+cds-modal-body:not(:defined),
+cds-modal-footer:not(:defined),
+cds-toast-notification:not(:defined),
+cds-inline-notification:not(:defined),
+cds-text-input:not(:defined),
+cds-textarea:not(:defined),
+cds-select:not(:defined),
+cds-dropdown:not(:defined),
+cds-dropdown-item:not(:defined),
+cds-checkbox:not(:defined),
+cds-radio-button:not(:defined),
+cds-radio-button-group:not(:defined),
+cds-toggle:not(:defined),
+cds-date-picker:not(:defined),
+cds-date-picker-input:not(:defined),
+cds-breadcrumb:not(:defined),
+cds-breadcrumb-item:not(:defined),
+cds-tabs:not(:defined),
+cds-tab:not(:defined),
+cds-tag:not(:defined),
+cds-tooltip:not(:defined),
+cds-progress-indicator:not(:defined),
+cds-progress-step:not(:defined),
+cds-accordion:not(:defined),
+cds-accordion-item:not(:defined),
+cds-table:not(:defined),
+cds-table-head:not(:defined),
+cds-table-header-row:not(:defined),
+cds-table-header-cell:not(:defined),
+cds-table-body:not(:defined),
+cds-table-row:not(:defined),
+cds-table-cell:not(:defined),
+cds-pagination:not(:defined),
+cds-loading:not(:defined),
+cds-icon:not(:defined) {
+    visibility: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CEDRUS BRAND → CARBON TOKEN MAPPING
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ─── Cedrus Primary (Violet-Indigo) → Carbon Interactive ─── */
+    --cds-interactive: #7C3AED;
+    --cds-interactive-hover: #6D28D9;
+    --cds-interactive-active: #5B21B6;
+    --cds-interactive-selected: #8B5CF6;
+    
+    /* ─── Cedrus Brand Focus States ─── */
+    --cds-focus: #7C3AED;
+    --cds-focus-inset: #FFFFFF;
+    --cds-focus-inverse: #FFFFFF;
+    
+    /* ─── Cedrus Brand Links ─── */
+    --cds-link-primary: #7C3AED;
+    --cds-link-primary-hover: #6D28D9;
+    --cds-link-secondary: #52525B;
+    --cds-link-visited: #5B21B6;
+    --cds-link-inverse: #A78BFA;
+    --cds-link-inverse-hover: #C4B5FD;
+    --cds-link-inverse-active: #DDD6FE;
+    
+    /* ─── Cedrus Status Colors ─── */
+    /* Success (Emerald) */
+    --cds-support-success: #10B981;
+    --cds-support-success-inverse: #34D399;
+    --cds-notification-success-background: rgba(16, 185, 129, 0.08);
+    
+    /* Warning (Amber) */
+    --cds-support-warning: #F59E0B;
+    --cds-support-warning-inverse: #FBBF24;
+    --cds-notification-warning-background: rgba(245, 158, 11, 0.08);
+    
+    /* Error/Danger (Rose) */
+    --cds-support-error: #E11D48;
+    --cds-support-error-inverse: #FB7185;
+    --cds-notification-error-background: rgba(244, 63, 94, 0.08);
+    
+    /* Info (Sky) */
+    --cds-support-info: #0EA5E9;
+    --cds-support-info-inverse: #38BDF8;
+    --cds-notification-info-background: rgba(14, 165, 233, 0.08);
+    
+    /* ─── Cedrus Typography ─── */
+    --cds-body-compact-01-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --cds-body-01-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --cds-heading-01-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --cds-code-01-font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --cds-code-02-font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    
+    /* ─── Button Customization ─── */
+    --cds-button-primary: #7C3AED;
+    --cds-button-primary-hover: #6D28D9;
+    --cds-button-primary-active: #5B21B6;
+    --cds-button-secondary: #3F3F46;
+    --cds-button-secondary-hover: #27272A;
+    --cds-button-secondary-active: #18181B;
+    --cds-button-tertiary: #7C3AED;
+    --cds-button-tertiary-hover: #6D28D9;
+    --cds-button-tertiary-active: #5B21B6;
+    --cds-button-danger-primary: #E11D48;
+    --cds-button-danger-secondary: #E11D48;
+    --cds-button-danger-hover: #BE123C;
+    --cds-button-danger-active: #9F1239;
+}
+
+/* ─── Dark Theme Overrides ─── */
+[data-theme="dark"],
+[data-carbon-theme="g90"],
+[data-carbon-theme="g100"] {
+    --cds-interactive: #A78BFA;
+    --cds-interactive-hover: #C4B5FD;
+    --cds-interactive-active: #DDD6FE;
+    
+    --cds-link-primary: #A78BFA;
+    --cds-link-primary-hover: #C4B5FD;
+    
+    --cds-button-primary: #A78BFA;
+    --cds-button-primary-hover: #C4B5FD;
+    --cds-button-tertiary: #A78BFA;
+    --cds-button-tertiary-hover: #C4B5FD;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARBON + CEDRUS LAYOUT INTEGRATION
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Ensure Carbon header works with Cedrus layout */
+cds-header {
+    --cds-header-height: 48px;
+}
+
+cds-side-nav {
+    --cds-side-nav-width: 256px;
+}
+
+/* Carbon button sizing to match Cedrus */
+cds-button {
+    --cds-button-padding-sm: 0.5rem 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY CLASSES FOR GRADUAL MIGRATION
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Wrapper for Carbon components in Bootstrap layout */
+.carbon-component {
+    display: contents;
+}
+
+/* Use Carbon's spacing scale with Bootstrap */
+.carbon-spacing-05 { margin: 1rem; }
+.carbon-spacing-06 { margin: 1.5rem; }
+.carbon-spacing-07 { margin: 2rem; }
+
+/* Carbon button in Bootstrap form */
+.btn-carbon-primary {
+    --bs-btn-bg: var(--cds-interactive);
+    --bs-btn-border-color: var(--cds-interactive);
+    --bs-btn-hover-bg: var(--cds-interactive-hover);
+    --bs-btn-hover-border-color: var(--cds-interactive-hover);
+    --bs-btn-active-bg: var(--cds-interactive-active);
+    --bs-btn-active-border-color: var(--cds-interactive-active);
+}

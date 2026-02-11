@@ -1,0 +1,39 @@
+{# Carbon Design System - Component Helper Templates #}
+{# Apache-2.0 License | https://github.com/carbon-design-system/carbon #}
+
+{# ═══════════════════════════════════════════════════════════════════
+   CARBON BUTTON
+   Usage: {% include "components/carbon/button.html" with label="Submit" kind="primary" %}
+   
+   Parameters:
+   - label: Button text (required)
+   - kind: primary|secondary|tertiary|ghost|danger|danger-tertiary|danger-ghost (default: primary)
+   - size: sm|md|lg|xl|2xl (default: md)
+   - type: button|submit|reset (default: button)
+   - disabled: true|false (default: false)
+   - icon: Bootstrap icon name without bi- prefix (optional)
+   - href: URL for link button (optional)
+   - tooltip: Tooltip text (optional)
+   ═══════════════════════════════════════════════════════════════════ #}
+
+{% if href %}
+<cds-button 
+    kind="{{ kind|default:'primary' }}" 
+    size="{{ size|default:'md' }}"
+    href="{{ href }}"
+    {% if disabled %}disabled{% endif %}
+    {% if tooltip %}title="{{ tooltip }}"{% endif %}>
+    {% if icon %}<i class="bi bi-{{ icon }}" slot="icon"></i>{% endif %}
+    {{ label }}
+</cds-button>
+{% else %}
+<cds-button 
+    kind="{{ kind|default:'primary' }}" 
+    size="{{ size|default:'md' }}"
+    type="{{ type|default:'button' }}"
+    {% if disabled %}disabled{% endif %}
+    {% if tooltip %}title="{{ tooltip }}"{% endif %}>
+    {% if icon %}<i class="bi bi-{{ icon }}" slot="icon"></i>{% endif %}
+    {{ label }}
+</cds-button>
+{% endif %}
