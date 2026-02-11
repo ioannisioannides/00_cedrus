@@ -56,73 +56,108 @@
                 {% if user.groups.all %}
                     {% for group in user.groups.all %}
                         {% if group.name == "cb_admin" %}
-                            <div class="sidebar-section">
-                                <div class="sidebar-section-label">Overview</div>
-                                <a href="{% url 'identity:dashboard_cb' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_cb' %}active{% endif %}">
-                                    <i class="bi bi-grid-1x2"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </div>
-                            <div class="sidebar-section">
-                                <div class="sidebar-section-label">Audit Operations</div>
-                                <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-clipboard2-check"></i>
-                                    <span>Audits</span>
-                                </a>
-                                <a href="{% url 'audit_management:program_list' %}" class="sidebar-link {% if 'program' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-calendar3"></i>
-                                    <span>Programs</span>
-                                </a>
-                            </div>
-                            <div class="sidebar-section">
-                                <div class="sidebar-section-label">Management</div>
-                                <a href="{% url 'core:organization_list' %}" class="sidebar-link {% if 'organization' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-building"></i>
-                                    <span>Organizations</span>
-                                </a>
-                                <a href="{% url 'core:site_list' %}" class="sidebar-link {% if 'site' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-geo-alt"></i>
-                                    <span>Sites</span>
-                                </a>
-                                <a href="{% url 'core:standard_list' %}" class="sidebar-link {% if 'standard' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-file-earmark-ruled"></i>
-                                    <span>Standards</span>
-                                </a>
-                                <a href="{% url 'core:certification_list' %}" class="sidebar-link {% if 'certification' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-patch-check"></i>
-                                    <span>Certifications</span>
-                                </a>
-                            </div>
+                            <details class="sidebar-group" {% if request.resolver_match.url_name == 'dashboard_cb' %}open{% endif %}>
+                                <summary class="sidebar-section-label">
+                                    Overview
+                                    <i class="bi bi-chevron-down"></i>
+                                </summary>
+                                <div class="sidebar-section-links">
+                                    <a href="{% url 'identity:dashboard_cb' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_cb' %}active{% endif %}">
+                                        <i class="bi bi-grid-1x2"></i>
+                                        <span>Dashboard</span>
+                                    </a>
+                                </div>
+                            </details>
+                            <details class="sidebar-group" {% if 'audit' in request.resolver_match.url_name or 'program' in request.resolver_match.url_name %}open{% endif %}>
+                                <summary class="sidebar-section-label">
+                                    Audit Operations
+                                    <i class="bi bi-chevron-down"></i>
+                                </summary>
+                                <div class="sidebar-section-links">
+                                    <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-clipboard2-check"></i>
+                                        <span>Audits</span>
+                                    </a>
+                                    <a href="{% url 'audit_management:program_list' %}" class="sidebar-link {% if 'program' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-calendar3"></i>
+                                        <span>Programs</span>
+                                    </a>
+                                </div>
+                            </details>
+                            <details class="sidebar-group" {% if 'organization' in request.resolver_match.url_name or 'site' in request.resolver_match.url_name or 'standard' in request.resolver_match.url_name or 'certification' in request.resolver_match.url_name %}open{% endif %}>
+                                <summary class="sidebar-section-label">
+                                    Management
+                                    <i class="bi bi-chevron-down"></i>
+                                </summary>
+                                <div class="sidebar-section-links">
+                                    <a href="{% url 'core:organization_list' %}" class="sidebar-link {% if 'organization' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-building"></i>
+                                        <span>Organizations</span>
+                                    </a>
+                                    <a href="{% url 'core:site_list' %}" class="sidebar-link {% if 'site' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-geo-alt"></i>
+                                        <span>Sites</span>
+                                    </a>
+                                    <a href="{% url 'core:standard_list' %}" class="sidebar-link {% if 'standard' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-file-earmark-ruled"></i>
+                                        <span>Standards</span>
+                                    </a>
+                                    <a href="{% url 'core:certification_list' %}" class="sidebar-link {% if 'certification' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-patch-check"></i>
+                                        <span>Certifications</span>
+                                    </a>
+                                </div>
+                            </details>
                         {% elif group.name == "lead_auditor" or group.name == "auditor" %}
-                            <div class="sidebar-section">
-                                <div class="sidebar-section-label">Overview</div>
-                                <a href="{% url 'identity:dashboard_auditor' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_auditor' %}active{% endif %}">
-                                    <i class="bi bi-grid-1x2"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </div>
-                            <div class="sidebar-section">
-                                <div class="sidebar-section-label">Work</div>
-                                <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-clipboard2-check"></i>
-                                    <span>My Audits</span>
-                                </a>
-                            </div>
+                            <details class="sidebar-group" {% if request.resolver_match.url_name == 'dashboard_auditor' %}open{% endif %}>
+                                <summary class="sidebar-section-label">
+                                    Overview
+                                    <i class="bi bi-chevron-down"></i>
+                                </summary>
+                                <div class="sidebar-section-links">
+                                    <a href="{% url 'identity:dashboard_auditor' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_auditor' %}active{% endif %}">
+                                        <i class="bi bi-grid-1x2"></i>
+                                        <span>Dashboard</span>
+                                    </a>
+                                </div>
+                            </details>
+                            <details class="sidebar-group" {% if 'audit' in request.resolver_match.url_name %}open{% endif %}>
+                                <summary class="sidebar-section-label">
+                                    Work
+                                    <i class="bi bi-chevron-down"></i>
+                                </summary>
+                                <div class="sidebar-section-links">
+                                    <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-clipboard2-check"></i>
+                                        <span>My Audits</span>
+                                    </a>
+                                </div>
+                            </details>
                         {% elif group.name == "client_admin" or group.name == "client_user" %}
-                            <div class="sidebar-section">
-                                <div class="sidebar-section-label">Overview</div>
-                                <a href="{% url 'identity:dashboard_client' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_client' %}active{% endif %}">
-                                    <i class="bi bi-grid-1x2"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </div>
-                            <div class="sidebar-section">
-                                <div class="sidebar-section-label">Compliance</div>
-                                <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
-                                    <i class="bi bi-clipboard2-check"></i>
-                                    <span>Our Audits</span>
-                                </a>
-                            </div>
+                            <details class="sidebar-group" {% if request.resolver_match.url_name == 'dashboard_client' %}open{% endif %}>
+                                <summary class="sidebar-section-label">
+                                    Overview
+                                    <i class="bi bi-chevron-down"></i>
+                                </summary>
+                                <div class="sidebar-section-links">
+                                    <a href="{% url 'identity:dashboard_client' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard_client' %}active{% endif %}">
+                                        <i class="bi bi-grid-1x2"></i>
+                                        <span>Dashboard</span>
+                                    </a>
+                                </div>
+                            </details>
+                            <details class="sidebar-group" {% if 'audit' in request.resolver_match.url_name %}open{% endif %}>
+                                <summary class="sidebar-section-label">
+                                    Compliance
+                                    <i class="bi bi-chevron-down"></i>
+                                </summary>
+                                <div class="sidebar-section-links">
+                                    <a href="{% url 'audit_management:audit_list' %}" class="sidebar-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                                        <i class="bi bi-clipboard2-check"></i>
+                                        <span>Our Audits</span>
+                                    </a>
+                                </div>
+                            </details>
                         {% endif %}
                     {% endfor %}
                 {% endif %}
@@ -158,7 +193,9 @@
                     <button class="topbar-toggle d-lg-none" id="sidebar-open" aria-label="Open sidebar">
                         <i class="bi bi-list"></i>
                     </button>
-                    {% block breadcrumb %}{% endblock %}
+                    <div class="topbar-context">
+                        {% block breadcrumb %}{% endblock %}
+                    </div>
                 </div>
                 <div class="topbar-right">
                     <button class="topbar-btn" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">

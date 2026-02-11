@@ -23,52 +23,50 @@
 
 {% if audits %}
     <!-- Filters -->
-    <div class="card filter-card">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="organization" class="form-label">Organization</label>
-                    <select name="organization" id="organization" class="form-select">
-                        <option value="">All Organizations</option>
-                        {% for org in organizations %}
-                            <option value="{{ org.pk }}" {% if request.GET.organization == org.pk|stringformat:"s" %}selected{% endif %}>{{ org.name }}</option>
-                        {% endfor %}
-                    </select>
+    <div class="filter-card">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="organization" class="form-label">Organization</label>
+                <select name="organization" id="organization" class="form-select">
+                    <option value="">All Organizations</option>
+                    {% for org in organizations %}
+                        <option value="{{ org.pk }}" {% if request.GET.organization == org.pk|stringformat:"s" %}selected{% endif %}>{{ org.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Draft</option>
+                    <option value="client_review" {% if request.GET.status == "client_review" %}selected{% endif %}>Client Review</option>
+                    <option value="submitted_to_cb" {% if request.GET.status == "submitted_to_cb" %}selected{% endif %}>Submitted to CB</option>
+                    <option value="decided" {% if request.GET.status == "decided" %}selected{% endif %}>Decided</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="audit_type" class="form-label">Type</label>
+                <select name="audit_type" id="audit_type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="stage1" {% if request.GET.audit_type == "stage1" %}selected{% endif %}>Stage 1</option>
+                    <option value="stage2" {% if request.GET.audit_type == "stage2" %}selected{% endif %}>Stage 2</option>
+                    <option value="surveillance" {% if request.GET.audit_type == "surveillance" %}selected{% endif %}>Surveillance</option>
+                    <option value="recertification" {% if request.GET.audit_type == "recertification" %}selected{% endif %}>Recertification</option>
+                    <option value="transfer" {% if request.GET.audit_type == "transfer" %}selected{% endif %}>Transfer</option>
+                    <option value="special" {% if request.GET.audit_type == "special" %}selected{% endif %}>Special</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    <a href="{% url 'audit_management:audit_list' %}" class="btn btn-secondary" title="Clear filters">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
                 </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">All Statuses</option>
-                        <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Draft</option>
-                        <option value="client_review" {% if request.GET.status == "client_review" %}selected{% endif %}>Client Review</option>
-                        <option value="submitted_to_cb" {% if request.GET.status == "submitted_to_cb" %}selected{% endif %}>Submitted to CB</option>
-                        <option value="decided" {% if request.GET.status == "decided" %}selected{% endif %}>Decided</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="audit_type" class="form-label">Type</label>
-                    <select name="audit_type" id="audit_type" class="form-select">
-                        <option value="">All Types</option>
-                        <option value="stage1" {% if request.GET.audit_type == "stage1" %}selected{% endif %}>Stage 1</option>
-                        <option value="stage2" {% if request.GET.audit_type == "stage2" %}selected{% endif %}>Stage 2</option>
-                        <option value="surveillance" {% if request.GET.audit_type == "surveillance" %}selected{% endif %}>Surveillance</option>
-                        <option value="recertification" {% if request.GET.audit_type == "recertification" %}selected{% endif %}>Recertification</option>
-                        <option value="transfer" {% if request.GET.audit_type == "transfer" %}selected{% endif %}>Transfer</option>
-                        <option value="special" {% if request.GET.audit_type == "special" %}selected{% endif %}>Special</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-fill">
-                            <i class="bi bi-funnel"></i> Filter
-                        </button>
-                        <a href="{% url 'audit_management:audit_list' %}" class="btn btn-secondary">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
-                    </div>
-                </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 
     <!-- Audits Table -->

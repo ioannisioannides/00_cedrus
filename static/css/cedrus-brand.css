@@ -205,6 +205,38 @@
     /* ─── Topbar ─── */
     --topbar-height: 60px;
 
+    /* ─── Layout ─── */
+    --bg-app:         var(--bg-base);
+    --bg-primary:     var(--bg-surface);
+    --bg-secondary:   var(--bg-sunken);
+    --bg-tertiary:    var(--bg-muted);
+    --bg-card:        var(--bg-surface);
+
+    /* ─── Font Aliases ─── */
+    --font-ui:        var(--font-sans);
+
+    /* ─── Borders ───*/
+    --border-primary:   var(--border-default);
+    --border-secondary: var(--border-subtle);
+
+    /* ─── Action Colors ─── */
+    --action-primary:       var(--btn-primary-bg);
+    --action-primary-hover: var(--btn-primary-hover);
+    --action-primary-text:  var(--btn-primary-text);
+
+    /* ─── Sidebar Link Colors ─── */
+    --sidebar-link-hover:       var(--sidebar-item-hover);
+    --sidebar-link-active-bg:   var(--sidebar-item-active);
+    --sidebar-link-active-text: var(--sidebar-text-active);
+
+    /* ─── Gray Scale for Badges ─── */
+    --gray-100: var(--neutral-100);
+    --gray-300: var(--neutral-300);
+    --gray-400: var(--neutral-400);
+    --gray-600: var(--neutral-600);
+    --gray-700: var(--neutral-700);
+    --gray-800: var(--neutral-800);
+
     /* ─── Animation ─── */
     --transition-fast:   100ms;
     --transition-base:   150ms;
@@ -290,6 +322,28 @@
     --warning-bg: rgba(245, 158, 11, 0.12);
     --danger-bg:  rgba(244, 63, 94, 0.12);
     --info-bg:    rgba(14, 165, 233, 0.12);
+
+    /* ─── Dark Theme Aliases ─── */
+    --bg-app:         var(--bg-base);
+    --bg-primary:     var(--bg-surface);
+    --bg-secondary:   var(--neutral-800);
+    --bg-tertiary:    var(--bg-muted);
+    --bg-card:        var(--bg-surface);
+    --font-ui:        var(--font-sans);
+    --border-primary:   var(--border-default);
+    --border-secondary: var(--border-subtle);
+    --action-primary:       var(--btn-primary-bg);
+    --action-primary-hover: var(--btn-primary-hover);
+    --action-primary-text:  var(--btn-primary-text);
+    --sidebar-link-hover:       var(--sidebar-item-hover);
+    --sidebar-link-active-bg:   var(--sidebar-item-active);
+    --sidebar-link-active-text: var(--sidebar-text-active);
+    --gray-100: var(--neutral-100);
+    --gray-300: var(--neutral-300);
+    --gray-400: var(--neutral-400);
+    --gray-600: var(--neutral-600);
+    --gray-700: var(--neutral-700);
+    --gray-800: var(--neutral-800);
 }
 
 @media (prefers-color-scheme: dark) {
