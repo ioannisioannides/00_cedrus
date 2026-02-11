@@ -7,7 +7,13 @@ name: CodeQL Security Scan
 # To disable default setup:
 # 1. Go to Settings → Code security and analysis
 # 2. Under "Code scanning", if "CodeQL analysis" shows as "Enabled"
-# 3. Click "Disable" or "Configure" → Switch to "Advanced"
+# 3. Click "..." (dropdown menu) → Select "Disable CodeQL" or "Remove"
+# 4. Confirm the action
+#
+# To verify it's disabled:
+# - Go to Settings → Code security and analysis
+# - "Code scanning" section should show "Set up" (not "Enabled")
+# - Only this advanced workflow should be running
 # ==============================================================================
 
 on:
@@ -34,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python', 'javascript' ]
+        language: [ 'python' ]
 
     steps:
       - name: Checkout repository
