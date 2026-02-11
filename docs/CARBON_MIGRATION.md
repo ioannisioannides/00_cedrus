@@ -2,18 +2,28 @@
 
 ## Overview
 
-Cedrus is migrating from Bootstrap 5 + custom CSS to **IBM Carbon Design System** (Apache-2.0 license).
+Cedrus has **fully migrated** from Bootstrap 5 to **IBM Carbon Design System** (Apache-2.0 license).
 
 - **Repository:** https://github.com/carbon-design-system/carbon
 - **Storybook:** https://web-components.carbondesignsystem.com/
 - **Tracking Issue:** #64
+- **Status:** ✅ Phase 2 Complete - Bootstrap Removed
 
 ## Current Setup
 
 Carbon Web Components are loaded via CDN in `templates/base.html`. No npm/build step required.
 
-### Files Added
-- `static/css/carbon-cedrus.css` - Brand customization mapping Cedrus colors to Carbon tokens
+**Bootstrap has been fully removed.** All utility classes (spacing, display, flex, grid, etc.) are now provided by `cedrus-utilities.css`.
+
+### CSS Architecture
+| File | Purpose |
+|------|---------|
+| `static/css/cedrus-brand.css` | Brand colors, CSS custom properties |
+| `static/css/cedrus-ui.css` | Component styles (btn-*, card-*, form-*, alert-*, table-*) |
+| `static/css/cedrus-utilities.css` | Bootstrap-compatible utility classes (m-*, d-*, flex-*, col-*) |
+| `static/css/carbon-cedrus.css` | Carbon theme customization |
+
+### Template Helpers
 - `templates/components/carbon/button.html` - Button helper template
 - `templates/components/carbon/notification.html` - Notification helper template
 
@@ -246,10 +256,19 @@ Carbon Web Components are loaded via CDN in `templates/base.html`. No npm/build 
 
 ## Migration Strategy
 
-1. **Phase 1 (Current):** Carbon CDN loaded alongside Bootstrap - both available
-2. **Phase 2:** Convert new features to Carbon, refactor high-traffic pages
-3. **Phase 3:** Complete migration, remove Bootstrap
-4. **Phase 4:** Remove legacy cedrus-ui.css, optimize bundle
+1. **Phase 1:** ✅ Carbon CDN loaded alongside Bootstrap - both available
+2. **Phase 2:** ✅ Bootstrap CDN removed, cedrus-utilities.css provides utility classes
+3. **Phase 3:** Convert high-traffic pages to Carbon components directly
+4. **Phase 4:** Remove legacy cedrus-ui.css utilities, optimize bundle
+
+### What Was Removed
+- Bootstrap CSS CDN (`bootstrap@5.3.0/dist/css/bootstrap.min.css`)
+- Bootstrap JS CDN (`bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js`)
+- Bootstrap JavaScript dependency (replaced with pure JS dropdown handler)
+
+### What Was Added
+- `cedrus-utilities.css` (~40KB) - All Bootstrap utility classes reimplemented
+- Pure JavaScript dropdown handler (no framework dependency)
 
 ## Theme Support
 
