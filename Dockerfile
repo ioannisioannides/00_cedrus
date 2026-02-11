@@ -14,7 +14,8 @@
 # STAGE 1: BUILDER
 # ==============================================================================
 # Build Python dependencies in isolated builder stage
-FROM python:3.13-alpine AS builder
+# Pinned to specific digest for security (updated 2026-02-11)
+FROM python:3.13-alpine@sha256:bb1f2fdb1065c85468775c9d680dcd344f6442a2d1181ef7916b60a623f11d40 AS builder
 
 # Set build-time labels
 LABEL maintainer="Cedrus Excellence Team <team@cedrus.local>"
@@ -57,7 +58,8 @@ RUN uv sync --frozen --no-install-project --no-dev
 # STAGE 2: RUNTIME
 # ==============================================================================
 # Minimal runtime image with only production dependencies
-FROM python:3.13-alpine AS runtime
+# Pinned to specific digest for security (updated 2026-02-11)
+FROM python:3.13-alpine@sha256:bb1f2fdb1065c85468775c9d680dcd344f6442a2d1181ef7916b60a623f11d40 AS runtime
 
 # Runtime arguments
 ARG UID=1000
