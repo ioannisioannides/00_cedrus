@@ -1,21 +1,7 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+name: CodeQL Security Scan
 
-# This workflow checks out code, performs a Codacy security scan
-# and integrates the results with the
-# GitHub Advanced Security code scanning feature.  For more information on
-# the Codacy security scan action usage and parameters, see
-# https://github.com/codacy/codacy-analysis-cli-action.
-# For more information on Codacy Analysis CLI in general, see
-# https://github.com/codacy/codacy-analysis-cli.
-
-name: Codacy Security Scan
-
-# Patched to handle multiple SARIF runs by assigning unique categories.
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
@@ -27,96 +13,32 @@ permissions:
   contents: read
 
 jobs:
-  codacy-security-scan:
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    name: Codacy Security Scan
+  codeql:
+    name: CodeQL Analysis
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript' ]
+
     steps:
-      # Checkout the repository to the GitHub Actions runner
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v6
 
-      # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
-      - name: Run Codacy Analysis CLI
-        uses: codacy/codacy-analysis-cli-action@master
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
         with:
-          # Run in standalone mode (no project-token) to force usage of .codacy.yml
-          # This prevents the CLI from fetching conflicting settings (like enabled Prospector/Trivy) from the Codacy UI.
-          verbose: true
-          output: results.sarif
-          format: sarif
-          # Adjust severity of non-security issues
-          gh-code-scanning-compat: true
-          # Force 0 exit code to allow SARIF file generation
-          # This will handover control about PR rejection to the GitHub side
-          max-allowed-issues: 2147483647
+          languages: ${{ matrix.language }}
 
-      # Split SARIF file into individual files per tool to avoid category conflicts
-      # GitHub Code Scanning no longer accepts multiple runs in a single SARIF file
-      - name: Split SARIF by tool and upload
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ ! -f results.sarif ]; then
-            echo "No SARIF file found."
-            exit 1
-          fi
-          
-          echo "Processing SARIF file..."
-          RUN_COUNT=$(jq '.runs | length' results.sarif)
-          echo "Found $RUN_COUNT runs in SARIF file"
-          
-          # If only one run, upload directly
-          if [ "$RUN_COUNT" -eq 1 ]; then
-            echo "Single run detected, uploading directly..."
-            TOOL_NAME=$(jq -r '.runs[0].tool.driver.name // "codacy"' results.sarif | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
-            
-            # Compress and encode
-            SARIF_CONTENT=$(gzip -c results.sarif | base64 -w0)
-            
-            gh api \
-              --method POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "/repos/${{ github.repository }}/code-scanning/sarifs" \
-              -f "commit_sha=${{ github.sha }}" \
-              -f "ref=${{ github.ref }}" \
-              -f "sarif=$SARIF_CONTENT"
-          else
-            # Extract and upload each run separately
-            for i in $(seq 0 $((RUN_COUNT - 1))); do
-              # Get tool name and append index to ensure uniqueness (required by GitHub Code Scanning)
-              BASE_TOOL_NAME=$(jq -r ".runs[$i].tool.driver.name // \"tool\"" results.sarif | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
-              TOOL_NAME="${BASE_TOOL_NAME}-${i}"
-              
-              echo "Processing run $i: $TOOL_NAME"
-              
-              # Extract single run to temp file
-              jq --argjson idx "$i" '{
-                "$schema": ."$schema",
-                version: .version,
-                runs: [.runs[$idx]]
-              }' results.sarif > "run-${i}.sarif"
-              
-              # Compress and encode
-              SARIF_CONTENT=$(gzip -c "run-${i}.sarif" | base64 -w0)
-              
-              echo "Uploading run $i ($TOOL_NAME)..."
-              gh api \
-                --method POST \
-                -H "Accept: application/vnd.github+json" \
-                -H "X-GitHub-Api-Version: 2022-11-28" \
-                "/repos/${{ github.repository }}/code-scanning/sarifs" \
-                -f "commit_sha=${{ github.sha }}" \
-                -f "ref=${{ github.ref }}" \
-                -f "sarif=$SARIF_CONTENT" \
-                -f "tool_name=${TOOL_NAME}" || echo "Warning: Failed to upload run $i"
-              
-              rm -f "run-${i}.sarif"
-            done
-          fi
-          
-          echo "Upload complete."
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
