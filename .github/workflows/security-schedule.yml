@@ -54,7 +54,7 @@ jobs:
         run: docker build -t cedrus:latest .
 
       - name: Run Trivy Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'cedrus:latest'
           format: 'table'
