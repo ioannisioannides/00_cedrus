@@ -130,6 +130,22 @@ ignore_missing_imports = true
 [tool.django-stubs]
 django_settings_module = "cedrus.settings"
 
+[tool.bandit]
+exclude_dirs = [
+    "tests",
+    ".venv",
+    "venv",
+    "htmlcov",
+]
+
+[tool.bandit.assert_used]
+skips = [
+    "**/test_*.py",
+    "**/*_test.py",
+    "**/tests/**",
+    "conftest.py",
+]
+
 [dependency-groups]
 dev = [
     "axe-playwright-python>=0.1.7",
