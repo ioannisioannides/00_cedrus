@@ -152,23 +152,24 @@ jobs:
           echo "url=https://staging.cedrus.yourdomain.com" >> $GITHUB_OUTPUT
         fi
     
-    - name: Set up Python
-      uses: actions/setup-python@v6
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
+        version: "latest"
+        enable-cache: false
+    
+    - name: Set up Python
+      run: uv python install ${{ env.PYTHON_VERSION }}
     
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      run: uv sync --all-extras --dev
     
     - name: Run Django checks
       env:
         DJANGO_SECRET_KEY: rollback-validation-key-not-for-production
         DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
       run: |
-        python manage.py check --settings=cedrus.settings_production || true
+        uv run python manage.py check --settings=cedrus.settings_production || true
     
     - name: Execute rollback deployment
       env:
