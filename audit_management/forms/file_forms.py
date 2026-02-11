@@ -2,7 +2,10 @@
 Forms for evidence file management.
 """
 
+import os
+
 from django import forms
+from django.conf import settings
 
 from audit_management.models import EvidenceFile
 
@@ -17,7 +20,7 @@ class EvidenceFileForm(forms.ModelForm):
             "file": forms.FileInput(
                 attrs={
                     "class": "form-control",
-                    "accept": ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png",
+                    "accept": ",".join(settings.EVIDENCE_ALLOWED_EXTENSIONS),
                 }
             ),
             "finding": forms.Select(attrs={"class": "form-select"}),
@@ -40,14 +43,16 @@ class EvidenceFileForm(forms.ModelForm):
     def clean_file(self):
         file = self.cleaned_data.get("file")
         if file:
-            # Check file size (10MB limit)
-            if file.size > 10 * 1024 * 1024:
-                raise forms.ValidationError("File size cannot exceed 10MB.")
+            # Check file size
+            max_size = settings.EVIDENCE_MAX_FILE_SIZE
+            if file.size > max_size:
+                max_mb = max_size / (1024 * 1024)
+                raise forms.ValidationError(f"File size cannot exceed {max_mb:.0f}MB.")
 
             # Check file extension
-            allowed_extensions = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png"]
-            file_ext = file.name.lower().split(".")[-1] if "." in file.name else ""
-            if file_ext not in [ext.lstrip(".") for ext in allowed_extensions]:
+            allowed_extensions = settings.EVIDENCE_ALLOWED_EXTENSIONS
+            file_ext = os.path.splitext(file.name)[1].lower()
+            if file_ext not in allowed_extensions:
                 raise forms.ValidationError(f"File type not allowed. Allowed types: {', '.join(allowed_extensions)}")
 
         return file

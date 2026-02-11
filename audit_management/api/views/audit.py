@@ -708,11 +708,27 @@ def evidence_file_download(request, file_pk):
 @login_required
 def evidence_file_delete(request, file_pk):
     """Delete an evidence file."""
+    from django.http import Http404
+
     evidence_file = get_object_or_404(EvidenceFile, pk=file_pk)
     audit = evidence_file.audit
 
-    # Permission check - uploader or CB Admin can delete
+    # First verify the user has access to this audit (cross-audit isolation)
     user = request.user
+    has_audit_access = False
+
+    if user.groups.filter(name="cb_admin").exists():
+        has_audit_access = True
+    elif user.groups.filter(name__in=["lead_auditor", "auditor"]).exists():
+        has_audit_access = audit.lead_auditor == user or audit.team_members.filter(user=user).exists()
+    elif user.groups.filter(name__in=["client_admin", "client_user"]).exists():
+        if hasattr(user, "profile") and user.profile.organization:
+            has_audit_access = audit.organization == user.profile.organization
+
+    if not has_audit_access:
+        raise Http404("File not found or access denied.")
+
+    # Permission check - uploader or CB Admin can delete
     can_delete = user.groups.filter(name="cb_admin").exists() or evidence_file.uploaded_by == user
 
     if not can_delete:

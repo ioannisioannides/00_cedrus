@@ -830,33 +830,21 @@ class EvidenceFile(models.Model):
         """Validate file uploads."""
         import os
 
+        from django.conf import settings
         from django.core.exceptions import ValidationError
 
         if self.file:
-            # Validate file size (10MB max)
-            max_size = 10 * 1024 * 1024  # 10MB in bytes
+            # Validate file size
+            max_size = settings.EVIDENCE_MAX_FILE_SIZE
             if self.file.size > max_size:
+                max_mb = max_size / (1024 * 1024)
+                cur_mb = self.file.size / (1024 * 1024)
                 raise ValidationError(
-                    {"file": f"File size must not exceed 10MB. Current size: {self.file.size / (1024 * 1024):.2f}MB"}
+                    {"file": f"File size must not exceed {max_mb:.0f}MB. Current size: {cur_mb:.2f}MB"}
                 )
 
             # Validate file type
-            allowed_extensions = [
-                ".pdf",
-                ".jpg",
-                ".jpeg",
-                ".png",
-                ".gif",
-                ".bmp",
-                ".doc",
-                ".docx",
-                ".xls",
-                ".xlsx",
-                ".ppt",
-                ".pptx",
-                ".txt",
-                ".csv",
-            ]
+            allowed_extensions = settings.EVIDENCE_ALLOWED_EXTENSIONS
             file_ext = os.path.splitext(self.file.name)[1].lower()
             if file_ext not in allowed_extensions:
                 raise ValidationError(
