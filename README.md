@@ -220,24 +220,40 @@ Follow the prompts to create an administrator account.
 
 #### 5. Seed Initial Data (Optional)
 
+Set demo-user passwords via environment variables, then run the seed command:
+
 ```bash
+export DEMO_CBADMIN_PASSWORD="YourStrongPassword1!"
+export DEMO_AUDITOR_PASSWORD="YourStrongPassword2!"
+export DEMO_TECHREVIEWER_PASSWORD="YourStrongPassword3!"
+export DEMO_DECISIONMAKER_PASSWORD="YourStrongPassword4!"
+export DEMO_CLIENTADMIN_PASSWORD="YourStrongPassword5!"
+
 uv run manage.py seed_data
 ```
 
 This command creates:
 
-- User groups (cb_admin, lead_auditor, auditor, client_admin, client_user)
-- Sample users for each role
+- User groups (cb_admin, lead_auditor, auditor, technical_reviewer, decision_maker, client_admin, client_user)
+- Sample users for each role (passwords from `DEMO_*_PASSWORD` env vars)
 - Sample organization, site, standard, and certification
 - Sample audit in "draft" status
 
-**Default Test Credentials** (after seeding):
+**Demo Users** (after seeding):
 
-- **CB Admin**: `cbadmin` / `password123`
-- **Lead Auditor**: `auditor1` / `password123`
-- **Client Admin**: `clientadmin` / `password123`
+| Role | Username | Password source |
+|---|---|---|
+| CB Admin | `cbadmin` | `$DEMO_CBADMIN_PASSWORD` |
+| Lead Auditor | `auditor1` | `$DEMO_AUDITOR_PASSWORD` |
+| Technical Reviewer | `techreviewer` | `$DEMO_TECHREVIEWER_PASSWORD` |
+| Decision Maker | `decisionmaker` | `$DEMO_DECISIONMAKER_PASSWORD` |
+| Client Admin | `clientadmin` | `$DEMO_CLIENTADMIN_PASSWORD` |
 
-⚠️ **Security Warning**: Change all default passwords in production!
+> **Tip:** You can also use `manage.py seed_demo_users` to create/update demo
+> users independently (supports `--force-update` to reset passwords).
+>
+> If an env var is not set, the user is created with an unusable password.
+> Reset it later with `manage.py changepassword <username>`.
 
 #### 6. Run Development Server
 

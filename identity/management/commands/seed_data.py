@@ -3,15 +3,23 @@ Django management command to seed initial data.
 
 Creates:
 - User groups (cb_admin, lead_auditor, auditor, client_admin, client_user)
-- Sample users for each role
+- Sample users for each role (passwords read from environment variables)
 - Sample organization, site, standard, and certification
 - Sample audit in "draft" status
+
+Environment variables for demo user passwords:
+    DEMO_CBADMIN_PASSWORD, DEMO_AUDITOR_PASSWORD,
+    DEMO_TECHREVIEWER_PASSWORD, DEMO_DECISIONMAKER_PASSWORD,
+    DEMO_CLIENTADMIN_PASSWORD
+
+If a password env-var is not set, the user is created with a random
+unusable password (you can reset it later with ``manage.py changepassword``).
 """
 
+import os
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group, User
-from django.contrib.auth.password_validation import validate_password
 from django.core.management.base import BaseCommand
 
 from audit_management.models import Audit
@@ -49,7 +57,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("✓ Created user groups"))
         return groups
 
-    def _create_user(self, username, email, first_name, last_name, group):  # pylint: disable=too-many-positional-arguments
+    def _create_user(self, username, email, first_name, last_name, group, env_var):  # pylint: disable=too-many-positional-arguments
         user, created = User.objects.get_or_create(
             username=username,
             defaults={
@@ -59,25 +67,32 @@ class Command(BaseCommand):
             },
         )
         if created:
-            password = "password123"  # noqa: S105 # nosec
-            try:
-                validate_password(password, user)
-            except Exception as e:  # pylint: disable=broad-except
-                # In development seeding, we might use weak passwords
-                # but we should still validate them in principle
-                self.stdout.write(self.style.WARNING(f"  Password validation warning: {e}"))
-            user.set_password(password)
+            password = os.environ.get(env_var)
+            if password:
+                user.set_password(password)
+                self.stdout.write(
+                    self.style.SUCCESS(f"✓ Created {first_name} {last_name} ({username}) — password from ${env_var}")
+                )
+            else:
+                user.set_unusable_password()
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"✓ Created {first_name} {last_name} ({username}) — "
+                        f"no password (${env_var} not set, use 'manage.py changepassword {username}')"
+                    )
+                )
             user.save()
             user.groups.add(group)
-            self.stdout.write(self.style.SUCCESS(f"✓ Created {first_name} {last_name} ({username}/{password})"))
         else:
             self.stdout.write(self.style.WARNING(f"  {first_name} {last_name} already exists"))
         return user
 
     def _create_users(self, groups):
-        cb_admin = self._create_user("cbadmin", "cbadmin@cedrus.example", "CB", "Administrator", groups["cb_admin"])
+        cb_admin = self._create_user(
+            "cbadmin", "cbadmin@cedrus.example", "CB", "Administrator", groups["cb_admin"], "DEMO_CBADMIN_PASSWORD"
+        )
         lead_auditor = self._create_user(
-            "auditor1", "auditor1@cedrus.example", "Lead", "Auditor", groups["lead_auditor"]
+            "auditor1", "auditor1@cedrus.example", "Lead", "Auditor", groups["lead_auditor"], "DEMO_AUDITOR_PASSWORD"
         )
         tech_reviewer = self._create_user(
             "techreviewer",
@@ -85,6 +100,7 @@ class Command(BaseCommand):
             "Technical",
             "Reviewer",
             groups["technical_reviewer"],
+            "DEMO_TECHREVIEWER_PASSWORD",
         )
         decision_maker = self._create_user(
             "decisionmaker",
@@ -92,6 +108,7 @@ class Command(BaseCommand):
             "Decision",
             "Maker",
             groups["decision_maker"],
+            "DEMO_DECISIONMAKER_PASSWORD",
         )
         client_admin = self._create_user(
             "clientadmin",
@@ -99,6 +116,7 @@ class Command(BaseCommand):
             "Client",
             "Administrator",
             groups["client_admin"],
+            "DEMO_CLIENTADMIN_PASSWORD",
         )
         return {
             "cb_admin": cb_admin,
@@ -209,9 +227,16 @@ class Command(BaseCommand):
 
     def _print_summary(self):
         self.stdout.write(self.style.SUCCESS("\n✓ Seeding complete!"))
-        self.stdout.write(self.style.SUCCESS("\nYou can now log in with:"))
-        self.stdout.write(self.style.SUCCESS("  - CB Admin: cbadmin / password123"))
-        self.stdout.write(self.style.SUCCESS("  - Lead Auditor: auditor1 / password123"))
-        self.stdout.write(self.style.SUCCESS("  - Technical Reviewer: techreviewer / password123"))
-        self.stdout.write(self.style.SUCCESS("  - Decision Maker: decisionmaker / password123"))
-        self.stdout.write(self.style.SUCCESS("  - Client Admin: clientadmin / password123"))
+        self.stdout.write(self.style.SUCCESS("\nDemo users:"))
+        self.stdout.write(self.style.SUCCESS("  - CB Admin:           cbadmin"))
+        self.stdout.write(self.style.SUCCESS("  - Lead Auditor:       auditor1"))
+        self.stdout.write(self.style.SUCCESS("  - Technical Reviewer: techreviewer"))
+        self.stdout.write(self.style.SUCCESS("  - Decision Maker:     decisionmaker"))
+        self.stdout.write(self.style.SUCCESS("  - Client Admin:       clientadmin"))
+        self.stdout.write("")
+        self.stdout.write(
+            self.style.WARNING(
+                "Passwords were set from DEMO_*_PASSWORD environment variables.\n"
+                "If a password was not set, use: manage.py changepassword <username>"
+            )
+        )

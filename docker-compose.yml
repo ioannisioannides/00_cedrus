@@ -180,6 +180,9 @@ services:
       echo '🔄 Collecting static files...' &&
       python manage.py collectstatic --noinput &&
       echo '✅ Static files collected!' &&
+      echo '🔄 Seeding demo users...' &&
+      python manage.py seed_demo_users &&
+      echo '✅ Demo users ready!' &&
       echo '🚀 Starting Django development server...' &&
       python manage.py runserver 0.0.0.0:8000
       "
@@ -201,6 +204,13 @@ services:
       
       # Email (console backend for development)
       EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
+      
+      # Demo user passwords (read from host .env or shell)
+      DEMO_CBADMIN_PASSWORD: "${DEMO_CBADMIN_PASSWORD:-}"
+      DEMO_AUDITOR_PASSWORD: "${DEMO_AUDITOR_PASSWORD:-}"
+      DEMO_TECHREVIEWER_PASSWORD: "${DEMO_TECHREVIEWER_PASSWORD:-}"
+      DEMO_DECISIONMAKER_PASSWORD: "${DEMO_DECISIONMAKER_PASSWORD:-}"
+      DEMO_CLIENTADMIN_PASSWORD: "${DEMO_CLIENTADMIN_PASSWORD:-}"
       
       # Static/Media files (local storage)
       MEDIA_ROOT: "/app/media"
