@@ -128,10 +128,10 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=cedrus.settings \
-    # Security: Disable Python hash randomization for reproducibility
+    # Security: Enable Python hash randomization
     PYTHONHASHSEED=random \
-    # Performance: Python optimization level
-    PYTHONOPTIMIZE=1 \
+    # NOTE: Do NOT set PYTHONOPTIMIZE=1 — it strips assert statements,
+    # which breaks any runtime validation that uses assert.
     # Locale
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
