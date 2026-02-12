@@ -5,6 +5,10 @@ import pytest
 # Allow synchronous Django DB operations in async contexts (like Playwright tests)
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
+# Ensure tests always use SQLite, even when .env sets DATABASE_URL for Docker/Postgres.
+# This must happen before Django settings are imported.
+os.environ.pop("DATABASE_URL", None)
+
 
 @pytest.fixture(autouse=True)
 def enable_celery_always_eager(settings):
