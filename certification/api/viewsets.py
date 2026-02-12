@@ -43,9 +43,9 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         return ComplaintSerializer
 
     def get_queryset(self):
-        queryset = Complaint.objects.select_related(
-            "organization", "submitted_by", "assigned_investigator"
-        ).order_by("-submitted_at")
+        queryset = Complaint.objects.select_related("organization", "submitted_by", "assigned_investigator").order_by(
+            "-submitted_at"
+        )
         status_filter = self.request.query_params.get("status")
         if status_filter:
             queryset = queryset.filter(status=status_filter)
@@ -69,9 +69,9 @@ class AppealViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsCBStaff]
 
     def get_queryset(self):
-        queryset = Appeal.objects.select_related(
-            "submitted_by", "related_complaint", "related_decision"
-        ).order_by("-submitted_at")
+        queryset = Appeal.objects.select_related("submitted_by", "related_complaint", "related_decision").order_by(
+            "-submitted_at"
+        )
         status_filter = self.request.query_params.get("status")
         if status_filter:
             queryset = queryset.filter(status=status_filter)

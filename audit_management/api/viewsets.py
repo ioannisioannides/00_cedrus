@@ -138,7 +138,9 @@ class AuditViewSet(viewsets.ModelViewSet):
 
         valid_statuses = [s[0] for s in Audit.STATUS_CHOICES]
         if new_status not in valid_statuses:
-            return Response({"error": f"Invalid status. Choose from: {valid_statuses}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": f"Invalid status. Choose from: {valid_statuses}"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         old_status = audit.status
         audit.status = new_status

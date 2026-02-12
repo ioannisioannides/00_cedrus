@@ -165,6 +165,7 @@ testpaths = [
     "trunk/tests",
     "trunk/workflows/tests",
     "audit_management/tests",
+    "certification/tests",
     "cedrus/tests",
 ]
 console_output_style = "progress"
