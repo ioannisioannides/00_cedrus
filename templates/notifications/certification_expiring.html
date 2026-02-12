@@ -1,0 +1,21 @@
+{% extends "notifications/base_email.html" %}
+
+{% block content %}
+<h2>Certification Expiring Soon</h2>
+<p>The following certification is approaching its expiry date:</p>
+
+<div class="detail">
+  <dl>
+    <dt>Organization:</dt><dd>{{ certification.organization.name }}</dd><br>
+    <dt>Standard:</dt><dd>{{ certification.standard.code }}</dd><br>
+    <dt>Certificate ID:</dt><dd>{{ certification.certificate_id }}</dd><br>
+    <dt>Expiry Date:</dt><dd><strong>{{ certification.expiry_date|date:"d M Y" }}</strong></dd>
+  </dl>
+</div>
+
+<p>Please ensure timely recertification to avoid a lapse in certification status.</p>
+
+{% if site_url %}
+<a class="btn" href="{{ site_url }}/core/certifications/">View Certifications</a>
+{% endif %}
+{% endblock %}

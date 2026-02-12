@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'IBM Plex Sans', Arial, sans-serif; color: #161616; margin: 0; padding: 0; background: #f4f4f4; }
+    .container { max-width: 600px; margin: 24px auto; background: #fff; border: 1px solid #e0e0e0; }
+    .header { background: #0f62fe; color: #fff; padding: 16px 24px; font-size: 18px; font-weight: 600; }
+    .body { padding: 24px; line-height: 1.6; }
+    .body h2 { font-size: 16px; margin-top: 0; }
+    .detail { background: #f4f4f4; padding: 12px 16px; margin: 12px 0; border-left: 3px solid #0f62fe; }
+    .detail dt { font-weight: 600; display: inline; }
+    .detail dd { display: inline; margin-left: 4px; }
+    .btn { display: inline-block; background: #0f62fe; color: #fff; text-decoration: none; padding: 10px 20px; margin-top: 16px; font-weight: 600; }
+    .footer { padding: 16px 24px; font-size: 12px; color: #6f6f6f; border-top: 1px solid #e0e0e0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Cedrus – Audit Notification</div>
+    <div class="body">
+      {% block content %}{% endblock %}
+    </div>
+    <div class="footer">
+      This is an automated notification from the Cedrus Certification Management Platform.
+      Please do not reply to this email.
+    </div>
+  </div>
+</body>
+</html>

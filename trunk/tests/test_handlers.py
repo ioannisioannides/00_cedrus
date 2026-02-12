@@ -185,8 +185,9 @@ class TestEventHandlers:
             {"nc_id": 10},
         )
 
+    @patch("trunk.events.handlers.NotificationService")
     @patch("trunk.events.handlers.apps.get_model")
-    def test_on_complaint_received(self, mock_get_model):
+    def test_on_complaint_received(self, mock_get_model, mock_notification):
         # Setup
         mock_complaint_model = MagicMock()
         mock_complaint = MagicMock()
@@ -203,6 +204,7 @@ class TestEventHandlers:
 
         # Verify
         mock_complaint_model.objects.get.assert_called_once_with(id=100)
+        mock_notification.notify_complaint_received.assert_called_once_with(payload)
 
     @patch("trunk.events.handlers.apps.get_model")
     def test_on_appeal_received(self, mock_get_model):
@@ -248,4 +250,4 @@ class TestEventHandlers:
         register_event_handlers()
 
         # Verify
-        assert mock_dispatcher.register.call_count == 4
+        assert mock_dispatcher.register.call_count == 9

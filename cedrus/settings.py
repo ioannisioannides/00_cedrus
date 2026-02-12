@@ -374,6 +374,27 @@ else:
     }
 
 # =============================================================================
+# EMAIL CONFIGURATION
+# =============================================================================
+
+# Use SMTP when EMAIL_HOST is set, otherwise console backend for development
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
+if EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("true", "1")
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@cedrus.local")
+SERVER_EMAIL = os.environ.get("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
+
+# Base URL for email links (e.g., 'https://app.cedrus.io')
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
+
+# =============================================================================
 # DATABASE (PostgreSQL when DATABASE_URL is set, SQLite fallback)
 # =============================================================================
 

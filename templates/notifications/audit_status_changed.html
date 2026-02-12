@@ -1,0 +1,19 @@
+{% extends "notifications/base_email.html" %}
+
+{% block content %}
+<h2>Audit Status Update</h2>
+<p>The status of the following audit has been updated:</p>
+
+<div class="detail">
+  <dl>
+    <dt>Organization:</dt><dd>{{ audit.organization.name }}</dd><br>
+    <dt>Audit Type:</dt><dd>{{ audit.get_audit_type_display }}</dd><br>
+    <dt>New Status:</dt><dd><strong>{{ new_status }}</strong></dd><br>
+    <dt>Dates:</dt><dd>{{ audit.total_audit_date_from|date:"d M Y" }} – {{ audit.total_audit_date_to|date:"d M Y" }}</dd>
+  </dl>
+</div>
+
+{% if site_url %}
+<a class="btn" href="{{ site_url }}/audits/{{ audit.id }}/">View Audit</a>
+{% endif %}
+{% endblock %}

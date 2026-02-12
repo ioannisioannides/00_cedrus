@@ -1,0 +1,19 @@
+{% extends "notifications/base_email.html" %}
+
+{% block content %}
+<h2>New Complaint Received</h2>
+<p>A new complaint has been submitted and requires investigation:</p>
+
+<div class="detail">
+  <dl>
+    <dt>Complaint #:</dt><dd>{{ complaint.complaint_number }}</dd><br>
+    <dt>Type:</dt><dd>{{ complaint.get_complaint_type_display }}</dd><br>
+    <dt>Complainant:</dt><dd>{{ complaint.complainant_name }}</dd><br>
+    <dt>Description:</dt><dd>{{ complaint.description|truncatewords:50 }}</dd>
+  </dl>
+</div>
+
+{% if site_url %}
+<a class="btn" href="{{ site_url }}/certification/complaints/">Review Complaints</a>
+{% endif %}
+{% endblock %}

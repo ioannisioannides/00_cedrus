@@ -1,0 +1,24 @@
+{% extends "notifications/base_email.html" %}
+
+{% block content %}
+<h2>Certification Decision Made</h2>
+<p>A certification decision has been made for the following audit:</p>
+
+<div class="detail">
+  <dl>
+    <dt>Organization:</dt><dd>{{ audit.organization.name }}</dd><br>
+    <dt>Audit Type:</dt><dd>{{ audit.get_audit_type_display }}</dd><br>
+    <dt>Decision:</dt><dd><strong>{{ decision.get_decision_display }}</strong></dd><br>
+    <dt>Decision Maker:</dt><dd>{{ decision.decision_maker.get_full_name }}</dd><br>
+    <dt>Date:</dt><dd>{{ decision.decided_at|date:"d M Y" }}</dd>
+  </dl>
+</div>
+
+{% if decision.decision_notes %}
+<p><strong>Notes:</strong> {{ decision.decision_notes|truncatewords:60 }}</p>
+{% endif %}
+
+{% if site_url %}
+<a class="btn" href="{{ site_url }}/audits/{{ audit.id }}/">View Audit</a>
+{% endif %}
+{% endblock %}

@@ -37,6 +37,10 @@ urlpatterns = [
     path("audits/", include("audit_management.urls")),
     path("certification/", include("certification.urls")),
     path("reporting/", include("reporting.urls")),
+    # REST API v1
+    path("api/v1/", include("core.api.urls")),
+    path("api/v1/audit-management/", include("audit_management.api.rest_urls")),
+    path("api/v1/certification/", include("certification.api.rest_urls")),
     # API Documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

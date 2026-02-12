@@ -1,0 +1,22 @@
+{% extends "notifications/base_email.html" %}
+
+{% block content %}
+<h2>Nonconformity Raised</h2>
+<p>A new nonconformity has been raised against your organization's audit:</p>
+
+<div class="detail">
+  <dl>
+    <dt>Organization:</dt><dd>{{ audit.organization.name }}</dd><br>
+    <dt>Category:</dt><dd><strong>{{ nc.get_category_display }} NC</strong></dd><br>
+    <dt>Standard:</dt><dd>{{ nc.standard.code|default:"—" }}</dd><br>
+    <dt>Clause:</dt><dd>{{ nc.clause }}</dd><br>
+    <dt>Statement:</dt><dd>{{ nc.statement_of_nc|truncatewords:40 }}</dd>
+  </dl>
+</div>
+
+<p>Please log in to review the finding and submit your corrective action response.</p>
+
+{% if site_url %}
+<a class="btn" href="{{ site_url }}/audits/{{ audit.id }}/findings/">View Findings</a>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "notifications/base_email.html" %}
+
+{% block content %}
+<h2>Corrective Action Response Required</h2>
+<p>A nonconformity requires your response:</p>
+
+<div class="detail">
+  <dl>
+    <dt>Organization:</dt><dd>{{ audit.organization.name }}</dd><br>
+    <dt>Category:</dt><dd><strong>{{ nc.get_category_display }} NC</strong></dd><br>
+    <dt>Clause:</dt><dd>{{ nc.clause }}</dd><br>
+    {% if nc.due_date %}
+    <dt>Due Date:</dt><dd>{{ nc.due_date|date:"d M Y" }}</dd>
+    {% endif %}
+  </dl>
+</div>
+
+<p>Please log in and provide your root cause analysis, correction, and corrective action plan.</p>
+
+{% if site_url %}
+<a class="btn" href="{{ site_url }}/audits/{{ audit.id }}/findings/">Respond Now</a>
+{% endif %}
+{% endblock %}

@@ -10,6 +10,7 @@ import logging
 from django.apps import apps
 
 from trunk.events import EventType, event_dispatcher
+from trunk.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +111,10 @@ def on_complaint_received(payload):
         logger.info("Complaint %s received from %s", complaint.complaint_number, complaint.complainant_name)
     except Complaint.DoesNotExist:
         logger.error("Complaint %s not found", complaint_id)
+        return
+
+    # Send email notification to CB admins
+    NotificationService.notify_complaint_received(payload)
 
 
 def on_appeal_received(payload):
@@ -134,14 +139,56 @@ def on_certificate_history_created(payload):
         logger.error("CertificateHistory %s not found", history_id)
 
 
+# ------------------------------------------------------------------
+# Email notification handlers
+# ------------------------------------------------------------------
+
+
+def on_audit_created_notify(payload):
+    """Send notification when a new audit is created with a lead auditor."""
+    NotificationService.notify_audit_assigned(payload)
+
+
+def on_audit_status_changed_notify(payload):
+    """Send notification when audit status changes."""
+    NotificationService.notify_audit_status_changed(payload)
+
+
+def on_finding_created_notify(payload):
+    """Send notification when a nonconformity is raised."""
+    finding_type = payload.get("finding_type", "")
+    if finding_type == "nonconformity":
+        NotificationService.notify_nc_raised(payload)
+
+
+def on_nc_client_responded_notify(payload):
+    """Log when client responds to an NC — future: could notify auditor."""
+    nc_id = payload.get("nc_id")
+    logger.info("Client responded to NC %s", nc_id)
+
+
+def on_decision_made_notify(payload):
+    """Send notification when a certification decision is made."""
+    NotificationService.notify_decision_made(payload)
+
+
 def register_event_handlers():
     """
     Register all event handlers.
 
     Called from core.apps.CoreConfig.ready()
     """
+    # Core lifecycle handlers
     event_dispatcher.register(EventType.AUDIT_STATUS_CHANGED, on_audit_status_changed)
     event_dispatcher.register(EventType.COMPLAINT_RECEIVED, on_complaint_received)
     event_dispatcher.register(EventType.APPEAL_RECEIVED, on_appeal_received)
     event_dispatcher.register(EventType.CERTIFICATE_HISTORY_CREATED, on_certificate_history_created)
-    logger.info("Registered event handlers for audit lifecycle events")
+
+    # Email notification handlers
+    event_dispatcher.register(EventType.AUDIT_CREATED, on_audit_created_notify)
+    event_dispatcher.register(EventType.AUDIT_STATUS_CHANGED, on_audit_status_changed_notify)
+    event_dispatcher.register(EventType.FINDING_CREATED, on_finding_created_notify)
+    event_dispatcher.register(EventType.NC_CLIENT_RESPONDED, on_nc_client_responded_notify)
+    event_dispatcher.register(EventType.CERTIFICATION_DECISION_MADE, on_decision_made_notify)
+
+    logger.info("Registered event handlers for audit lifecycle events and email notifications")

@@ -1,0 +1,20 @@
+{% extends "notifications/base_email.html" %}
+
+{% block content %}
+<h2>Audit Assigned to You</h2>
+<p>Hello {{ recipient.first_name|default:"Auditor" }},</p>
+<p>You have been assigned as <strong>Lead Auditor</strong> for the following audit:</p>
+
+<div class="detail">
+  <dl>
+    <dt>Organization:</dt><dd>{{ audit.organization.name }}</dd><br>
+    <dt>Audit Type:</dt><dd>{{ audit.get_audit_type_display }}</dd><br>
+    <dt>Dates:</dt><dd>{{ audit.total_audit_date_from|date:"d M Y" }} – {{ audit.total_audit_date_to|date:"d M Y" }}</dd><br>
+    <dt>Status:</dt><dd>{{ audit.get_status_display }}</dd>
+  </dl>
+</div>
+
+{% if site_url %}
+<a class="btn" href="{{ site_url }}/audits/{{ audit.id }}/">View Audit</a>
+{% endif %}
+{% endblock %}
