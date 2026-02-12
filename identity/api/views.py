@@ -76,7 +76,9 @@ def dashboard_cb(request):
         "organizations_count": Organization.objects.count(),
         "certifications_count": Certification.objects.count(),
         "audits_count": Audit.objects.count(),
-        "recent_audits": Audit.objects.all()[:5],
+        "recent_audits": Audit.objects.select_related(
+            "organization", "lead_auditor"
+        ).order_by("-created_at")[:5],
     }
     return render(request, "identity/dashboard_cb.html", context)
 
@@ -95,6 +97,7 @@ def dashboard_auditor(request):
     # Show audits where user is lead auditor or team member
     all_audits = (
         Audit.objects.filter(Q(lead_auditor=request.user) | Q(team_members__user=request.user))
+        .select_related("organization", "lead_auditor")
         .distinct()
         .order_by("-total_audit_date_from")
     )
@@ -123,7 +126,9 @@ def dashboard_client(request):
     organization = None
     if hasattr(request.user, "profile") and request.user.profile.organization:
         organization = request.user.profile.organization
-        audits = Audit.objects.filter(organization=organization).order_by("-total_audit_date_from")
+        audits = Audit.objects.filter(organization=organization).select_related(
+            "organization", "lead_auditor"
+        ).order_by("-total_audit_date_from")
     else:
         audits = Audit.objects.none()
 
