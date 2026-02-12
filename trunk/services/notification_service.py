@@ -120,7 +120,9 @@ class NotificationService:
                 organization=nc.audit.organization,
                 user__groups__name__in=["client_admin", "client_user"],
                 user__email__gt="",
-            ).values_list("user__email", flat=True).distinct()
+            )
+            .values_list("user__email", flat=True)
+            .distinct()
         )
 
         if not client_emails:
@@ -158,7 +160,9 @@ class NotificationService:
                 organization=nc.audit.organization,
                 user__groups__name__in=["client_admin", "client_user"],
                 user__email__gt="",
-            ).values_list("user__email", flat=True).distinct()
+            )
+            .values_list("user__email", flat=True)
+            .distinct()
         )
 
         if not client_emails:
@@ -200,7 +204,9 @@ class NotificationService:
                 organization=cert.organization,
                 user__groups__name__in=["client_admin", "client_user"],
                 user__email__gt="",
-            ).values_list("user__email", flat=True).distinct()
+            )
+            .values_list("user__email", flat=True)
+            .distinct()
         )
 
         if not client_emails:
@@ -280,11 +286,15 @@ class NotificationService:
 
         # Also notify client contacts
         Profile = apps.get_model("identity", "Profile")
-        client_emails = Profile.objects.filter(
-            organization=audit.organization,
-            user__groups__name__in=["client_admin"],
-            user__email__gt="",
-        ).values_list("user__email", flat=True).distinct()
+        client_emails = (
+            Profile.objects.filter(
+                organization=audit.organization,
+                user__groups__name__in=["client_admin"],
+                user__email__gt="",
+            )
+            .values_list("user__email", flat=True)
+            .distinct()
+        )
         recipients.update(client_emails)
 
         if not recipients:

@@ -54,21 +54,31 @@ class AuditAPITestBase(TestCase):
         )
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management")
         self.certification = Certification.objects.create(
-            organization=self.org, standard=self.standard, certificate_id="CERT-001",
-            issue_date=date(2025, 1, 1), expiry_date=date(2028, 1, 1),
+            organization=self.org,
+            standard=self.standard,
+            certificate_id="CERT-001",
+            issue_date=date(2025, 1, 1),
+            expiry_date=date(2028, 1, 1),
         )
         self.site = Site.objects.create(organization=self.org, site_name="HQ", site_address="addr")
 
         # Audit data
         self.program = AuditProgram.objects.create(
-            organization=self.org, title="2025 Program", year=2025,
-            objectives="Quality objectives", risks_opportunities="Risks",
+            organization=self.org,
+            title="2025 Program",
+            year=2025,
+            objectives="Quality objectives",
+            risks_opportunities="Risks",
             created_by=self.admin_user,
         )
         self.audit = Audit.objects.create(
-            program=self.program, organization=self.org, audit_type="stage1",
-            total_audit_date_from=date(2025, 3, 1), total_audit_date_to=date(2025, 3, 5),
-            created_by=self.admin_user, lead_auditor=self.lead_auditor_user,
+            program=self.program,
+            organization=self.org,
+            audit_type="stage1",
+            total_audit_date_from=date(2025, 3, 1),
+            total_audit_date_to=date(2025, 3, 5),
+            created_by=self.admin_user,
+            lead_auditor=self.lead_auditor_user,
         )
 
 
@@ -86,26 +96,44 @@ class TestIsAuditorOrAdminPermission(AuditAPITestBase):
 
     def test_regular_user_cannot_create(self):
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.post("/api/v1/audit-management/programs/", {
-            "organization": self.org.pk, "title": "Test", "year": 2026,
-            "objectives": "obj", "risks_opportunities": "risk",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/programs/",
+            {
+                "organization": self.org.pk,
+                "title": "Test",
+                "year": 2026,
+                "objectives": "obj",
+                "risks_opportunities": "risk",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_auditor_can_create(self):
         self.client.force_authenticate(user=self.auditor_user)
-        response = self.client.post("/api/v1/audit-management/programs/", {
-            "organization": self.org.pk, "title": "Auditor Program", "year": 2026,
-            "objectives": "obj", "risks_opportunities": "risk",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/programs/",
+            {
+                "organization": self.org.pk,
+                "title": "Auditor Program",
+                "year": 2026,
+                "objectives": "obj",
+                "risks_opportunities": "risk",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_lead_auditor_can_create(self):
         self.client.force_authenticate(user=self.lead_auditor_user)
-        response = self.client.post("/api/v1/audit-management/programs/", {
-            "organization": self.org.pk, "title": "Lead Program", "year": 2026,
-            "objectives": "obj", "risks_opportunities": "risk",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/programs/",
+            {
+                "organization": self.org.pk,
+                "title": "Lead Program",
+                "year": 2026,
+                "objectives": "obj",
+                "risks_opportunities": "risk",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -132,10 +160,16 @@ class TestAuditProgramViewSet(AuditAPITestBase):
 
     def test_create_sets_created_by(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/audit-management/programs/", {
-            "organization": self.org.pk, "title": "New", "year": 2026,
-            "objectives": "obj", "risks_opportunities": "risk",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/programs/",
+            {
+                "organization": self.org.pk,
+                "title": "New",
+                "year": 2026,
+                "objectives": "obj",
+                "risks_opportunities": "risk",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         program = AuditProgram.objects.get(pk=response.data["id"])
         self.assertEqual(program.created_by, self.admin_user)
@@ -196,10 +230,15 @@ class TestAuditViewSet(AuditAPITestBase):
     def test_create_audit(self):
         self.client.force_authenticate(user=self.admin_user)
         count_before = Audit.objects.count()
-        response = self.client.post("/api/v1/audit-management/audits/", {
-            "organization": self.org.pk, "audit_type": "surveillance",
-            "total_audit_date_from": "2025-06-01", "total_audit_date_to": "2025-06-05",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/audits/",
+            {
+                "organization": self.org.pk,
+                "audit_type": "surveillance",
+                "total_audit_date_from": "2025-06-01",
+                "total_audit_date_to": "2025-06-05",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Audit.objects.count(), count_before + 1)
         audit = Audit.objects.latest("pk")
@@ -207,13 +246,21 @@ class TestAuditViewSet(AuditAPITestBase):
 
     def test_findings_action(self):
         Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.1",
-            category="major", objective_evidence="evidence", statement_of_nc="statement",
-            auditor_explanation="explanation", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.1",
+            category="major",
+            objective_evidence="evidence",
+            statement_of_nc="statement",
+            auditor_explanation="explanation",
+            created_by=self.admin_user,
         )
         Observation.objects.create(
-            audit=self.audit, standard=self.standard, clause="5.1",
-            statement="obs statement", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="5.1",
+            statement="obs statement",
+            created_by=self.admin_user,
         )
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get(f"/api/v1/audit-management/audits/{self.audit.pk}/findings/")
@@ -224,8 +271,12 @@ class TestAuditViewSet(AuditAPITestBase):
 
     def test_team_action(self):
         AuditTeamMember.objects.create(
-            audit=self.audit, user=self.lead_auditor_user, name="Lead",
-            role="lead_auditor", date_from=date(2025, 3, 1), date_to=date(2025, 3, 5),
+            audit=self.audit,
+            user=self.lead_auditor_user,
+            name="Lead",
+            role="lead_auditor",
+            date_from=date(2025, 3, 1),
+            date_to=date(2025, 3, 5),
         )
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get(f"/api/v1/audit-management/audits/{self.audit.pk}/team/")
@@ -234,9 +285,11 @@ class TestAuditViewSet(AuditAPITestBase):
 
     def test_evidence_action(self):
         EvidenceFile.objects.create(
-            audit=self.audit, uploaded_by=self.admin_user,
+            audit=self.audit,
+            uploaded_by=self.admin_user,
             file=SimpleUploadedFile("test.pdf", b"content"),
-            evidence_type="document", description="Test evidence",
+            evidence_type="document",
+            description="Test evidence",
         )
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get(f"/api/v1/audit-management/audits/{self.audit.pk}/evidence/")
@@ -276,9 +329,13 @@ class TestNonconformityViewSet(AuditAPITestBase):
     def setUp(self):
         super().setUp()
         self.nc = Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.1",
-            category="major", objective_evidence="evidence",
-            statement_of_nc="statement", auditor_explanation="explanation",
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.1",
+            category="major",
+            objective_evidence="evidence",
+            statement_of_nc="statement",
+            auditor_explanation="explanation",
             created_by=self.admin_user,
         )
 
@@ -302,11 +359,18 @@ class TestNonconformityViewSet(AuditAPITestBase):
 
     def test_create_nc(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/audit-management/nonconformities/", {
-            "audit": self.audit.pk, "standard": self.standard.pk, "clause": "7.1",
-            "category": "minor", "objective_evidence": "ev",
-            "statement_of_nc": "st", "auditor_explanation": "exp",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/nonconformities/",
+            {
+                "audit": self.audit.pk,
+                "standard": self.standard.pk,
+                "clause": "7.1",
+                "category": "minor",
+                "objective_evidence": "ev",
+                "statement_of_nc": "st",
+                "auditor_explanation": "exp",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         nc = Nonconformity.objects.get(pk=response.data["id"])
         self.assertEqual(nc.created_by, self.admin_user)
@@ -325,8 +389,11 @@ class TestObservationViewSet(AuditAPITestBase):
     def setUp(self):
         super().setUp()
         self.obs = Observation.objects.create(
-            audit=self.audit, standard=self.standard, clause="5.1",
-            statement="Observation statement", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="5.1",
+            statement="Observation statement",
+            created_by=self.admin_user,
         )
 
     def test_list_observations(self):
@@ -342,9 +409,14 @@ class TestObservationViewSet(AuditAPITestBase):
 
     def test_create_observation(self):
         self.client.force_authenticate(user=self.auditor_user)
-        response = self.client.post("/api/v1/audit-management/observations/", {
-            "audit": self.audit.pk, "clause": "6.1", "statement": "new obs",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/observations/",
+            {
+                "audit": self.audit.pk,
+                "clause": "6.1",
+                "statement": "new obs",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         obs = Observation.objects.get(pk=response.data["id"])
         self.assertEqual(obs.created_by, self.auditor_user)
@@ -356,8 +428,11 @@ class TestOFIViewSet(AuditAPITestBase):
     def setUp(self):
         super().setUp()
         self.ofi = OpportunityForImprovement.objects.create(
-            audit=self.audit, standard=self.standard, clause="8.1",
-            description="Improvement suggestion", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="8.1",
+            description="Improvement suggestion",
+            created_by=self.admin_user,
         )
 
     def test_list_ofis(self):
@@ -373,9 +448,14 @@ class TestOFIViewSet(AuditAPITestBase):
 
     def test_create_ofi(self):
         self.client.force_authenticate(user=self.auditor_user)
-        response = self.client.post("/api/v1/audit-management/ofis/", {
-            "audit": self.audit.pk, "clause": "9.1", "description": "new ofi",
-        })
+        response = self.client.post(
+            "/api/v1/audit-management/ofis/",
+            {
+                "audit": self.audit.pk,
+                "clause": "9.1",
+                "description": "new ofi",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         ofi = OpportunityForImprovement.objects.get(pk=response.data["id"])
         self.assertEqual(ofi.created_by, self.auditor_user)
@@ -387,8 +467,12 @@ class TestAuditTeamMemberViewSet(AuditAPITestBase):
     def setUp(self):
         super().setUp()
         self.member = AuditTeamMember.objects.create(
-            audit=self.audit, user=self.lead_auditor_user, name="Lead Auditor",
-            role="lead_auditor", date_from=date(2025, 3, 1), date_to=date(2025, 3, 5),
+            audit=self.audit,
+            user=self.lead_auditor_user,
+            name="Lead Auditor",
+            role="lead_auditor",
+            date_from=date(2025, 3, 1),
+            date_to=date(2025, 3, 5),
         )
 
     def test_list_team_members(self):
@@ -409,9 +493,11 @@ class TestEvidenceFileViewSet(AuditAPITestBase):
     def setUp(self):
         super().setUp()
         self.evidence = EvidenceFile.objects.create(
-            audit=self.audit, uploaded_by=self.admin_user,
+            audit=self.audit,
+            uploaded_by=self.admin_user,
             file=SimpleUploadedFile("evidence.pdf", b"content"),
-            evidence_type="document", description="Test file",
+            evidence_type="document",
+            description="Test file",
         )
 
     def test_list_evidence(self):
@@ -436,15 +522,25 @@ class TestAuditDetailSerializerFields(AuditAPITestBase):
 
     def test_nc_count_and_open_nc_count(self):
         Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.1",
-            category="major", objective_evidence="ev", statement_of_nc="st",
-            auditor_explanation="exp", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.1",
+            category="major",
+            objective_evidence="ev",
+            statement_of_nc="st",
+            auditor_explanation="exp",
+            created_by=self.admin_user,
             verification_status="open",
         )
         Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.2",
-            category="minor", objective_evidence="ev", statement_of_nc="st",
-            auditor_explanation="exp", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.2",
+            category="minor",
+            objective_evidence="ev",
+            statement_of_nc="st",
+            auditor_explanation="exp",
+            created_by=self.admin_user,
             verification_status="closed",
         )
         self.client.force_authenticate(user=self.regular_user)

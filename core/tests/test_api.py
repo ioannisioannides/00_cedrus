@@ -74,12 +74,18 @@ class TestIsCBAdminPermission(CoreAPITestBase):
 
     def test_regular_user_cannot_write(self):
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.post("/api/v1/organizations/", {"name": "New", "customer_id": "NEW01", "total_employee_count": 5, "registered_address": "Addr"})
+        response = self.client.post(
+            "/api/v1/organizations/",
+            {"name": "New", "customer_id": "NEW01", "total_employee_count": 5, "registered_address": "Addr"},
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_cb_admin_can_write(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/organizations/", {"name": "New Corp", "customer_id": "NEW01", "total_employee_count": 5, "registered_address": "addr"})
+        response = self.client.post(
+            "/api/v1/organizations/",
+            {"name": "New Corp", "customer_id": "NEW01", "total_employee_count": 5, "registered_address": "addr"},
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -117,12 +123,15 @@ class TestOrganizationViewSet(CoreAPITestBase):
 
     def test_create_organization(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/organizations/", {
-            "name": "Charlie Ltd",
-            "customer_id": "CHAR01",
-            "total_employee_count": 10,
-            "registered_address": "789 Pine",
-        })
+        response = self.client.post(
+            "/api/v1/organizations/",
+            {
+                "name": "Charlie Ltd",
+                "customer_id": "CHAR01",
+                "total_employee_count": 10,
+                "registered_address": "789 Pine",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Organization.objects.count(), 3)
 
@@ -177,11 +186,14 @@ class TestSiteViewSet(CoreAPITestBase):
 
     def test_create_site(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/sites/", {
-            "organization": self.org.pk,
-            "site_name": "Branch",
-            "site_address": "456 Side St",
-        })
+        response = self.client.post(
+            "/api/v1/sites/",
+            {
+                "organization": self.org.pk,
+                "site_name": "Branch",
+                "site_address": "456 Side St",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -196,7 +208,9 @@ class TestStandardViewSet(CoreAPITestBase):
 
     def test_create_standard(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/standards/", {"code": "ISO 14001:2015", "title": "Environmental Management"})
+        response = self.client.post(
+            "/api/v1/standards/", {"code": "ISO 14001:2015", "title": "Environmental Management"}
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 

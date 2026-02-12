@@ -34,33 +34,47 @@ class TestNotificationService(TestCase):
 
         # Users
         self.admin_user = User.objects.create_user(
-            username="admin", password="pass", email="admin@cb.com",
-            first_name="Admin", last_name="User",
+            username="admin",
+            password="pass",
+            email="admin@cb.com",
+            first_name="Admin",
+            last_name="User",
         )
         self.admin_user.groups.add(self.cb_admin_group)
 
         self.lead_auditor = User.objects.create_user(
-            username="lead", password="pass", email="lead@cb.com",
-            first_name="Lead", last_name="Auditor",
+            username="lead",
+            password="pass",
+            email="lead@cb.com",
+            first_name="Lead",
+            last_name="Auditor",
         )
         self.lead_auditor.groups.add(self.lead_auditor_group)
 
         self.client_user = User.objects.create_user(
-            username="client1", password="pass", email="client@acme.com",
-            first_name="Client", last_name="Contact",
+            username="client1",
+            password="pass",
+            email="client@acme.com",
+            first_name="Client",
+            last_name="Contact",
         )
         self.client_user.groups.add(self.client_admin_group)
 
         # Core data
         self.org = Organization.objects.create(
-            name="Acme Corp", customer_id="ACME01", total_employee_count=50,
+            name="Acme Corp",
+            customer_id="ACME01",
+            total_employee_count=50,
             registered_address="addr",
         )
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management")
         self.certification = Certification.objects.create(
-            organization=self.org, standard=self.standard,
-            certificate_id="CERT-001", issue_date=date(2025, 1, 1),
-            expiry_date=date(2025, 12, 31), certificate_status="active",
+            organization=self.org,
+            standard=self.standard,
+            certificate_id="CERT-001",
+            issue_date=date(2025, 1, 1),
+            expiry_date=date(2025, 12, 31),
+            certificate_status="active",
         )
 
         # Link client profile to organization (profile auto-created by signal)
@@ -69,14 +83,21 @@ class TestNotificationService(TestCase):
 
         # Audit data
         self.program = AuditProgram.objects.create(
-            organization=self.org, title="2025", year=2025,
-            objectives="obj", risks_opportunities="risk",
+            organization=self.org,
+            title="2025",
+            year=2025,
+            objectives="obj",
+            risks_opportunities="risk",
             created_by=self.admin_user,
         )
         self.audit = Audit.objects.create(
-            program=self.program, organization=self.org, audit_type="stage1",
-            total_audit_date_from=date(2025, 3, 1), total_audit_date_to=date(2025, 3, 5),
-            created_by=self.admin_user, lead_auditor=self.lead_auditor,
+            program=self.program,
+            organization=self.org,
+            audit_type="stage1",
+            total_audit_date_from=date(2025, 3, 1),
+            total_audit_date_to=date(2025, 3, 5),
+            created_by=self.admin_user,
+            lead_auditor=self.lead_auditor,
         )
 
     # ------------------------------------------------------------------
@@ -114,9 +135,12 @@ class TestNotificationService(TestCase):
     # ------------------------------------------------------------------
 
     def test_notify_audit_status_changed_sends_email(self):
-        NotificationService.notify_audit_status_changed({
-            "audit_id": self.audit.pk, "new_status": "scheduled",
-        })
+        NotificationService.notify_audit_status_changed(
+            {
+                "audit_id": self.audit.pk,
+                "new_status": "scheduled",
+            }
+        )
         # Should send to lead auditor + created_by (2 unique emails)
         self.assertEqual(len(mail.outbox), 2)
 
@@ -124,9 +148,12 @@ class TestNotificationService(TestCase):
         # When lead_auditor == created_by, only one email
         self.audit.lead_auditor = self.admin_user
         self.audit.save()
-        NotificationService.notify_audit_status_changed({
-            "audit_id": self.audit.pk, "new_status": "scheduled",
-        })
+        NotificationService.notify_audit_status_changed(
+            {
+                "audit_id": self.audit.pk,
+                "new_status": "scheduled",
+            }
+        )
         self.assertEqual(len(mail.outbox), 1)
 
     def test_notify_audit_status_changed_empty_payload(self):
@@ -146,9 +173,12 @@ class TestNotificationService(TestCase):
         self.lead_auditor.save()
         self.admin_user.email = ""
         self.admin_user.save()
-        NotificationService.notify_audit_status_changed({
-            "audit_id": self.audit.pk, "new_status": "scheduled",
-        })
+        NotificationService.notify_audit_status_changed(
+            {
+                "audit_id": self.audit.pk,
+                "new_status": "scheduled",
+            }
+        )
         self.assertEqual(len(mail.outbox), 0)
 
     # ------------------------------------------------------------------
@@ -157,9 +187,14 @@ class TestNotificationService(TestCase):
 
     def test_notify_nc_raised_sends_email(self):
         nc = Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.1",
-            category="major", objective_evidence="ev", statement_of_nc="st",
-            auditor_explanation="exp", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.1",
+            category="major",
+            objective_evidence="ev",
+            statement_of_nc="st",
+            auditor_explanation="exp",
+            created_by=self.admin_user,
         )
         NotificationService.notify_nc_raised({"nc_id": nc.pk})
         self.assertEqual(len(mail.outbox), 1)
@@ -168,9 +203,14 @@ class TestNotificationService(TestCase):
 
     def test_notify_nc_raised_uses_finding_id_fallback(self):
         nc = Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.1",
-            category="minor", objective_evidence="ev", statement_of_nc="st",
-            auditor_explanation="exp", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.1",
+            category="minor",
+            objective_evidence="ev",
+            statement_of_nc="st",
+            auditor_explanation="exp",
+            created_by=self.admin_user,
         )
         NotificationService.notify_nc_raised({"finding_id": nc.pk})
         self.assertEqual(len(mail.outbox), 1)
@@ -187,9 +227,14 @@ class TestNotificationService(TestCase):
         # Remove client group membership so no client contacts are found
         self.client_user.groups.clear()
         nc = Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.1",
-            category="major", objective_evidence="ev", statement_of_nc="st",
-            auditor_explanation="exp", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.1",
+            category="major",
+            objective_evidence="ev",
+            statement_of_nc="st",
+            auditor_explanation="exp",
+            created_by=self.admin_user,
         )
         NotificationService.notify_nc_raised({"nc_id": nc.pk})
         self.assertEqual(len(mail.outbox), 0)
@@ -200,9 +245,14 @@ class TestNotificationService(TestCase):
 
     def test_notify_nc_response_required_sends_email(self):
         nc = Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="4.1",
-            category="major", objective_evidence="ev", statement_of_nc="st",
-            auditor_explanation="exp", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="4.1",
+            category="major",
+            objective_evidence="ev",
+            statement_of_nc="st",
+            auditor_explanation="exp",
+            created_by=self.admin_user,
         )
         NotificationService.notify_nc_response_required({"nc_id": nc.pk})
         self.assertEqual(len(mail.outbox), 1)
@@ -219,9 +269,14 @@ class TestNotificationService(TestCase):
     def test_notify_nc_response_required_no_client_contacts(self):
         self.client_user.groups.clear()
         nc = Nonconformity.objects.create(
-            audit=self.audit, standard=self.standard, clause="5.1",
-            category="minor", objective_evidence="ev", statement_of_nc="st",
-            auditor_explanation="exp", created_by=self.admin_user,
+            audit=self.audit,
+            standard=self.standard,
+            clause="5.1",
+            category="minor",
+            objective_evidence="ev",
+            statement_of_nc="st",
+            auditor_explanation="exp",
+            created_by=self.admin_user,
         )
         NotificationService.notify_nc_response_required({"nc_id": nc.pk})
         self.assertEqual(len(mail.outbox), 0)
@@ -254,9 +309,12 @@ class TestNotificationService(TestCase):
 
     def test_notify_complaint_received_sends_email(self):
         complaint = Complaint.objects.create(
-            complaint_number="COMP-001", organization=self.org,
-            complainant_name="John", complaint_type="audit_conduct",
-            description="desc", submitted_by=self.admin_user,
+            complaint_number="COMP-001",
+            organization=self.org,
+            complainant_name="John",
+            complaint_type="audit_conduct",
+            description="desc",
+            submitted_by=self.admin_user,
         )
         NotificationService.notify_complaint_received({"complaint_id": complaint.pk})
         self.assertEqual(len(mail.outbox), 1)
@@ -274,9 +332,12 @@ class TestNotificationService(TestCase):
     def test_notify_complaint_received_no_cb_admins(self):
         self.admin_user.groups.clear()
         complaint = Complaint.objects.create(
-            complaint_number="COMP-002", organization=self.org,
-            complainant_name="Jane", complaint_type="other",
-            description="desc", submitted_by=self.admin_user,
+            complaint_number="COMP-002",
+            organization=self.org,
+            complainant_name="Jane",
+            complaint_type="other",
+            description="desc",
+            submitted_by=self.admin_user,
         )
         NotificationService.notify_complaint_received({"complaint_id": complaint.pk})
         self.assertEqual(len(mail.outbox), 0)
@@ -287,8 +348,10 @@ class TestNotificationService(TestCase):
 
     def test_notify_decision_made_sends_email(self):
         CertificationDecision.objects.create(
-            audit=self.audit, decision_maker=self.admin_user,
-            decision="grant", decision_notes="Approved",
+            audit=self.audit,
+            decision_maker=self.admin_user,
+            decision="grant",
+            decision_notes="Approved",
         )
         NotificationService.notify_decision_made({"audit_id": self.audit.pk})
         # Should send to lead_auditor + client_admin
@@ -310,8 +373,10 @@ class TestNotificationService(TestCase):
         self.lead_auditor.save()
         self.client_user.groups.clear()
         CertificationDecision.objects.create(
-            audit=self.audit, decision_maker=self.admin_user,
-            decision="grant", decision_notes="Approved",
+            audit=self.audit,
+            decision_maker=self.admin_user,
+            decision="grant",
+            decision_notes="Approved",
         )
         NotificationService.notify_decision_made({"audit_id": self.audit.pk})
         self.assertEqual(len(mail.outbox), 0)

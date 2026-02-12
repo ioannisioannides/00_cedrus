@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 
 from audit_management.models import Audit, AuditProgram
 from certification.models import Appeal, CertificationDecision, Complaint, TechnicalReview, TransferCertification
-from core.models import Certification, Organization, Site, Standard
+from core.models import Certification, Organization, Standard
 
 
 class CertificationAPITestBase(TestCase):
@@ -46,26 +46,40 @@ class CertificationAPITestBase(TestCase):
         )
         self.standard = Standard.objects.create(code="ISO 9001:2015", title="Quality Management")
         self.certification = Certification.objects.create(
-            organization=self.org, standard=self.standard, certificate_id="CERT-001",
-            issue_date=date(2025, 1, 1), expiry_date=date(2028, 1, 1),
+            organization=self.org,
+            standard=self.standard,
+            certificate_id="CERT-001",
+            issue_date=date(2025, 1, 1),
+            expiry_date=date(2028, 1, 1),
         )
 
         # Audit (needed for decisions and reviews)
         self.program = AuditProgram.objects.create(
-            organization=self.org, title="2025", year=2025,
-            objectives="obj", risks_opportunities="risk", created_by=self.admin_user,
+            organization=self.org,
+            title="2025",
+            year=2025,
+            objectives="obj",
+            risks_opportunities="risk",
+            created_by=self.admin_user,
         )
         self.audit = Audit.objects.create(
-            program=self.program, organization=self.org, audit_type="stage1",
-            total_audit_date_from=date(2025, 3, 1), total_audit_date_to=date(2025, 3, 5),
-            created_by=self.admin_user, lead_auditor=self.auditor_user,
+            program=self.program,
+            organization=self.org,
+            audit_type="stage1",
+            total_audit_date_from=date(2025, 3, 1),
+            total_audit_date_to=date(2025, 3, 5),
+            created_by=self.admin_user,
+            lead_auditor=self.auditor_user,
         )
 
         # Complaint
         self.complaint = Complaint.objects.create(
-            complaint_number="COMP-001", organization=self.org,
-            complainant_name="John Doe", complaint_type="audit_conduct",
-            description="Test complaint", submitted_by=self.admin_user,
+            complaint_number="COMP-001",
+            organization=self.org,
+            complainant_name="John Doe",
+            complaint_type="audit_conduct",
+            description="Test complaint",
+            submitted_by=self.admin_user,
         )
 
 
@@ -83,26 +97,41 @@ class TestIsCBStaffPermission(CertificationAPITestBase):
 
     def test_regular_user_cannot_write(self):
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.post("/api/v1/certification/complaints/", {
-            "complaint_number": "COMP-002", "complainant_name": "Jane",
-            "complaint_type": "other", "description": "desc",
-        })
+        response = self.client.post(
+            "/api/v1/certification/complaints/",
+            {
+                "complaint_number": "COMP-002",
+                "complainant_name": "Jane",
+                "complaint_type": "other",
+                "description": "desc",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_cb_admin_can_write(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/certification/complaints/", {
-            "complaint_number": "COMP-002", "complainant_name": "Jane",
-            "complaint_type": "other", "description": "desc",
-        })
+        response = self.client.post(
+            "/api/v1/certification/complaints/",
+            {
+                "complaint_number": "COMP-002",
+                "complainant_name": "Jane",
+                "complaint_type": "other",
+                "description": "desc",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_auditor_can_write(self):
         self.client.force_authenticate(user=self.auditor_user)
-        response = self.client.post("/api/v1/certification/complaints/", {
-            "complaint_number": "COMP-003", "complainant_name": "Bob",
-            "complaint_type": "other", "description": "desc",
-        })
+        response = self.client.post(
+            "/api/v1/certification/complaints/",
+            {
+                "complaint_number": "COMP-003",
+                "complainant_name": "Bob",
+                "complaint_type": "other",
+                "description": "desc",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
@@ -145,10 +174,15 @@ class TestComplaintViewSet(CertificationAPITestBase):
 
     def test_create_sets_submitted_by(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/certification/complaints/", {
-            "complaint_number": "COMP-010", "complainant_name": "Test",
-            "complaint_type": "other", "description": "desc",
-        })
+        response = self.client.post(
+            "/api/v1/certification/complaints/",
+            {
+                "complaint_number": "COMP-010",
+                "complainant_name": "Test",
+                "complaint_type": "other",
+                "description": "desc",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         complaint = Complaint.objects.get(pk=response.data["id"])
         self.assertEqual(complaint.submitted_by, self.admin_user)
@@ -160,8 +194,10 @@ class TestAppealViewSet(CertificationAPITestBase):
     def setUp(self):
         super().setUp()
         self.appeal = Appeal.objects.create(
-            appeal_number="APP-001", related_complaint=self.complaint,
-            appellant_name="Jane", grounds="Unfair decision",
+            appeal_number="APP-001",
+            related_complaint=self.complaint,
+            appellant_name="Jane",
+            grounds="Unfair decision",
             submitted_by=self.admin_user,
         )
 
@@ -180,10 +216,14 @@ class TestAppealViewSet(CertificationAPITestBase):
 
     def test_create_appeal(self):
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post("/api/v1/certification/appeals/", {
-            "appeal_number": "APP-002", "appellant_name": "Bob",
-            "grounds": "Grounds for appeal",
-        })
+        response = self.client.post(
+            "/api/v1/certification/appeals/",
+            {
+                "appeal_number": "APP-002",
+                "appellant_name": "Bob",
+                "grounds": "Grounds for appeal",
+            },
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         appeal = Appeal.objects.get(pk=response.data["id"])
         self.assertEqual(appeal.submitted_by, self.admin_user)
@@ -201,8 +241,10 @@ class TestCertificationDecisionViewSet(CertificationAPITestBase):
     def setUp(self):
         super().setUp()
         self.decision = CertificationDecision.objects.create(
-            audit=self.audit, decision_maker=self.decision_maker,
-            decision="grant", decision_notes="All good",
+            audit=self.audit,
+            decision_maker=self.decision_maker,
+            decision="grant",
+            decision_notes="All good",
         )
 
     def test_list_decisions(self):
@@ -234,13 +276,17 @@ class TestTechnicalReviewViewSet(CertificationAPITestBase):
         super().setUp()
         # Need a separate audit since TechnicalReview is OneToOne
         self.audit2 = Audit.objects.create(
-            organization=self.org, audit_type="surveillance",
-            total_audit_date_from=date(2025, 6, 1), total_audit_date_to=date(2025, 6, 3),
+            organization=self.org,
+            audit_type="surveillance",
+            total_audit_date_from=date(2025, 6, 1),
+            total_audit_date_to=date(2025, 6, 3),
             created_by=self.admin_user,
         )
         self.review = TechnicalReview.objects.create(
-            audit=self.audit2, reviewer=self.admin_user,
-            status="pending", scope_verified=True,
+            audit=self.audit2,
+            reviewer=self.admin_user,
+            status="pending",
+            scope_verified=True,
         )
 
     def test_list_reviews(self):
@@ -270,8 +316,10 @@ class TestTransferCertificationViewSet(CertificationAPITestBase):
     def setUp(self):
         super().setUp()
         self.transfer_audit = Audit.objects.create(
-            organization=self.org, audit_type="transfer",
-            total_audit_date_from=date(2025, 7, 1), total_audit_date_to=date(2025, 7, 3),
+            organization=self.org,
+            audit_type="transfer",
+            total_audit_date_from=date(2025, 7, 1),
+            total_audit_date_to=date(2025, 7, 3),
             created_by=self.admin_user,
         )
         self.transfer = TransferCertification.objects.create(
