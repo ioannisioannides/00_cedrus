@@ -277,7 +277,6 @@ class NotificationService:
         except CertificationDecision.DoesNotExist:
             return
 
-        Audit = apps.get_model("audit_management", "Audit")
         audit = decision.audit
 
         recipients = set()
