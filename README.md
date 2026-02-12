@@ -1,5 +1,14 @@
 # Cedrus - Audit, Compliance, Risk & Governance Platform
 
+[![CI Pipeline](https://github.com/ioannisioannides/00_cedrus/actions/workflows/ci.yml/badge.svg)](https://github.com/ioannisioannides/00_cedrus/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/ioannisioannides/00_cedrus/actions/workflows/codeql.yml/badge.svg)](https://github.com/ioannisioannides/00_cedrus/actions/workflows/codeql.yml)
+[![Security Schedule](https://github.com/ioannisioannides/00_cedrus/actions/workflows/security-schedule.yml/badge.svg)](https://github.com/ioannisioannides/00_cedrus/actions/workflows/security-schedule.yml)
+
+![Python 3.13](https://img.shields.io/badge/python-3.13-blue?logo=python&logoColor=white)
+![Django 6.0](https://img.shields.io/badge/django-6.0-green?logo=django&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-yellow)
+![Docker](https://img.shields.io/badge/docker-ready-blue?logo=docker&logoColor=white)
+
 **Cedrus** is an enterprise-grade Django-based platform for managing audits, compliance, risk, and governance. It serves as a comprehensive alternative to commercial certification body portals (such as DNV, LRQA, TÜV, Bureau Veritas) while remaining open-source and customizable.
 
 ## Table of Contents
