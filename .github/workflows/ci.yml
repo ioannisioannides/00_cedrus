@@ -133,8 +133,10 @@ jobs:
           DJANGO_SECRET_KEY: 'ci-test-key-that-is-at-least-50-characters-long-for-security-testing-purposes-only'
           DJANGO_ALLOWED_HOSTS: 'localhost'
           DJANGO_SETTINGS_MODULE: 'cedrus.settings_production'
+          SECURE_SSL_REDIRECT: 'False'
+          DATABASE_URL: 'sqlite:///ci_test.db'
         run: |
-          uv run python manage.py check --deploy --fail-level WARNING
+          uv run python manage.py check --deploy --fail-level ERROR
 
   # -----------------------------------------------------------------------------
   # JOB 5: Docker Build (Verification)

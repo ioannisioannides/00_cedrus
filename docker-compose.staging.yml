@@ -1,0 +1,148 @@
+# ==============================================================================
+# CEDRUS DOCKER COMPOSE - STAGING ENVIRONMENT
+# ==============================================================================
+# Production-like environment for pre-deployment validation
+# Uses production settings but with relaxed resource limits
+#
+# Usage:
+#   cp .env.staging.example .env.staging
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+#
+# Validates:
+#   - Production Django settings (settings_production.py)
+#   - PostgreSQL (same as production)
+#   - Gunicorn (same as production)
+#   - Redis caching
+#   - Static file serving via collectstatic
+# ==============================================================================
+
+networks:
+  cedrus-staging:
+    driver: bridge
+
+volumes:
+  postgres-data-staging:
+    driver: local
+  redis-data-staging:
+    driver: local
+  static-files-staging:
+    driver: local
+  media-files-staging:
+    driver: local
+
+services:
+
+  # ============================================================================
+  # POSTGRESQL (Staging)
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: cedrus-postgres-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cedrus_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-cedrus_staging}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-staging_password_change_me}
+    volumes:
+      - postgres-data-staging:/var/lib/postgresql/data
+    networks:
+      - cedrus-staging
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cedrus_staging} -d ${POSTGRES_DB:-cedrus_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================================
+  # REDIS (Staging)
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: cedrus-redis-staging
+    restart: unless-stopped
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data-staging:/data
+    networks:
+      - cedrus-staging
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # DJANGO APPLICATION (Staging - Gunicorn, Production Settings)
+  # ============================================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cedrus-web-staging
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    command: >
+      sh -c "
+      echo '⏳ Waiting for PostgreSQL...' &&
+      until pg_isready -h postgres -p 5432 -U $${POSTGRES_USER:-cedrus_staging}; do
+        sleep 2;
+      done &&
+      echo '✅ PostgreSQL ready' &&
+      python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput &&
+      python manage.py seed_demo_users &&
+      echo '🚀 Starting Gunicorn (staging)...' &&
+      gunicorn cedrus.wsgi:application
+        --bind 0.0.0.0:8000
+        --workers 2
+        --worker-class sync
+        --worker-tmp-dir /dev/shm
+        --max-requests 500
+        --max-requests-jitter 50
+        --timeout 30
+        --access-logfile -
+        --error-logfile -
+        --log-level info
+      "
+
+    environment:
+      DJANGO_SETTINGS_MODULE: cedrus.settings_production
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-staging-secret-key-change-in-production-at-least-50-chars-long}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8001,http://127.0.0.1:8001}
+      DEBUG: "False"
+      # SSL disabled for local staging (no reverse proxy)
+      SECURE_SSL_REDIRECT: "False"
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+      SECURE_HSTS_SECONDS: "0"
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-cedrus_staging}:${POSTGRES_PASSWORD:-staging_password_change_me}@postgres:5432/${POSTGRES_DB:-cedrus_staging}
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+
+    ports:
+      - "8001:8000"
+
+    volumes:
+      - static-files-staging:/app/staticfiles
+      - media-files-staging:/app/media
+
+    networks:
+      - cedrus-staging
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
