@@ -76,9 +76,7 @@ def dashboard_cb(request):
         "organizations_count": Organization.objects.count(),
         "certifications_count": Certification.objects.count(),
         "audits_count": Audit.objects.count(),
-        "recent_audits": Audit.objects.select_related(
-            "organization", "lead_auditor"
-        ).order_by("-created_at")[:5],
+        "recent_audits": Audit.objects.select_related("organization", "lead_auditor").order_by("-created_at")[:5],
     }
     return render(request, "identity/dashboard_cb.html", context)
 
@@ -126,9 +124,11 @@ def dashboard_client(request):
     organization = None
     if hasattr(request.user, "profile") and request.user.profile.organization:
         organization = request.user.profile.organization
-        audits = Audit.objects.filter(organization=organization).select_related(
-            "organization", "lead_auditor"
-        ).order_by("-total_audit_date_from")
+        audits = (
+            Audit.objects.filter(organization=organization)
+            .select_related("organization", "lead_auditor")
+            .order_by("-total_audit_date_from")
+        )
     else:
         audits = Audit.objects.none()
 
