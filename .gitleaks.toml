@@ -1,0 +1,11 @@
+# Gitleaks configuration — allowlist false positives in documentation files.
+# These are example/placeholder values in setup guides, not real secrets.
+
+[allowlist]
+  description = "Documentation examples and placeholders"
+
+  paths = [
+    '''\.github/SECRETS\.md''',
+    '''\.governance/MCP_SETUP_GUIDE\.md''',
+    '''docs/PRIVATE_ENV_SECRETS_ELI5\.md''',
+  ]

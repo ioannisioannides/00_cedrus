@@ -177,7 +177,7 @@ jobs:
       - name: Run Gitleaks
         uses: docker://ghcr.io/gitleaks/gitleaks:latest
         with:
-          args: detect --source /github/workspace --verbose --redact
+          args: detect --source /github/workspace --verbose --redact -c /github/workspace/.gitleaks.toml
 
   # -----------------------------------------------------------------------------
   # JOB 6: SBOM Generation (CycloneDX)
