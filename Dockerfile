@@ -104,6 +104,9 @@ RUN apk add --no-cache \
     # Bash for scripts (Alpine uses ash by default)
     bash
 
+# Remove pip — not needed (uv manages dependencies) and eliminates CVE-2026-1703
+RUN python -m pip uninstall -y pip setuptools 2>/dev/null || true
+
 # Create non-root user for security (principle of least privilege)
 # Running as root in containers is a security anti-pattern
 RUN addgroup -g ${GID} cedrus && \
