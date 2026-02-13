@@ -5,6 +5,9 @@ on:
     - cron: '0 2 * * 1' # Every Monday at 2 AM
   workflow_dispatch:
 
+env:
+  PYTHON_VERSION: '3.13'
+
 permissions:
   contents: read
   security-events: write
@@ -12,7 +15,7 @@ permissions:
 
 jobs:
   # -----------------------------------------------------------------------------
-  # JOB 1: Dependency Audit
+  # JOB 1: Dependency Audit (pip-audit)
   # -----------------------------------------------------------------------------
   dependency-audit:
     name: Dependency Audit
@@ -27,7 +30,7 @@ jobs:
           enable-cache: false
 
       - name: Set up Python
-        run: uv python install 3.13
+        run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: uv sync --all-extras --dev
@@ -36,10 +39,7 @@ jobs:
         run: uv export --format requirements-txt --no-emit-project --output-file requirements.txt
 
       - name: Run pip-audit
-        run: uvx pip-audit -r requirements.txt
-
-      - name: Run Safety
-        run: uvx safety check --file requirements.txt
+        run: uvx pip-audit -r requirements.txt --desc on
 
   # -----------------------------------------------------------------------------
   # JOB 2: Container Scan (Trivy)
@@ -53,7 +53,7 @@ jobs:
       - name: Build Docker Image
         run: docker build -t cedrus:latest .
 
-      - name: Run Trivy Vulnerability Scanner
+      - name: Run Trivy (table output)
         uses: aquasecurity/trivy-action@0.34.0
         with:
           image-ref: 'cedrus:latest'
@@ -63,8 +63,26 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
+      - name: Run Trivy (SARIF for GitHub Security tab)
+        if: always()
+        uses: aquasecurity/trivy-action@0.34.0
+        with:
+          image-ref: 'cedrus:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: trivy-container
+
   # -----------------------------------------------------------------------------
-  # JOB 3: DAST (OWASP ZAP)
+  # JOB 3: DAST (OWASP ZAP Baseline Scan)
   # -----------------------------------------------------------------------------
   zap-scan:
     name: OWASP ZAP Scan
@@ -79,24 +97,116 @@ jobs:
           enable-cache: false
 
       - name: Set up Python
-        run: uv python install 3.13
+        run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
       - name: Start Application
         env:
-          DJANGO_SECRET_KEY: 'zap-scan-secret'
-          DJANGO_DEBUG: 'False'
+          # DEBUG=True avoids SECURE_SSL_REDIRECT which blocks ZAP over HTTP.
+          # This is safe: the scan targets the app's routes, not its TLS config.
+          DJANGO_SECRET_KEY: 'zap-scan-only-throwaway-key-not-used-in-production-1234567890'
+          DJANGO_DEBUG: 'True'
           DJANGO_ALLOWED_HOSTS: 'localhost,127.0.0.1'
         run: |
-          uv run python manage.py migrate
+          uv run python manage.py migrate --run-syncdb
           uv run python manage.py runserver 0.0.0.0:8000 &
-          sleep 10
+          echo "Waiting for Django to start..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/health/ > /dev/null 2>&1; then
+              echo "Django is ready (attempt $i)"
+              break
+            fi
+            echo "  attempt $i/30 - waiting..."
+            sleep 2
+          done
+          curl -sf http://localhost:8000/health/ || { echo "ERROR: Django failed to start"; exit 1; }
 
       - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:8000'
-          fail_action: false # Don't fail the build, just report
+          fail_action: false
           cmd_options: '-a'
+          artifact_name: zap_scan
+
+  # -----------------------------------------------------------------------------
+  # JOB 4: Django Security Checks (--deploy flag)
+  # -----------------------------------------------------------------------------
+  django-security:
+    name: Django Deploy Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Django Check (Production Deploy)
+        env:
+          DJANGO_SECRET_KEY: 'ci-security-key-at-least-50-characters-long-for-deploy-check-only'
+          DJANGO_ALLOWED_HOSTS: 'localhost'
+          DJANGO_SETTINGS_MODULE: 'cedrus.settings_production'
+          SECURE_SSL_REDIRECT: 'False'
+          DATABASE_URL: 'sqlite:///ci_test.db'
+        run: uv run python manage.py check --deploy --fail-level WARNING
+
+  # -----------------------------------------------------------------------------
+  # JOB 5: Secret Scanning (Gitleaks)
+  # -----------------------------------------------------------------------------
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # -----------------------------------------------------------------------------
+  # JOB 6: SBOM Generation (CycloneDX)
+  # -----------------------------------------------------------------------------
+  sbom:
+    name: SBOM Generation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Export requirements
+        run: uv export --format requirements-txt --no-emit-project --output-file requirements.txt
+
+      - name: Generate SBOM (CycloneDX)
+        run: uvx cyclonedx-bom -i requirements.txt -o sbom.json --format json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v6
+        with:
+          name: sbom-cyclonedx
+          path: sbom.json
+          retention-days: 90
