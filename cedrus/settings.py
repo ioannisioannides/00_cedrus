@@ -169,6 +169,8 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+# Don't crash when manifest is missing (CI/tests skip collectstatic)
+WHITENOISE_MANIFEST_STRICT = False
 
 # Media files (for uploaded evidence files)
 MEDIA_URL = "/media/"
