@@ -161,16 +161,21 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # WhiteNoise: Serve static files with security headers and compression
+# Use manifest-based cache busting only in production (requires collectstatic).
+# In dev/CI (DEBUG=True), use the default storage to avoid ValueError when
+# the staticfiles manifest hasn't been generated.
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if not DEBUG
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        ),
     },
 }
-# Don't crash when manifest is missing (CI/tests skip collectstatic)
-WHITENOISE_MANIFEST_STRICT = False
 
 # Media files (for uploaded evidence files)
 MEDIA_URL = "/media/"
