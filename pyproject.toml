@@ -29,6 +29,7 @@ dependencies = [
     "tenacity>=9.1.2",
     "urllib3>=2.6.3",
     "weasyprint>=68.0",
+    "whitenoise>=6.11.0",
 ]
 
 [tool.setuptools]
