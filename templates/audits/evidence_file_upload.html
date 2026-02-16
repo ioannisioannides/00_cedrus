@@ -23,7 +23,7 @@
                 <p class="mb-0 text-muted">Attach documents, photos, or other evidence related to this audit</p>
             </div>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data" novalidate aria-label="Evidence upload form">
                     {% csrf_token %}
                     
                     {% if form.non_field_errors %}

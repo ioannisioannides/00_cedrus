@@ -10,7 +10,7 @@
     </div>
 </div>
 
-<form method="post" novalidate>
+<form method="post" novalidate aria-label="Organization form">
     {% csrf_token %}
     
     {% if form.non_field_errors %}

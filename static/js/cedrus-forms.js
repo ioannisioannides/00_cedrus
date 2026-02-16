@@ -255,21 +255,20 @@
     
     /**
      * Validate date ranges (end date must be after start date)
+     * Also validates single date fields and issue/expiry date pairs
      */
     function initDateValidation() {
         const forms = document.querySelectorAll('form');
         
         forms.forEach(form => {
-            // Find date range pairs
+            // Find date range pairs (standard naming)
             const startDate = form.querySelector('[name*="date_from"], [name*="start_date"], [name*="from_date"]');
             const endDate = form.querySelector('[name*="date_to"], [name*="end_date"], [name*="to_date"]');
             
             if (startDate && endDate) {
-                // Validate on end date change
                 endDate.addEventListener('change', () => validateDateRange(startDate, endDate));
                 startDate.addEventListener('change', () => validateDateRange(startDate, endDate));
                 
-                // Validate on form submit
                 form.addEventListener('submit', (e) => {
                     if (!validateDateRange(startDate, endDate)) {
                         e.preventDefault();
@@ -279,6 +278,30 @@
                     }
                 });
             }
+            
+            // Find issue_date / expiry_date pairs (certification forms)
+            const issueDate = form.querySelector('[name*="issue_date"]');
+            const expiryDate = form.querySelector('[name*="expiry_date"]');
+            
+            if (issueDate && expiryDate) {
+                expiryDate.addEventListener('change', () => validateDateRange(issueDate, expiryDate, 'Expiry date must be after issue date'));
+                issueDate.addEventListener('change', () => validateDateRange(issueDate, expiryDate, 'Expiry date must be after issue date'));
+                
+                form.addEventListener('submit', (e) => {
+                    if (!validateDateRange(issueDate, expiryDate, 'Expiry date must be after issue date')) {
+                        e.preventDefault();
+                        if (window.CedrusA11y) {
+                            CedrusA11y.announce('Please fix the dates: expiry date must be after issue date', 'assertive');
+                        }
+                    }
+                });
+            }
+            
+            // Validate single date fields: due dates should not be in the past
+            const dueDateFields = form.querySelectorAll('[name*="due_date"]');
+            dueDateFields.forEach(field => {
+                field.addEventListener('change', () => validateFutureDate(field));
+            });
         });
     }
     
@@ -286,15 +309,17 @@
      * Validate that end date is after start date
      * @param {HTMLInputElement} startInput - Start date input
      * @param {HTMLInputElement} endInput - End date input
+     * @param {string} errorMessage - Custom error message
      * @returns {boolean} - Whether date range is valid
      */
-    function validateDateRange(startInput, endInput) {
+    function validateDateRange(startInput, endInput, errorMessage) {
         if (!startInput.value || !endInput.value) return true;
         
         const startDate = new Date(startInput.value);
         const endDate = new Date(endInput.value);
         
         const isValid = endDate >= startDate;
+        const msg = errorMessage || 'End date must be on or after start date';
         
         // Update visual feedback
         if (isValid) {
@@ -302,10 +327,38 @@
             removeError(endInput);
         } else {
             endInput.classList.add('is-invalid');
-            showError(endInput, 'End date must be on or after start date');
+            showError(endInput, msg);
         }
         
         return isValid;
+    }
+    
+    /**
+     * Warn if a date field is set to a date in the past
+     * Shows a warning (not an error) since past dates may be intentional
+     * @param {HTMLInputElement} input - Date input element
+     */
+    function validateFutureDate(input) {
+        if (!input.value) return;
+        
+        const dateValue = new Date(input.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (dateValue < today) {
+            // Show as warning, not blocking error
+            removeError(input);
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'form-text text-warning';
+            warningDiv.setAttribute('role', 'status');
+            warningDiv.innerHTML = '<i class="bi bi-exclamation-triangle" aria-hidden="true"></i> This date is in the past. Are you sure?';
+            input.parentNode.appendChild(warningDiv);
+        } else {
+            removeError(input);
+            // Also remove any warning
+            const existing = input.parentNode.querySelector('.text-warning');
+            if (existing) existing.remove();
+        }
     }
     
     /**
@@ -369,6 +422,45 @@
             }
         });
     }
+    
+    /**
+     * Enhance form error messages with actionable guidance
+     * Adds role="alert" and improves error styling for screen readers
+     */
+    function enhanceFormErrors() {
+        // Find all server-side error messages and add ARIA attributes
+        document.querySelectorAll('.text-danger, .invalid-feedback, .errorlist').forEach(el => {
+            if (!el.getAttribute('role')) {
+                el.setAttribute('role', 'alert');
+            }
+        });
+        
+        // Focus the first error field on page load (server-side validation failures)
+        const firstError = document.querySelector('.is-invalid, .text-danger:first-of-type');
+        if (firstError) {
+            const errorField = firstError.classList.contains('is-invalid') 
+                ? firstError 
+                : firstError.closest('.form-group, .mb-3')?.querySelector('input, select, textarea');
+            
+            if (errorField) {
+                errorField.focus();
+                if (window.CedrusA11y) {
+                    const errorCount = document.querySelectorAll('.text-danger, .invalid-feedback, .errorlist li').length;
+                    CedrusA11y.announce(
+                        `Form has ${errorCount} error${errorCount !== 1 ? 's' : ''}. Please review and correct the highlighted fields.`,
+                        'assertive'
+                    );
+                }
+            }
+        }
+        
+        // Enhance Django non-field errors with better styling
+        document.querySelectorAll('.alert-danger').forEach(alert => {
+            if (!alert.getAttribute('role')) {
+                alert.setAttribute('role', 'alert');
+            }
+        });
+    }
 
     // ============================================
     // INITIALIZATION
@@ -379,6 +471,7 @@
         initConfirmReplacements();
         initDateValidation();
         enhanceIconButtons();
+        enhanceFormErrors();
         
         console.log('Cedrus Forms Enhancement Module loaded');
     }
@@ -394,7 +487,9 @@
     window.CedrusForms = {
         showConfirmModal,
         closeConfirmModal,
-        validateDateRange
+        validateDateRange,
+        validateFutureDate,
+        enhanceFormErrors
     };
     
 })();

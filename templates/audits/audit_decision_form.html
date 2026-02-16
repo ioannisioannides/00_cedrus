@@ -59,7 +59,7 @@
                 <p class="mb-0 text-muted">Review or update the audit recommendations, then finalize the decision</p>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" novalidate aria-label="Audit decision form">
                     {% csrf_token %}
                     
                     {% if form.non_field_errors %}
@@ -155,9 +155,14 @@
                     </div>
                     
                     <div class="d-flex justify-content-between">
-                        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to finalize this certification decision? This action cannot be undone.');">
-                            <strong>✓ Finalize Decision</strong>
+                        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-ghost">Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-lg"
+                                data-confirm="Are you sure you want to finalize this certification decision?"
+                                data-confirm-title="Finalize Audit Decision"
+                                data-confirm-warning="This action cannot be undone. The audit status will change to Decided."
+                                data-confirm-button="Finalize Decision"
+                                data-confirm-class="btn-primary">
+                            <i class="bi bi-check-lg me-1" aria-hidden="true"></i> Finalize Decision
                         </button>
                     </div>
                 </form>

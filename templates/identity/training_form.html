@@ -1,9 +1,59 @@
 {% extends "base.html" %}
+
+{% block title %}Training Record - Cedrus{% endblock %}
+
 {% block content %}
-  <h1>Training Form</h1>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save</button>
-  </form>
+<div class="page-header">
+    <div>
+        <h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Training Record</h1>
+        <p class="page-subtitle">Record auditor training and professional development</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'identity:training_list' %}" class="btn btn-ghost btn-sm">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate aria-label="Training record form">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="form-group mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label{% if field.field.required %} required{% endif %}">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small" role="alert">{{ field.errors }}</div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-4" style="padding-top: 1.5rem; border-top: 1px solid var(--border-secondary);">
+                        <a href="{% url 'identity:training_list' %}" class="btn btn-ghost">
+                            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg me-1" aria-hidden="true"></i> Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

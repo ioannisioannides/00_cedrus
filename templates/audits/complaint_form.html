@@ -31,7 +31,7 @@
                 <h5><i class="bi bi-exclamation-triangle"></i> Complaint Details</h5>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" novalidate aria-label="Complaint form">
                     {% csrf_token %}
                     
                     {% for field in form %}
@@ -57,12 +57,12 @@
                         </div>
                     {% endfor %}
                     
-                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                        <a href="{% url 'certification:complaint_list' %}" class="btn btn-secondary">
-                            <i class="bi bi-x-lg me-1"></i> Cancel
+                    <div class="d-flex justify-content-between align-items-center mt-4" style="padding-top: 1.5rem; border-top: 1px solid var(--border-secondary);">
+                        <a href="{% url 'certification:complaint_list' %}" class="btn btn-ghost">
+                            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Cancel
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-send me-1"></i> Submit Complaint
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg me-1" aria-hidden="true"></i> Submit Complaint
                         </button>
                     </div>
                 </form>

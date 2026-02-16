@@ -43,7 +43,12 @@
         {% if available_transitions %}
             {% for status_code, status_display in available_transitions %}
                 {% if status_code != 'client_review' and status_code != 'decided' and status_code != 'technical_review' %}
-                    <a href="{% url 'audit_management:audit_transition_status' audit.pk status_code %}" class="btn btn-outline-primary btn-sm">{{ status_display }}</a>
+                    <a href="{% url 'audit_management:audit_transition_status' audit.pk status_code %}" class="btn btn-outline-primary btn-sm"
+                       data-confirm="Are you sure you want to change the audit status to '{{ status_display }}'?"
+                       data-confirm-title="Change Audit Status"
+                       data-confirm-warning="This will transition the audit from its current status."
+                       data-confirm-button="Change to {{ status_display }}"
+                       data-confirm-class="btn-primary">{{ status_display }}</a>
                 {% endif %}
             {% endfor %}
         {% endif %}

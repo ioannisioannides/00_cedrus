@@ -54,7 +54,7 @@
         <div class="login-body">
             <h2 class="h4 mb-4" style="text-align: center; color: var(--cedrus-text);">Sign In</h2>
             
-            <form method="post" novalidate>
+            <form method="post" novalidate aria-label="Login form">
                 {% csrf_token %}
                 
                 {% if form.errors %}

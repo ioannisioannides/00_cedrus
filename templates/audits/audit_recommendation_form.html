@@ -21,7 +21,7 @@
                 <p class="mb-0 text-muted">Provide recommendations for certification decisions</p>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" novalidate aria-label="Audit recommendation form">
                     {% csrf_token %}
                     
                     {% if form.non_field_errors %}
@@ -131,9 +131,13 @@
                         <div class="form-text">Any additional notes or recommendations for the Certification Body.</div>
                     </div>
                     
-                    <div class="d-flex justify-content-between">
-                        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-outline-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Save Recommendations</button>
+                    <div class="d-flex justify-content-between align-items-center mt-4" style="padding-top: 1.5rem; border-top: 1px solid var(--border-secondary);">
+                        <a href="{% url 'audit_management:audit_detail' audit.pk %}" class="btn btn-ghost">
+                            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg me-1" aria-hidden="true"></i> Save Recommendations
+                        </button>
                     </div>
                 </form>
             </div>

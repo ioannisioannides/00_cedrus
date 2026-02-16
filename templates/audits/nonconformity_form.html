@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<form method="post" novalidate>
+<form method="post" novalidate aria-label="Nonconformity form">
     {% csrf_token %}
     
     {% if form.non_field_errors %}
