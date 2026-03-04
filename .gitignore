@@ -67,3 +67,4 @@ node_modules/
 reports/
 _archive/
 results.sarif
+requirements.txt
