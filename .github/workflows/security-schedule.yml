@@ -54,7 +54,7 @@ jobs:
         run: docker build -t cedrus:latest .
 
       - name: Run Trivy (table output)
-        uses: aquasecurity/trivy-action@0.34.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: 'cedrus:latest'
           format: 'table'
@@ -65,7 +65,7 @@ jobs:
 
       - name: Run Trivy (SARIF for GitHub Security tab)
         if: always()
-        uses: aquasecurity/trivy-action@0.34.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: 'cedrus:latest'
           format: 'sarif'
@@ -207,7 +207,7 @@ jobs:
         run: uvx --from cyclonedx-bom cyclonedx-py requirements --of json -o sbom.json requirements.txt
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-cyclonedx
           path: sbom.json
