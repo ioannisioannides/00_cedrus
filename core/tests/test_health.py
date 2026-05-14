@@ -128,7 +128,9 @@ class TestHealthChecks:
         mock_settings.CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
         request = self.factory.get("/health/status/")
-        request.user = AnonymousUser()
+        request.user = Mock(spec=User)
+        request.user.is_authenticated = True
+        request.user.is_superuser = True
 
         # We need to mock connection and cache here too or they will fail/use real ones
         with patch("core.health.connection") as mock_conn, patch("core.health.cache") as mock_cache:
@@ -163,7 +165,9 @@ class TestHealthChecks:
         mock_settings.DJANGO_VERSION = "4.2"
 
         request = self.factory.get("/health/status/")
-        request.user = AnonymousUser()
+        request.user = Mock(spec=User)
+        request.user.is_authenticated = True
+        request.user.is_superuser = True
 
         # Mock DB Failure
         mock_connection.cursor.side_effect = Exception("DB Error")
