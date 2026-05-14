@@ -21,6 +21,9 @@ FROM python:3.13-alpine@sha256:bb1f2fdb1065c85468775c9d680dcd344f6442a2d1181ef79
 LABEL maintainer="Cedrus Excellence Team <team@cedrus.local>"
 LABEL stage="builder"
 
+# Upgrade zlib to patch CVEs: buffer overflow in untgz (Critical) and DoS via CRC32 combine (Medium)
+RUN apk upgrade --no-cache zlib
+
 # Install build dependencies (only needed for compilation)
 # hadolint ignore=DL3018
 RUN apk add --no-cache \
@@ -74,6 +77,9 @@ LABEL org.opencontainers.image.authors="Dr. Thomas Berg, Dr. Alex Müller"
 LABEL org.opencontainers.image.url="https://cedrus.local"
 LABEL org.opencontainers.image.documentation="https://cedrus.local/docs"
 LABEL org.opencontainers.image.source="https://github.com/yourorg/cedrus"
+
+# Upgrade zlib to patch CVEs: buffer overflow in untgz (Critical) and DoS via CRC32 combine (Medium)
+RUN apk upgrade --no-cache zlib
 
 # Install only runtime dependencies (no build tools)
 # hadolint ignore=DL3018
