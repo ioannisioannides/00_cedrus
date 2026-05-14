@@ -97,6 +97,8 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run Tests
+        env:
+          DJANGO_DEBUG: 'True'
         run: |
           uv run pytest --cov=. --cov-report=xml --cov-report=term
 

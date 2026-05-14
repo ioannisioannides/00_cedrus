@@ -68,3 +68,4 @@ reports/
 _archive/
 results.sarif
 requirements.txt
+.actrc
