@@ -217,8 +217,8 @@ def detailed_status(request):
             "system": {...}
         }
     """
-    # Only allow in DEBUG mode or for superusers
-    if not settings.DEBUG and not (request.user.is_authenticated and request.user.is_superuser):
+    # Only allow superusers — never rely on DEBUG mode for access control
+    if not (request.user.is_authenticated and request.user.is_superuser):
         return JsonResponse({"error": "Forbidden - admin access required"}, status=403)
 
     status_data = {
@@ -237,14 +237,11 @@ def detailed_status(request):
     # Database info
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT version()")
-            db_version = cursor.fetchone()[0]
+            cursor.execute("SELECT 1")
 
         status_data["database"] = {
             "status": "connected",
-            "engine": connection.settings_dict.get("ENGINE", "unknown").split(".")[-1],
-            "name": connection.settings_dict.get("NAME", "unknown"),
-            "version": db_version,
+            # Omit engine/name/version to avoid infrastructure disclosure
         }
     except Exception as e:
         status_data["database"] = {

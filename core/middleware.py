@@ -31,7 +31,7 @@ class SecurityHeadersMiddleware:
         if "Content-Security-Policy" not in response:
             response["Content-Security-Policy"] = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' https://1.www.s81c.com; "
+                "script-src 'self' https://1.www.s81c.com; "
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
                 "https://1.www.s81c.com https://cdn.jsdelivr.net; "
                 "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; "

@@ -185,7 +185,10 @@ class AuditListView(LoginRequiredMixin, ListView):
         # Apply filters
         org_id = self.request.GET.get("organization")
         if org_id:
-            queryset = queryset.filter(organization_id=org_id)
+            try:
+                queryset = queryset.filter(organization_id=int(org_id))
+            except (ValueError, TypeError):
+                pass
 
         status = self.request.GET.get("status")
         if status:

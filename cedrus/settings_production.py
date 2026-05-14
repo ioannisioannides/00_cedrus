@@ -105,7 +105,7 @@ CSRF_COOKIE_AGE = 31449600  # 1 year
 # 🟢 Content Security Policy
 # Requires django-csp
 CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net")
+CSP_SCRIPT_SRC = ("'self'", "cdn.jsdelivr.net")
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net")
 CSP_IMG_SRC = ("'self'", "data:", "blob:")
 CSP_FONT_SRC = ("'self'", "data:")

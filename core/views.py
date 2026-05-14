@@ -106,7 +106,10 @@ class SiteListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
         queryset = Site.objects.all()
         org_id = self.request.GET.get("organization")
         if org_id:
-            queryset = queryset.filter(organization_id=org_id)
+            try:
+                queryset = queryset.filter(organization_id=int(org_id))
+            except (ValueError, TypeError):
+                pass
         return queryset.select_related("organization")
 
     def get_context_data(self, **kwargs):
@@ -198,7 +201,10 @@ class CertificationListView(LoginRequiredMixin, CBAdminRequiredMixin, ListView):
         queryset = Certification.objects.select_related("organization", "standard")
         org_id = self.request.GET.get("organization")
         if org_id:
-            queryset = queryset.filter(organization_id=org_id)
+            try:
+                queryset = queryset.filter(organization_id=int(org_id))
+            except (ValueError, TypeError):
+                pass
         return queryset
 
     def get_context_data(self, **kwargs):
