@@ -156,32 +156,11 @@
     </div>
 </div>
 
-<script>
-// Auto-fill name from user selection
-document.addEventListener('DOMContentLoaded', function() {
-    const userSelect = document.getElementById('{{ form.user.id_for_label }}');
-    const nameInput = document.getElementById('{{ form.name.id_for_label }}');
-    
-    if (userSelect && nameInput) {
-        userSelect.addEventListener('change', function() {
-            if (this.value) {
-                // User selected - will auto-fill on server side
-                // For now, just clear placeholder
-                nameInput.placeholder = 'Will be auto-filled from user';
-                nameInput.disabled = true;
-            } else {
-                // External expert - enable manual entry
-                nameInput.placeholder = 'Enter name for external expert';
-                nameInput.disabled = false;
-                nameInput.value = '';
-            }
-        });
-        
-        // Initialize state
-        if (userSelect.value) {
-            nameInput.disabled = true;
-        }
-    }
-});
-</script>
+{# Pass template variables to the external cedrus-forms.js handler via data attributes          #}
+{# This avoids inline <script> blocks so 'unsafe-inline' is not required in the CSP script-src. #}
+<div hidden
+     data-team-member-form
+     data-user-select-id="{{ form.user.id_for_label }}"
+     data-name-input-id="{{ form.name.id_for_label }}"></div>
+
 {% endblock %}

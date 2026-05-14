@@ -491,5 +491,47 @@
         validateFutureDate,
         enhanceFormErrors
     };
-    
+
+})();
+
+// ============================================================
+// Team Member Form: user-select auto-fill behaviour
+// Uses data-user-select and data-name-input attributes to avoid
+// inline scripts (CSP compliance).
+// ============================================================
+(function () {
+    'use strict';
+
+    function initTeamMemberForm() {
+        const container = document.querySelector('[data-team-member-form]');
+        if (!container) return;
+
+        const userSelectId = container.dataset.userSelectId;
+        const nameInputId = container.dataset.nameInputId;
+        if (!userSelectId || !nameInputId) return;
+
+        const userSelect = document.getElementById(userSelectId);
+        const nameInput = document.getElementById(nameInputId);
+        if (!userSelect || !nameInput) return;
+
+        function applyState() {
+            if (userSelect.value) {
+                nameInput.placeholder = 'Will be auto-filled from user';
+                nameInput.disabled = true;
+            } else {
+                nameInput.placeholder = 'Enter name for external expert';
+                nameInput.disabled = false;
+                nameInput.value = '';
+            }
+        }
+
+        userSelect.addEventListener('change', applyState);
+        applyState();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTeamMemberForm);
+    } else {
+        initTeamMemberForm();
+    }
 })();
