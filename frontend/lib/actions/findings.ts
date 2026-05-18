@@ -179,3 +179,96 @@ export async function verifyFinding(
   revalidatePath(`/lead-auditor/audits/${finding.auditId}`)
   return { success: true }
 }
+
+export async function verifyFindingAction(
+  findingId: string,
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const status = formData.get("status") as NCVerificationStatus | null
+  if (!status || !["ACCEPTED", "CLOSED"].includes(status)) {
+    return { error: "Valid verification status required (ACCEPTED or CLOSED)" }
+  }
+  const notes = (formData.get("verificationNotes") as string) || ""
+  return verifyFinding(findingId, status, notes)
+}
+
+export async function updateFinding(
+  findingId: string,
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const user = await requireAuditorOrAdmin()
+
+  const finding = await prisma.finding.findUnique({
+    where: { id: findingId },
+    select: { auditId: true, findingType: true, audit: { select: { status: true } } },
+  })
+  if (!finding) return { error: "Finding not found" }
+  if (!["IN_PROGRESS", "REPORT_DRAFT"].includes(finding.audit.status)) {
+    return { error: "Audit is not in an editable state" }
+  }
+
+  const clause = (formData.get("clause") as string)?.trim()
+  if (!clause) return { error: "Clause reference is required" }
+
+  let updateData: Record<string, unknown> = { clause }
+
+  if (finding.findingType === "NC_MAJOR" || finding.findingType === "NC_MINOR") {
+    const objectiveEvidence = (formData.get("objectiveEvidence") as string)?.trim()
+    const statementOfNc = (formData.get("statementOfNc") as string)?.trim()
+    if (!objectiveEvidence || objectiveEvidence.length < 10)
+      return { error: "Objective evidence must be at least 10 characters" }
+    if (!statementOfNc || statementOfNc.length < 10)
+      return { error: "Statement of NC must be at least 10 characters" }
+    const dueDateStr = formData.get("dueDate") as string | null
+    updateData = {
+      ...updateData,
+      objectiveEvidence,
+      statementOfNc,
+      auditorExplanation: (formData.get("auditorExplanation") as string) || "",
+      dueDate: dueDateStr ? new Date(dueDateStr) : null,
+    }
+  } else if (finding.findingType === "OBSERVATION") {
+    const observationStatement = (formData.get("observationStatement") as string)?.trim()
+    if (!observationStatement || observationStatement.length < 10)
+      return { error: "Observation statement must be at least 10 characters" }
+    updateData = {
+      ...updateData,
+      observationStatement,
+      observationExplanation: (formData.get("observationExplanation") as string) || "",
+    }
+  } else {
+    const ofiDescription = (formData.get("ofiDescription") as string)?.trim()
+    if (!ofiDescription || ofiDescription.length < 10)
+      return { error: "Description must be at least 10 characters" }
+    updateData = { ...updateData, ofiDescription }
+  }
+
+  await prisma.finding.update({ where: { id: findingId }, data: updateData })
+
+  revalidatePath(`/lead-auditor/audits/${finding.auditId}`)
+  revalidatePath(`/cb-admin/audits/${finding.auditId}`)
+  return { success: true }
+}
+
+export async function deleteFinding(findingId: string): Promise<{ error?: string }> {
+  const session = await auth()
+  if (!session?.user || !["CB_ADMIN", "SUPER_ADMIN", "LEAD_AUDITOR"].includes(session.user.role)) {
+    return { error: "Unauthorised" }
+  }
+
+  const finding = await prisma.finding.findUnique({
+    where: { id: findingId },
+    select: { auditId: true, audit: { select: { status: true } } },
+  })
+  if (!finding) return { error: "Finding not found" }
+  if (!["IN_PROGRESS", "REPORT_DRAFT"].includes(finding.audit.status)) {
+    return { error: "Cannot delete findings from an audit in this state" }
+  }
+
+  await prisma.finding.delete({ where: { id: findingId } })
+  revalidatePath(`/lead-auditor/audits/${finding.auditId}`)
+  revalidatePath(`/cb-admin/audits/${finding.auditId}`)
+  return {}
+}

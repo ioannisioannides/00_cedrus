@@ -9,8 +9,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { format } from "date-fns"
-import { AlertTriangle, Plus } from "lucide-react"
+import { AlertTriangle, BookOpen, FileText, Pencil, Plus, Trash2, Users } from "lucide-react"
 import { StatusTransitionButton } from "@/components/status-transition-button"
+import { deleteFinding } from "@/lib/actions/findings"
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -23,17 +24,26 @@ const FINDING_BADGE: Record<string, "default" | "secondary" | "destructive" | "o
 
 export default async function LeadAuditorAuditDetailPage({ params }: Props) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "LEAD_AUDITOR") redirect("/")
+  if (!session?.user || !["LEAD_AUDITOR", "CB_ADMIN", "SUPER_ADMIN"].includes(session.user.role)) {
+    redirect("/")
+  }
 
   const { id } = await params
+  // Lead auditors can only see their own audits; CB_ADMIN/SUPER_ADMIN see all
+  const whereClause =
+    session.user.role === "LEAD_AUDITOR"
+      ? { id, leadAuditorId: session.user.id }
+      : { id }
+
   const audit = await prisma.audit.findUnique({
-    where: { id, leadAuditorId: session.user.id },
+    where: whereClause,
     include: {
       clientOrg: { select: { name: true, customerId: true } },
       findings: {
         orderBy: { createdAt: "desc" },
         include: { createdBy: { select: { name: true } } },
       },
+      teamMembers: { include: { user: { select: { name: true } } }, orderBy: { dateFrom: "asc" } },
       certifications: {
         include: { certification: { include: { standard: true } } },
       },
@@ -68,6 +78,16 @@ export default async function LeadAuditorAuditDetailPage({ params }: Props) {
         </div>
         <Button render={<Link href="/lead-auditor/audits" />} variant="outline" size="sm">
           ← Back
+        </Button>
+      </div>
+
+      {/* Quick nav */}
+      <div className="flex flex-wrap gap-2">
+        <Button render={<Link href={`/lead-auditor/audits/${id}/docs`} />} variant="outline" size="sm">
+          <BookOpen className="h-4 w-4 mr-1" /> Documentation
+        </Button>
+        <Button render={<Link href={`/lead-auditor/audits/${id}/team`} />} variant="outline" size="sm">
+          <Users className="h-4 w-4 mr-1" /> Team ({audit.teamMembers.length})
         </Button>
       </div>
 
@@ -159,6 +179,7 @@ export default async function LeadAuditorAuditDetailPage({ params }: Props) {
                   <TableHead>Description</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Status</TableHead>
+                  {isEditable && <TableHead className="w-24">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -185,6 +206,47 @@ export default async function LeadAuditorAuditDetailPage({ params }: Props) {
                         </Badge>
                       ) : "—"}
                     </TableCell>
+                    {isEditable && (
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            render={<Link href={`/lead-auditor/audits/${id}/findings/${f.id}/edit`} />}
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            aria-label="Edit finding"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          {(f.findingType === "NC_MAJOR" || f.findingType === "NC_MINOR") &&
+                            f.verificationStatus === "CLIENT_RESPONDED" && (
+                              <Button
+                                render={<Link href={`/lead-auditor/audits/${id}/findings/${f.id}/verify`} />}
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-green-700"
+                                aria-label="Verify NC response"
+                              >
+                                Verify
+                              </Button>
+                            )}
+                          <form
+                            action={async () => {
+                              "use server"
+                              await deleteFinding(f.id)
+                            }}
+                          >
+                            <button
+                              type="submit"
+                              className="text-destructive hover:text-destructive/80 p-1"
+                              aria-label="Delete finding"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </form>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

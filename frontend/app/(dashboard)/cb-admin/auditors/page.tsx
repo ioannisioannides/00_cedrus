@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -93,6 +95,7 @@ export default async function AuditorsPage() {
                   <TableHead>Active Audits</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -117,6 +120,11 @@ export default async function AuditorsPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {format(a.createdAt, "dd MMM yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      <Button render={<Link href={`/cb-admin/auditors/${a.id}`} />} variant="ghost" size="sm">
+                        View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

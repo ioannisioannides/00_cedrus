@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
-import { Building, Calendar, ClipboardList, Edit } from "lucide-react"
+import { Building, Calendar, ClipboardList, Edit, Plus, Trash2 } from "lucide-react"
 import { format } from "date-fns"
+import { addSite, deleteSite, addCertification } from "@/lib/actions/client-orgs"
+import { AddSiteForm, AddCertificationForm } from "@/components/client-management-forms"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -35,25 +37,31 @@ export default async function ClientDetailPage({ params }: Props) {
   }
 
   const { id } = await params
-  const client = await prisma.clientOrg.findUnique({
-    where: { id },
-    include: {
-      sites: { orderBy: { siteName: "asc" } },
-      certifications: {
-        include: { standard: true },
-        orderBy: { createdAt: "desc" },
-      },
-      audits: {
-        orderBy: { dateFrom: "desc" },
-        take: 10,
-        include: {
-          leadAuditor: { select: { name: true } },
+  const [client, standards] = await Promise.all([
+    prisma.clientOrg.findUnique({
+      where: { id },
+      include: {
+        sites: { orderBy: { siteName: "asc" } },
+        certifications: {
+          include: { standard: true },
+          orderBy: { createdAt: "desc" },
+        },
+        audits: {
+          orderBy: { dateFrom: "desc" },
+          take: 10,
+          include: {
+            leadAuditor: { select: { name: true } },
+          },
         },
       },
-    },
-  })
+    }),
+    prisma.standard.findMany({ orderBy: { code: "asc" } }),
+  ])
 
   if (!client) notFound()
+
+  const addSiteAction = addSite.bind(null, id)
+  const addCertAction = addCertification.bind(null, id)
 
   return (
     <div className="space-y-6">
@@ -114,7 +122,12 @@ export default async function ClientDetailPage({ params }: Props) {
             ) : (
               client.certifications.map((cert) => (
                 <div key={cert.id} className="flex items-center justify-between text-sm">
-                  <span>{cert.standard.code}</span>
+                  <div>
+                    <span className="font-medium">{cert.standard.code}</span>
+                    {cert.certificationScope && (
+                      <p className="text-xs text-muted-foreground line-clamp-1">{cert.certificationScope}</p>
+                    )}
+                  </div>
                   <Badge
                     variant={
                       cert.certificateStatus === "ACTIVE"
@@ -135,15 +148,15 @@ export default async function ClientDetailPage({ params }: Props) {
 
       {/* Sites */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Building className="h-4 w-4" />
             Sites ({client.sites.length})
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="space-y-4">
           {client.sites.length === 0 ? (
-            <p className="text-sm text-muted-foreground p-6">No sites registered.</p>
+            <p className="text-sm text-muted-foreground">No sites registered.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -152,6 +165,7 @@ export default async function ClientDetailPage({ params }: Props) {
                   <TableHead>Address</TableHead>
                   <TableHead className="text-right">Employees</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -165,11 +179,94 @@ export default async function ClientDetailPage({ params }: Props) {
                         {site.active ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <form
+                        action={async () => {
+                          "use server"
+                          await deleteSite(site.id)
+                        }}
+                      >
+                        <button
+                          type="submit"
+                          className="text-destructive hover:text-destructive/80"
+                          aria-label="Delete site"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </form>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-medium mb-3 flex items-center gap-1">
+              <Plus className="h-4 w-4" /> Add Site
+            </h3>
+            <AddSiteForm action={addSiteAction} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Certifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Certifications ({client.certifications.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {client.certifications.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Standard</TableHead>
+                  <TableHead>Scope</TableHead>
+                  <TableHead>Certificate #</TableHead>
+                  <TableHead>Expiry</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {client.certifications.map((cert) => (
+                  <TableRow key={cert.id}>
+                    <TableCell className="font-medium">{cert.standard.code}</TableCell>
+                    <TableCell className="text-sm max-w-xs">
+                      <p className="line-clamp-2">{cert.certificationScope}</p>
+                    </TableCell>
+                    <TableCell className="text-sm font-mono">{cert.certificateId || "—"}</TableCell>
+                    <TableCell className="text-sm">
+                      {cert.expiryDate ? format(cert.expiryDate, "dd MMM yyyy") : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          cert.certificateStatus === "ACTIVE"
+                            ? "default"
+                            : cert.certificateStatus === "SUSPENDED" || cert.certificateStatus === "WITHDRAWN"
+                            ? "destructive"
+                            : "outline"
+                        }
+                      >
+                        {cert.certificateStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button render={<Link href={`/cb-admin/clients/${id}/certifications/${cert.id}`} />} variant="ghost" size="sm">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-medium mb-3 flex items-center gap-1">
+              <Plus className="h-4 w-4" /> Add Certification
+            </h3>
+            <AddCertificationForm action={addCertAction} standards={standards} />
+          </div>
         </CardContent>
       </Card>
 

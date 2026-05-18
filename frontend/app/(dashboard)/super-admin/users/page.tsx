@@ -2,12 +2,15 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { format } from "date-fns"
-import { Users } from "lucide-react"
+import { Plus, Users } from "lucide-react"
+import { CreateUserForm } from "@/components/create-user-form"
+import { toggleUserActive } from "@/lib/actions/super-admin"
 
 const ROLE_LABEL: Record<string, string> = {
   SUPER_ADMIN: "Super Admin",
@@ -22,12 +25,13 @@ export default async function UsersPage() {
   const session = await auth()
   if (!session?.user || session.user.role !== "SUPER_ADMIN") redirect("/")
 
-  const users = await prisma.user.findMany({
-    orderBy: [{ role: "asc" }, { name: "asc" }],
-    include: {
-      cbOrg: { select: { name: true } },
-    },
-  })
+  const [users, cbOrgs] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+      include: { cbOrg: { select: { name: true } } },
+    }),
+    prisma.cbOrg.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ])
 
   return (
     <div className="space-y-6">
@@ -54,6 +58,7 @@ export default async function UsersPage() {
                 <TableHead>CB Organisation</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -73,10 +78,32 @@ export default async function UsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">{format(u.createdAt, "dd MMM yyyy")}</TableCell>
+                  <TableCell>
+                    <form action={async () => {
+                      "use server"
+                      await toggleUserActive(u.id, !u.isActive)
+                    }}>
+                      <Button type="submit" variant="ghost" size="sm">
+                        {u.isActive ? "Deactivate" : "Activate"}
+                      </Button>
+                    </form>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create User
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CreateUserForm cbOrgs={cbOrgs} />
         </CardContent>
       </Card>
     </div>

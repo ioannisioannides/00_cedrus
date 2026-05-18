@@ -2,12 +2,15 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { format } from "date-fns"
-import { Building2 } from "lucide-react"
+import { Building2, Plus } from "lucide-react"
+import { CreateCbOrgForm } from "@/components/super-admin-forms"
+import { toggleCbOrgActive } from "@/lib/actions/super-admin"
 
 export default async function CbOrgsPage() {
   const session = await auth()
@@ -45,7 +48,9 @@ export default async function CbOrgsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Code</TableHead>
                   <TableHead className="text-right">Users</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -54,12 +59,39 @@ export default async function CbOrgsPage() {
                     <TableCell className="font-medium">{org.name}</TableCell>
                     <TableCell className="font-mono text-sm text-muted-foreground">{org.code}</TableCell>
                     <TableCell className="text-right text-sm">{org._count.users}</TableCell>
+                    <TableCell>
+                      <Badge variant={org.isActive ? "default" : "outline"}>
+                        {org.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-sm">{format(org.createdAt, "dd MMM yyyy")}</TableCell>
+                    <TableCell>
+                      <form action={async () => {
+                        "use server"
+                        await toggleCbOrgActive(org.id, !org.isActive)
+                      }}>
+                        <Button type="submit" variant="ghost" size="sm">
+                          {org.isActive ? "Deactivate" : "Activate"}
+                        </Button>
+                      </form>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add CB Organisation
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CreateCbOrgForm />
         </CardContent>
       </Card>
     </div>

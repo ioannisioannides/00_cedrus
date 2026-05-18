@@ -115,3 +115,111 @@ export async function deleteClientOrg(id: string): Promise<FormState> {
   revalidatePath("/cb-admin/clients")
   return { success: true }
 }
+
+// ─── Sites ────────────────────────────────────────────────────────────────────
+
+const SiteSchema = z.object({
+  siteName: z.string().min(2, "Site name is required"),
+  siteAddress: z.string().min(5, "Site address is required"),
+  siteEmployeeCount: z.coerce.number().int().min(0).optional(),
+  siteScope: z.string().default(""),
+})
+
+export async function addSite(
+  clientOrgId: string,
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  await requireCbAdmin()
+
+  const parsed = SiteSchema.safeParse({
+    siteName: formData.get("siteName"),
+    siteAddress: formData.get("siteAddress"),
+    siteEmployeeCount: formData.get("siteEmployeeCount") || undefined,
+    siteScope: formData.get("siteScope") || "",
+  })
+
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  await prisma.site.create({ data: { clientOrgId, ...parsed.data } })
+  revalidatePath(`/cb-admin/clients/${clientOrgId}`)
+  return { success: true }
+}
+
+export async function deleteSite(siteId: string): Promise<void> {
+  const session = await auth()
+  if (!session?.user || !["SUPER_ADMIN", "CB_ADMIN"].includes(session.user.role)) return
+
+  const site = await prisma.site.findUnique({ where: { id: siteId } })
+  if (!site) return
+
+  await prisma.site.delete({ where: { id: siteId } })
+  revalidatePath(`/cb-admin/clients/${site.clientOrgId}`)
+}
+
+// ─── Certifications ───────────────────────────────────────────────────────────
+
+const CertificationSchema = z.object({
+  standardId: z.string().min(1, "Standard is required"),
+  certificationScope: z.string().min(5, "Certification scope is required"),
+  certificateId: z.string().default(""),
+  certificateStatus: z.enum(["DRAFT", "ACTIVE", "SUSPENDED", "WITHDRAWN", "EXPIRED"]).default("DRAFT"),
+  issueDate: z.string().optional(),
+  expiryDate: z.string().optional(),
+})
+
+export async function addCertification(
+  clientOrgId: string,
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  await requireCbAdmin()
+
+  const parsed = CertificationSchema.safeParse({
+    standardId: formData.get("standardId"),
+    certificationScope: formData.get("certificationScope"),
+    certificateId: formData.get("certificateId") || "",
+    certificateStatus: formData.get("certificateStatus") || "DRAFT",
+    issueDate: formData.get("issueDate") || undefined,
+    expiryDate: formData.get("expiryDate") || undefined,
+  })
+
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  try {
+    await prisma.certification.create({
+      data: {
+        clientOrgId,
+        standardId: parsed.data.standardId,
+        certificationScope: parsed.data.certificationScope,
+        certificateId: parsed.data.certificateId,
+        certificateStatus: parsed.data.certificateStatus,
+        issueDate: parsed.data.issueDate ? new Date(parsed.data.issueDate) : null,
+        expiryDate: parsed.data.expiryDate ? new Date(parsed.data.expiryDate) : null,
+      },
+    })
+  } catch {
+    return { error: "A certification for this standard already exists for this client." }
+  }
+
+  revalidatePath(`/cb-admin/clients/${clientOrgId}`)
+  return { success: true }
+}
+
+export async function updateCertificationStatus(
+  certId: string,
+  status: string
+): Promise<void> {
+  const session = await auth()
+  if (!session?.user || !["SUPER_ADMIN", "CB_ADMIN"].includes(session.user.role)) return
+
+  const cert = await prisma.certification.findUnique({ where: { id: certId } })
+  if (!cert) return
+
+  await prisma.certification.update({
+    where: { id: certId },
+    data: { certificateStatus: status as "DRAFT" | "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | "EXPIRED" },
+  })
+  revalidatePath(`/cb-admin/clients/${cert.clientOrgId}`)
+}
+
