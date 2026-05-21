@@ -38,10 +38,13 @@ export default async function ClientAuditDetailPage({
   const session = await auth()
   if (!session?.user || session.user.role !== "CLIENT_ADMIN") redirect("/")
 
+  const clientOrgId = session.user.clientOrgId
+  if (!clientOrgId) redirect("/client-admin")
+
   const { id } = await params
 
   const audit = await prisma.audit.findUnique({
-    where: { id },
+    where: { id, clientOrgId },
     include: {
       clientOrg: { select: { name: true } },
       leadAuditor: { select: { name: true } },

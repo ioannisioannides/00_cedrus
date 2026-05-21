@@ -50,6 +50,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { title: "Audits", href: "/cb-admin/audits", icon: ClipboardList },
     { title: "Audit Programs", href: "/cb-admin/programs", icon: FileText },
     { title: "Auditors", href: "/cb-admin/auditors", icon: UserCheck },
+    { title: "Users", href: "/cb-admin/users", icon: Users },
     { title: "Complaints", href: "/cb-admin/complaints", icon: MessageSquareWarning },
     { title: "Appeals", href: "/cb-admin/appeals", icon: Scale },
   ],

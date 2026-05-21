@@ -35,6 +35,15 @@ interface AuditFormProps {
   auditors: Auditor[]
   programs: AuditProgram[]
   defaultClientOrgId?: string
+  defaultValues?: {
+    auditType?: string
+    dateFrom?: string
+    dateTo?: string
+    leadAuditorId?: string
+    programId?: string
+    plannedDurationHours?: string
+    durationJustification?: string
+  }
 }
 
 const AUDIT_TYPES = [
@@ -55,13 +64,14 @@ export function AuditForm({
   auditors,
   programs,
   defaultClientOrgId,
+  defaultValues,
 }: AuditFormProps) {
   const router = useRouter()
   const [state, formAction, isPending] = useActionState(action, INITIAL_STATE)
 
   useEffect(() => {
     if (state.success && state.id) {
-      toast.success("Audit created.")
+      toast.success(state.id ? "Audit saved." : "Audit created.")
       router.push(`/cb-admin/audits/${state.id}`)
     } else if (state.error) {
       toast.error(state.error)
@@ -99,6 +109,7 @@ export function AuditForm({
                 name="auditType"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 required
+                defaultValue={defaultValues?.auditType ?? ""}
               >
                 <option value="">Select type…</option>
                 {AUDIT_TYPES.map((t) => (
@@ -111,11 +122,11 @@ export function AuditForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="dateFrom">Start Date *</Label>
-              <Input id="dateFrom" name="dateFrom" type="date" required />
+              <Input id="dateFrom" name="dateFrom" type="date" required defaultValue={defaultValues?.dateFrom ?? ""} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dateTo">End Date *</Label>
-              <Input id="dateTo" name="dateTo" type="date" required />
+              <Input id="dateTo" name="dateTo" type="date" required defaultValue={defaultValues?.dateTo ?? ""} />
             </div>
           </div>
 
@@ -126,6 +137,7 @@ export function AuditForm({
                 id="leadAuditorId"
                 name="leadAuditorId"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                defaultValue={defaultValues?.leadAuditorId ?? ""}
               >
                 <option value="">Assign later…</option>
                 {auditors.map((a) => (
@@ -140,6 +152,7 @@ export function AuditForm({
                 id="programId"
                 name="programId"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                defaultValue={defaultValues?.programId ?? ""}
               >
                 <option value="">None</option>
                 {programs.map((p) => (
@@ -158,6 +171,7 @@ export function AuditForm({
               min="0.5"
               step="0.5"
               placeholder="e.g. 16"
+              defaultValue={defaultValues?.plannedDurationHours ?? ""}
             />
           </div>
 
@@ -169,6 +183,7 @@ export function AuditForm({
               rows={3}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
               placeholder="Basis for planned audit duration…"
+              defaultValue={defaultValues?.durationJustification ?? ""}
             />
           </div>
         </CardContent>
@@ -180,7 +195,7 @@ export function AuditForm({
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Creating…" : "Create Audit"}
+          {isPending ? "Saving…" : defaultValues ? "Save Changes" : "Create Audit"}
         </Button>
         <Button
           type="button"

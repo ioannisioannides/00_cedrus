@@ -4,3 +4,11 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function formatEnum(value: string): string {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\bNc\b/g, "NC")
+    .replace(/\bOfi\b/g, "OFI")
+}

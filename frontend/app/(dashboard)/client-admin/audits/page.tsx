@@ -39,8 +39,12 @@ export default async function ClientAuditsPage() {
   const session = await auth()
   if (!session?.user || session.user.role !== "CLIENT_ADMIN") redirect("/")
 
+  const clientOrgId = session.user.clientOrgId
+  if (!clientOrgId) redirect("/client-admin")
+
   const audits = await prisma.audit.findMany({
     where: {
+      clientOrgId,
       status: {
         in: [
           "SCHEDULED",

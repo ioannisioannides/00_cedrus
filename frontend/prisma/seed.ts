@@ -16,6 +16,7 @@ const DEMO_USERS: Array<{
   password: string
   role: Role
   orgCode: string | null
+  clientOrgCode: string | null
 }> = [
   {
     name: "System Administrator",
@@ -23,6 +24,7 @@ const DEMO_USERS: Array<{
     password: "SuperAdmin123!",
     role: Role.SUPER_ADMIN,
     orgCode: null,
+    clientOrgCode: null,
   },
   {
     name: "CB Administrator",
@@ -30,6 +32,7 @@ const DEMO_USERS: Array<{
     password: "CBAdmin123!",
     role: Role.CB_ADMIN,
     orgCode: "CEDRUS-CB",
+    clientOrgCode: null,
   },
   {
     name: "Lead Auditor",
@@ -37,6 +40,7 @@ const DEMO_USERS: Array<{
     password: "Auditor123!",
     role: Role.LEAD_AUDITOR,
     orgCode: "CEDRUS-CB",
+    clientOrgCode: null,
   },
   {
     name: "Technical Reviewer",
@@ -44,6 +48,7 @@ const DEMO_USERS: Array<{
     password: "TechReview123!",
     role: Role.TECHNICAL_REVIEWER,
     orgCode: "CEDRUS-CB",
+    clientOrgCode: null,
   },
   {
     name: "Decision Maker",
@@ -51,13 +56,15 @@ const DEMO_USERS: Array<{
     password: "Decision123!",
     role: Role.DECISION_MAKER,
     orgCode: "CEDRUS-CB",
+    clientOrgCode: null,
   },
   {
     name: "Client Administrator",
     email: "clientadmin@cedrus.example",
     password: "ClientAdmin123!",
     role: Role.CLIENT_ADMIN,
-    orgCode: "ACME-001",
+    orgCode: null,
+    clientOrgCode: "ACME-IND",
   },
 ]
 
@@ -70,15 +77,23 @@ async function main() {
     create: { name: "Cedrus Certification Body", code: "CEDRUS-CB" },
   })
 
-  const acme = await prisma.cbOrg.upsert({
-    where: { code: "ACME-001" },
-    update: {},
-    create: { name: "Acme Corp", code: "ACME-001" },
-  })
-
   const orgMap: Record<string, string> = {
     "CEDRUS-CB": cb.id,
-    "ACME-001": acme.id,
+  }
+
+  const acmeClientOrg = await prisma.clientOrg.upsert({
+    where: { customerId: "ACME-IND-001" },
+    update: {},
+    create: {
+      name: "Acme Industries Ltd",
+      customerId: "ACME-IND-001",
+      registeredAddress: "123 Industrial Way, London, UK",
+      totalEmployeeCount: 250,
+    },
+  })
+
+  const clientOrgMap: Record<string, string> = {
+    "ACME-IND": acmeClientOrg.id,
   }
 
   for (const demo of DEMO_USERS) {
@@ -92,6 +107,7 @@ async function main() {
         passwordHash,
         role: demo.role,
         cbOrgId: demo.orgCode ? orgMap[demo.orgCode] : null,
+        clientOrgId: demo.clientOrgCode ? clientOrgMap[demo.clientOrgCode] : null,
       },
     })
     console.log(`  ✓ ${demo.role.padEnd(20)} ${demo.email}  (${demo.password})`)

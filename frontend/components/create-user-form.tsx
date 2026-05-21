@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { useActionState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -18,9 +19,11 @@ const ROLES = [
 ]
 
 type CbOrg = { id: string; name: string }
+type ClientOrgItem = { id: string; name: string }
 
-export function CreateUserForm({ cbOrgs }: { cbOrgs: CbOrg[] }) {
+export function CreateUserForm({ cbOrgs, clientOrgs }: { cbOrgs: CbOrg[]; clientOrgs: ClientOrgItem[] }) {
   const [state, formAction, pending] = useActionState(createUser, {})
+  const [selectedRole, setSelectedRole] = React.useState("")
 
   return (
     <form action={formAction} className="space-y-4 max-w-2xl">
@@ -39,7 +42,7 @@ export function CreateUserForm({ cbOrgs }: { cbOrgs: CbOrg[] }) {
         </div>
         <div>
           <Label htmlFor="role">Role *</Label>
-          <Select name="role" required>
+          <Select name="role" required onValueChange={setSelectedRole}>
             <SelectTrigger id="role" className="mt-1">
               <SelectValue placeholder="Select role..." />
             </SelectTrigger>
@@ -50,19 +53,35 @@ export function CreateUserForm({ cbOrgs }: { cbOrgs: CbOrg[] }) {
             </SelectContent>
           </Select>
         </div>
-        <div className="sm:col-span-2">
-          <Label htmlFor="cbOrgId">CB Organisation (if applicable)</Label>
-          <select
-            id="cbOrgId"
-            name="cbOrgId"
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">— None —</option>
-            {cbOrgs.map((o) => (
-              <option key={o.id} value={o.id}>{o.name}</option>
-            ))}
-          </select>
-        </div>
+        {selectedRole === "CLIENT_ADMIN" ? (
+          <div className="sm:col-span-2">
+            <Label htmlFor="clientOrgId">Client Organisation *</Label>
+            <select
+              id="clientOrgId"
+              name="clientOrgId"
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">— None —</option>
+              {clientOrgs.map((o) => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="sm:col-span-2">
+            <Label htmlFor="cbOrgId">CB Organisation (if applicable)</Label>
+            <select
+              id="cbOrgId"
+              name="cbOrgId"
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">— None —</option>
+              {cbOrgs.map((o) => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {state.success && (

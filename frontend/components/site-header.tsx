@@ -13,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { LogOut } from "lucide-react"
+import { LogOut, User } from "lucide-react"
+import Link from "next/link"
 import type { Role } from "@prisma/client"
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -68,6 +69,13 @@ export function SiteHeader({ user }: SiteHeaderProps) {
                 <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="cursor-pointer flex items-center">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"

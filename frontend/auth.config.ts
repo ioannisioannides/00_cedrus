@@ -24,6 +24,8 @@ export const authConfig = {
         token.role = (user as any).role as Role
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         token.organizationId = (user as any).organizationId as string | null
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        token.clientOrgId = (user as any).clientOrgId as string | null
       }
       return token
     },
@@ -31,6 +33,7 @@ export const authConfig = {
       session.user.id = token.id as string
       session.user.role = token.role as Role
       session.user.organizationId = token.organizationId as string | null
+      session.user.clientOrgId = token.clientOrgId as string | null
       return session
     },
   },

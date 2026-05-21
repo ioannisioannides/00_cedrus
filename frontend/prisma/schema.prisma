@@ -32,32 +32,33 @@ model CbOrg {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role
-  isActive     Boolean  @default(true)
-  cbOrgId      String?
-  cbOrg        CbOrg?   @relation(fields: [cbOrgId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          Role
+  isActive      Boolean   @default(true)
+  cbOrgId       String?
+  cbOrg         CbOrg?    @relation(fields: [cbOrgId], references: [id])
+  clientOrgId   String?
+  clientOrg     ClientOrg? @relation("ClientAdmins", fields: [clientOrgId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // Relations populated throughout schema
-  auditProgramsCreated       AuditProgram[]         @relation("AuditProgramsCreated")
-  auditsCreated              Audit[]                @relation("AuditsCreated")
-  auditsLed                  Audit[]                @relation("AuditsLed")
+  auditProgramsCreated       AuditProgram[]          @relation("AuditProgramsCreated")
+  auditsCreated              Audit[]                 @relation("AuditsCreated")
+  auditsLed                  Audit[]                 @relation("AuditsLed")
   auditTeamAssignments       AuditTeamMember[]
-  findingsCreated            Finding[]              @relation("FindingsCreated")
-  findingsVerified           Finding[]              @relation("FindingsVerified")
-  evidenceUploads            EvidenceFile[]         @relation("EvidenceUploads")
-  statusLogs                 AuditStatusLog[]       @relation("StatusLogs")
-  technicalReviews           TechnicalReview[]      @relation("TechnicalReviews")
+  findingsCreated            Finding[]               @relation("FindingsCreated")
+  findingsVerified           Finding[]               @relation("FindingsVerified")
+  evidenceUploads            EvidenceFile[]          @relation("EvidenceUploads")
+  statusLogs                 AuditStatusLog[]        @relation("StatusLogs")
+  technicalReviews           TechnicalReview[]       @relation("TechnicalReviews")
   certificationDecisions     CertificationDecision[] @relation("DecisionsMade")
-  complaintsSubmitted        Complaint[]            @relation("ComplaintsSubmitted")
-  complaintsInvestigating    Complaint[]            @relation("ComplaintsInvestigating")
-  appealsSubmitted           Appeal[]               @relation("AppealsSubmitted")
-  appealPanels               AppealPanelMember[]
+  complaintsSubmitted        Complaint[]             @relation("ComplaintsSubmitted")
+  complaintsInvestigating    Complaint[]             @relation("ComplaintsInvestigating")
+  appealsSubmitted           Appeal[]                @relation("AppealsSubmitted")
   certificateHistoryActions  CertificateHistory[]
   competenceWarnings         AuditorCompetenceWarning[]
 }
@@ -90,6 +91,7 @@ model ClientOrg {
   auditPrograms  AuditProgram[]
   audits         Audit[]
   complaints     Complaint[]
+  clientAdmins   User[]          @relation("ClientAdmins")
 }
 
 model Site {
@@ -284,12 +286,9 @@ model Audit {
   findings              Finding[]
   recommendations       AuditRecommendation[]
   statusLogs            AuditStatusLog[]
-  remoteAuditLogs       RemoteAuditLog[]
-  preAuditDocuments     PreAuditDocumentSubmission[]
   evidenceFiles         EvidenceFile[]
   certificationDecision CertificationDecision?
   technicalReview       TechnicalReview?
-  transferCertification TransferCertification?
   complaints            Complaint[]
 
   @@index([status])
@@ -428,7 +427,6 @@ model Finding {
   verifiedBy             User?                @relation("FindingsVerified", fields: [verifiedById], references: [id])
   verifiedAt             DateTime?
   verificationNotes      String               @default("")
-  rootCauseCategories    FindingRootCause[]
 
   // Observation-specific fields
   observationStatement   String?
@@ -437,46 +435,9 @@ model Finding {
   // OFI-specific fields
   ofiDescription         String?
 
-  recurrences FindingRecurrence[]
-
   @@index([auditId])
   @@index([findingType])
   @@index([verificationStatus])
-}
-
-model RootCauseCategory {
-  id            String              @id @default(cuid())
-  name          String
-  code          String              @unique
-  description   String              @default("")
-  parentId      String?
-  parent        RootCauseCategory?  @relation("Subcategories", fields: [parentId], references: [id])
-  subcategories RootCauseCategory[] @relation("Subcategories")
-  isActive      Boolean             @default(true)
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-
-  findings FindingRootCause[]
-
-  @@index([code])
-  @@index([isActive])
-}
-
-model FindingRootCause {
-  finding             Finding           @relation(fields: [findingId], references: [id], onDelete: Cascade)
-  findingId           String
-  rootCauseCategory   RootCauseCategory @relation(fields: [rootCauseCategoryId], references: [id])
-  rootCauseCategoryId String
-
-  @@id([findingId, rootCauseCategoryId])
-}
-
-model FindingRecurrence {
-  id        String   @id @default(cuid())
-  finding   Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
-  findingId String
-  notes     String   @default("")
-  createdAt DateTime @default(now())
 }
 
 model AuditRecommendation {
@@ -499,25 +460,6 @@ model AuditStatusLog {
   changedAt   DateTime    @default(now())
 
   @@index([auditId])
-}
-
-model RemoteAuditLog {
-  id       String   @id @default(cuid())
-  audit    Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId  String
-  platform String
-  notes    String   @default("")
-  loggedAt DateTime @default(now())
-}
-
-model PreAuditDocumentSubmission {
-  id           String   @id @default(cuid())
-  audit        Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId      String
-  documentType String
-  fileName     String
-  filePath     String
-  submittedAt  DateTime @default(now())
 }
 
 model EvidenceFile {
@@ -654,19 +596,8 @@ model Appeal {
   panelDecisionDate  DateTime?
   panelJustification String               @default("")
 
-  panelMembers AppealPanelMember[]
-
   @@index([status])
   @@index([appealNumber])
-}
-
-model AppealPanelMember {
-  appeal   Appeal @relation(fields: [appealId], references: [id], onDelete: Cascade)
-  appealId String
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String
-
-  @@id([appealId, userId])
 }
 
 enum TechnicalReviewStatus {
@@ -692,22 +623,4 @@ model TechnicalReview {
   clarificationRequested String                @default("")
 }
 
-model TransferCertification {
-  id                                  String    @id @default(cuid())
-  audit                               Audit     @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId                             String    @unique
-  previousCbName                      String
-  previousCbAccreditationBody         String    @default("")
-  previousCertificateNumber           String    @default("")
-  previousCertificateIssueDate        DateTime?
-  previousCertificateExpiryDate       DateTime?
-  reasonForTransfer                   String    @default("")
-  previousAuditReportsReceived        Boolean   @default(false)
-  previousNcRecordsReceived           Boolean   @default(false)
-  previousSurveillanceHistoryReceived Boolean   @default(false)
-  transferDateBeforeExpiry            Boolean   @default(false)
-  noExpiryExtensionApplied            Boolean   @default(false)
-  transferApproved                    Boolean?
-  transferApprovalNotes               String    @default("")
-}
 

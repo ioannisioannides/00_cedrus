@@ -31,6 +31,7 @@ export default async function CbAdminDashboard() {
     auditorCount,
     activeAudits,
     recentAudits,
+    openFindingsCount,
   ] = await Promise.all([
     prisma.clientOrg.count(),
     prisma.user.count({ where: { role: "LEAD_AUDITOR", isActive: true } }),
@@ -44,6 +45,9 @@ export default async function CbAdminDashboard() {
         leadAuditor: { select: { name: true } },
         _count: { select: { findings: true } },
       },
+    }),
+    prisma.finding.count({
+      where: { verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] } },
     }),
   ])
 
@@ -77,7 +81,7 @@ export default async function CbAdminDashboard() {
         />
         <StatCard
           title="Open Findings"
-          value={0}
+          value={openFindingsCount}
           description="Pending client response"
           icon={AlertTriangle}
         />

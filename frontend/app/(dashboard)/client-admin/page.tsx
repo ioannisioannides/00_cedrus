@@ -20,27 +20,31 @@ export default async function ClientAdminDashboard() {
   const session = await auth()
   if (!session?.user || session.user.role !== "CLIENT_ADMIN") redirect("/")
 
-  // Client admin must belong to a clientOrg — find via email
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  })
+  const clientOrgId = session.user.clientOrgId
+  if (!clientOrgId) {
+    // CLIENT_ADMIN with no org assigned — show empty state
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Client Admin Dashboard</h1>
+          <p className="text-muted-foreground">Your account is not yet linked to a client organisation. Contact your administrator.</p>
+        </div>
+      </div>
+    )
+  }
 
-  if (!user) redirect("/")
-
-  // Find the client org associated with audits this user's org is involved in
-  // Client admin is typically linked by their cbOrgId being null and belonging to a clientOrg
-  // For now, find audits relevant to the user's organisation context
   const [activeAudits, activeCerts] = await Promise.all([
     prisma.audit.count({
-      where: { status: { in: ["SCHEDULED", "IN_PROGRESS", "REPORT_DRAFT", "CLIENT_REVIEW"] } },
+      where: { clientOrgId, status: { in: ["SCHEDULED", "IN_PROGRESS", "REPORT_DRAFT", "CLIENT_REVIEW"] } },
     }),
     prisma.certification.count({
-      where: { certificateStatus: "ACTIVE" },
+      where: { clientOrgId, certificateStatus: "ACTIVE" },
     }),
   ])
 
   const openFindings = await prisma.finding.findMany({
     where: {
+      audit: { clientOrgId },
       findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
       verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
     },

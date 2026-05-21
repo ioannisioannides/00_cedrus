@@ -77,6 +77,45 @@ export async function createAudit(
   return { success: true, id: audit.id }
 }
 
+export async function updateAudit(
+  auditId: string,
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  await requireCbAdmin()
+
+  const parsed = AuditSchema.partial({ clientOrgId: true }).safeParse({
+    clientOrgId: formData.get("clientOrgId") || undefined,
+    programId: formData.get("programId") || undefined,
+    auditType: formData.get("auditType"),
+    dateFrom: formData.get("dateFrom"),
+    dateTo: formData.get("dateTo"),
+    plannedDurationHours: formData.get("plannedDurationHours") || undefined,
+    leadAuditorId: formData.get("leadAuditorId") || undefined,
+    durationJustification: formData.get("durationJustification") || "",
+  })
+
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  const { dateFrom, dateTo, ...rest } = parsed.data
+  const from = new Date(dateFrom!)
+  const to = new Date(dateTo!)
+
+  if (to < from) return { error: "End date must be on or after the start date." }
+
+  await prisma.audit.update({
+    where: { id: auditId },
+    data: {
+      ...rest,
+      dateFrom: from,
+      dateTo: to,
+    },
+  })
+
+  revalidatePath(`/cb-admin/audits/${auditId}`)
+  return { success: true, id: auditId }
+}
+
 export async function updateAuditStatus(
   auditId: string,
   newStatus: AuditStatus,

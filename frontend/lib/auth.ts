@@ -14,6 +14,7 @@ declare module "next-auth" {
       image?: string | null
       role: Role
       organizationId: string | null
+      clientOrgId: string | null
     }
   }
 }
@@ -45,6 +46,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           role: user.role,
           organizationId: user.cbOrgId,
+          clientOrgId: user.clientOrgId,
         }
       },
     }),

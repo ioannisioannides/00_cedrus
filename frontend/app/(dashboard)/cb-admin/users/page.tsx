@@ -1,53 +1,56 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { format } from "date-fns"
 import { Plus, Users } from "lucide-react"
-import { CreateUserForm } from "@/components/create-user-form"
-import { toggleUserActive } from "@/lib/actions/super-admin"
+import { toggleCbUserActive } from "@/lib/actions/users"
 
 const ROLE_LABEL: Record<string, string> = {
-  SUPER_ADMIN: "Super Admin",
   CB_ADMIN: "CB Admin",
   LEAD_AUDITOR: "Lead Auditor",
   TECHNICAL_REVIEWER: "Technical Reviewer",
   DECISION_MAKER: "Decision Maker",
-  CLIENT_ADMIN: "Client Admin",
 }
 
-export default async function UsersPage() {
+export default async function CbAdminUsersPage() {
   const session = await auth()
-  if (!session?.user || session.user.role !== "SUPER_ADMIN") redirect("/")
+  if (!session?.user || !["CB_ADMIN", "SUPER_ADMIN"].includes(session.user.role)) redirect("/")
 
-  const [users, cbOrgs, clientOrgs] = await Promise.all([
-    prisma.user.findMany({
-      orderBy: [{ role: "asc" }, { name: "asc" }],
-      include: { cbOrg: { select: { name: true } }, clientOrg: { select: { name: true } } },
-    }),
-    prisma.cbOrg.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.clientOrg.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-  ])
+  const users = await prisma.user.findMany({
+    where: {
+      cbOrgId: session.user.organizationId,
+      role: { in: ["CB_ADMIN", "LEAD_AUDITOR", "TECHNICAL_REVIEWER", "DECISION_MAKER"] },
+    },
+    orderBy: [{ role: "asc" }, { name: "asc" }],
+  })
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-        <p className="text-muted-foreground">{users.length} platform user{users.length !== 1 ? "s" : ""}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+          <p className="text-muted-foreground">{users.length} user{users.length !== 1 ? "s" : ""} in your CB</p>
+        </div>
+        <Button render={<Link href="/cb-admin/users/new" />} size="sm">
+          <Plus className="h-4 w-4 mr-1" />
+          New User
+        </Button>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            All Users
+            CB Users
           </CardTitle>
-          <CardDescription>Platform users across all certification bodies</CardDescription>
+          <CardDescription>Auditors, reviewers, and administrators in your certification body</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -56,9 +59,8 @@ export default async function UsersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>CB Organisation</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>Joined</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -72,7 +74,6 @@ export default async function UsersPage() {
                       {ROLE_LABEL[u.role] ?? u.role}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">{u.cbOrg?.name ?? u.clientOrg?.name ?? <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell>
                     <Badge variant={u.isActive ? "default" : "secondary"}>
                       {u.isActive ? "Active" : "Inactive"}
@@ -80,31 +81,31 @@ export default async function UsersPage() {
                   </TableCell>
                   <TableCell className="text-sm">{format(u.createdAt, "dd MMM yyyy")}</TableCell>
                   <TableCell>
-                    <form action={async () => {
-                      "use server"
-                      await toggleUserActive(u.id, !u.isActive)
-                    }}>
-                      <Button type="submit" variant="ghost" size="sm">
-                        {u.isActive ? "Deactivate" : "Activate"}
-                      </Button>
-                    </form>
+                    <div className="flex items-center gap-2">
+                      <form action={async () => {
+                        "use server"
+                        await toggleCbUserActive(u.id, !u.isActive)
+                      }}>
+                        <Button type="submit" variant="ghost" size="sm">
+                          {u.isActive ? "Deactivate" : "Activate"}
+                        </Button>
+                      </form>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
+              {users.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                    No users yet.{" "}
+                    <Link href="/cb-admin/users/new" className="text-primary hover:underline">
+                      Create one
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Create User
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CreateUserForm cbOrgs={cbOrgs} clientOrgs={clientOrgs} />
         </CardContent>
       </Card>
     </div>

@@ -23,12 +23,18 @@ export async function submitNCResponse(
     return { error: "Unauthorised" }
   }
 
+  const clientOrgId = session.user.clientOrgId
+  if (!clientOrgId) return { error: "Unauthorised" }
+
   const finding = await prisma.finding.findUnique({
     where: { id: findingId },
-    select: { id: true, verificationStatus: true, findingType: true, auditId: true },
+    select: { id: true, verificationStatus: true, findingType: true, auditId: true, audit: { select: { clientOrgId: true } } },
   })
 
   if (!finding) return { error: "Finding not found" }
+  if (finding.audit.clientOrgId !== clientOrgId) {
+    return { error: "Unauthorised" }
+  }
   if (!["NC_MAJOR", "NC_MINOR"].includes(finding.findingType)) {
     return { error: "Only non-conformities can have a client response" }
   }

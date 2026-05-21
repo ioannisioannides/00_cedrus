@@ -92,6 +92,7 @@ const CreateUserSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   role: z.nativeEnum(Role),
   cbOrgId: z.string().optional(),
+  clientOrgId: z.string().optional(),
 })
 
 export async function createUser(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -103,6 +104,7 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
     password: formData.get("password"),
     role: formData.get("role"),
     cbOrgId: formData.get("cbOrgId") || undefined,
+    clientOrgId: formData.get("clientOrgId") || undefined,
   })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
@@ -115,7 +117,8 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
         email: parsed.data.email,
         passwordHash,
         role: parsed.data.role,
-        cbOrgId: parsed.data.cbOrgId ?? null,
+        cbOrgId: parsed.data.role === "CLIENT_ADMIN" ? null : (parsed.data.cbOrgId ?? null),
+        clientOrgId: parsed.data.role === "CLIENT_ADMIN" ? (parsed.data.clientOrgId ?? null) : null,
       },
     })
   } catch {
