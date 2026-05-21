@@ -5,8 +5,6 @@ on:
     - cron: '0 2 * * 1' # Every Monday at 2 AM
   workflow_dispatch:
 
-env:
-  PYTHON_VERSION: '3.13'
 
 permissions:
   contents: read
@@ -15,7 +13,7 @@ permissions:
 
 jobs:
   # -----------------------------------------------------------------------------
-  # JOB 1: Dependency Audit (pip-audit)
+  # JOB 1: Dependency Audit (npm audit)
   # -----------------------------------------------------------------------------
   dependency-audit:
     name: Dependency Audit
@@ -23,23 +21,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          version: "latest"
-          enable-cache: false
-
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        working-directory: frontend
+        run: npm ci
 
-      - name: Export requirements for audit tools
-        run: uv export --format requirements-txt --no-emit-project --output-file requirements.txt
-
-      - name: Run pip-audit
-        run: uvx pip-audit -r requirements.txt --desc on
+      - name: Run npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=moderate
 
   # -----------------------------------------------------------------------------
   # JOB 2: Container Scan (Trivy)
@@ -83,88 +78,25 @@ jobs:
 
   # -----------------------------------------------------------------------------
   # JOB 3: DAST (OWASP ZAP Baseline Scan)
+  # Requires STAGING_URL variable set in repository/environment settings.
   # -----------------------------------------------------------------------------
   zap-scan:
     name: OWASP ZAP Scan
     runs-on: ubuntu-latest
+    if: vars.STAGING_URL != ''
     steps:
       - uses: actions/checkout@v6
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "latest"
-          enable-cache: false
-
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
-
-      - name: Start Application
-        env:
-          # DEBUG=True avoids SECURE_SSL_REDIRECT which blocks ZAP over HTTP.
-          # This is safe: the scan targets the app's routes, not its TLS config.
-          DJANGO_SECRET_KEY: 'zap-scan-only-throwaway-key-not-used-in-production-1234567890'
-          DJANGO_DEBUG: 'True'
-          DJANGO_ALLOWED_HOSTS: 'localhost,127.0.0.1'
-        run: |
-          uv run python manage.py migrate --run-syncdb
-          uv run python manage.py runserver 0.0.0.0:8000 &
-          echo "Waiting for Django to start..."
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:8000/health/ > /dev/null 2>&1; then
-              echo "Django is ready (attempt $i)"
-              break
-            fi
-            echo "  attempt $i/30 - waiting..."
-            sleep 2
-          done
-          curl -sf http://localhost:8000/health/ || { echo "ERROR: Django failed to start"; exit 1; }
 
       - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.15.0
         with:
-          target: 'http://localhost:8000'
+          target: ${{ vars.STAGING_URL }}
           fail_action: false
           cmd_options: '-a'
           artifact_name: zap_scan
 
   # -----------------------------------------------------------------------------
-  # JOB 4: Django Security Checks (--deploy flag)
-  # -----------------------------------------------------------------------------
-  django-security:
-    name: Django Deploy Checks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "latest"
-          enable-cache: false
-
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
-
-      - name: Django Check (Production Deploy)
-        env:
-          DJANGO_SECRET_KEY: 'ci-security-key-at-least-50-characters-long-for-deploy-check-only'
-          DJANGO_ALLOWED_HOSTS: 'localhost'
-          DJANGO_SETTINGS_MODULE: 'cedrus.settings_production'
-          SECURE_SSL_REDIRECT: 'False'
-          DATABASE_URL: 'sqlite:///ci_test.db'
-        # ERROR level: SSL/cookie warnings are expected since we disable
-        # SECURE_SSL_REDIRECT in CI (no TLS terminator). Real errors still fail.
-        run: uv run python manage.py check --deploy --fail-level ERROR
-
-  # -----------------------------------------------------------------------------
-  # JOB 5: Secret Scanning (Gitleaks)
+  # JOB 4: Secret Scanning (Gitleaks)
   # -----------------------------------------------------------------------------
   secret-scan:
     name: Secret Scanning
@@ -180,7 +112,7 @@ jobs:
           args: detect --source /github/workspace --verbose --redact -c /github/workspace/.gitleaks.toml
 
   # -----------------------------------------------------------------------------
-  # JOB 6: SBOM Generation (CycloneDX)
+  # JOB 5: SBOM Generation (CycloneDX via npm)
   # -----------------------------------------------------------------------------
   sbom:
     name: SBOM Generation
@@ -188,27 +120,24 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          version: "latest"
-          enable-cache: false
-
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev
-
-      - name: Export requirements
-        run: uv export --format requirements-txt --no-emit-project --output-file requirements.txt
+        working-directory: frontend
+        run: npm ci
 
       - name: Generate SBOM (CycloneDX)
-        run: uvx --from cyclonedx-bom cyclonedx-py requirements --of json -o sbom.json requirements.txt
+        working-directory: frontend
+        run: npm sbom --sbom-format cyclonedx > sbom.json
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v7
         with:
           name: sbom-cyclonedx
-          path: sbom.json
+          path: frontend/sbom.json
           retention-days: 90

@@ -24,7 +24,6 @@ jobs:
                 'Code Quality',
                 'Security Scan',
                 'Tests & Coverage',
-                'Django Checks',
                 'Docker Build'
               ]
             };
