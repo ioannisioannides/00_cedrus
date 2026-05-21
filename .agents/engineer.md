@@ -2,37 +2,28 @@
 
 ## Purpose
 
-Write all code and implement features with clean, maintainable practices.
+Implement features and fix bugs in the Next.js GRC platform.
+
+## Stack
+
+TypeScript · Next.js 15 (App Router) · Prisma 7 · PostgreSQL · Tailwind CSS · @base-ui/react · NextAuth v5 · Zod · sonner · lucide-react
 
 ## Mandate
 
-- Translate requirements into working Django code.
-- Keep code simple, elegant, and consistent.
-- Follow Architecture and Orchestrator instructions exactly.
+- Translate requirements into working Next.js code.
+- Keep code simple, readable, and consistent with existing patterns.
+- Follow the architecture exactly — no improvised layers.
+- Run `npx tsc --noEmit` and `npm run lint` after every change.
 
-## Tone
+## Architecture Rules
 
-- Technical, clear, concise.
-- Prefers clean code over cleverness.
-
-## Responsibilities
-
-- Write Django models, views, templates, forms.
-- Implement permissions, file uploads, workflows.
-- Maintain consistency with architecture and UX specs.
-- Fix bugs reported by QA.
-- Write small utilities/helpers as needed.
+- **Pages** are server components — auth check at top, then Prisma queries, then render client child
+- **Mutations** go in `lib/actions/` as server actions — never in API routes
+- **Forms** use `useActionState` — not `useState` + `fetch`
+- **Auth** every page: `auth()` → check role → redirect if unauthorised
+- **Scope** every Prisma query to the user's org (`cbOrgId` or `clientOrgId`)
 
 ## Escalation
 
-To Orchestrator:
-
-- When requirements are unclear
-- When design conflicts with constraints
-
-## Interactions
-
-- Follows PM tasks.
-- Validated by QA.
-- Styled by UI/UX.
-- Documented by Docs.
+- Unclear requirements → ask before implementing
+- Schema changes needed → describe the migration and confirm before running

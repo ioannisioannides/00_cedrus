@@ -1,114 +1,38 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-env/
-venv/
-ENV/
-build/
-dist/
-.eggs/
-.git/
-*.egg-info/
-htmlcov/
-.pytest_cache/
-*.sqlite3
-media/
-staticfiles/
-logs/
-.env
-# ==============================================================================
-# CEDRUS .dockerignore
-# ==============================================================================
-# Exclude unnecessary files from Docker build context
-# Reduces build time and image size
-# ==============================================================================
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-
-# Virtual environments
-venv/
-env/
-ENV/
-.venv
-
-# Django
-*.log
-db.sqlite3
-db.sqlite3-journal
-/media/*
-/staticfiles/*
-*.pot
-
-# Development
-.env
-.env.local
-.env.*.local
-local_settings.py
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Testing
-.coverage
-.pytest_cache/
-htmlcov/
-.tox/
-.hypothesis/
-*.bak
-
+# ──────────────────────────────────────────────────────────
 # Git
+# ──────────────────────────────────────────────────────────
 .git/
 .gitignore
 .gitattributes
 
-# CI/CD
-.github/
+# ──────────────────────────────────────────────────────────
+# Development
+# ──────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
 
-# Documentation (build docs separately)
+# ──────────────────────────────────────────────────────────
+# Dependencies & Build Cache
+# ──────────────────────────────────────────────────────────
+**/node_modules/
+**/.next/cache/
+
+# ──────────────────────────────────────────────────────────
+# Documentation & CI
+# ──────────────────────────────────────────────────────────
 docs/
+.github/
+.agents/
+.governance/
+.vscode/
 *.md
 !README.md
 
-# Docker
-docker-compose*.yml
-Dockerfile
-.dockerignore
-
-# Security reports (sensitive)
-security_*.json
-
-# Governance (not needed in container)
-.governance/
-
-# Agents (development only)
-.agents/
-
-# Trunk (not needed in production)
-trunk/
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-
-# OS files
-Thumbs.db
+# ──────────────────────────────────────────────────────────
+# OS
+# ──────────────────────────────────────────────────────────
 .DS_Store
-
-# Temporary files
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
+**/.DS_Store

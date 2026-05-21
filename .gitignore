@@ -1,73 +1,40 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-# Allow the Next.js frontend's lib/ directory
-!frontend/lib/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+# ──────────────────────────────────────────────────────────
+# Next.js
+# ──────────────────────────────────────────────────────────
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
 
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-/media
-/staticfiles
-/static
-
+# ──────────────────────────────────────────────────────────
 # Environment
+# ──────────────────────────────────────────────────────────
 .env
 .env.local
 .env.*.local
 
-# IDE
-.vscode/
+# ──────────────────────────────────────────────────────────
+# IDE / OS
+# ──────────────────────────────────────────────────────────
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
 
-# Testing
-.coverage
-coverage.xml
-.pytest_cache/
-htmlcov/
-.tox/
-.hypothesis/
-
+# ──────────────────────────────────────────────────────────
 # Security
+# ──────────────────────────────────────────────────────────
 *.pem
 *.key
 *.crt
 security_*.json
 
-# CI/CD
-.github/secrets/
-logs/*.log
-snyk-code.sarif
-node_modules/
-reports/
-_archive/
-results.sarif
-requirements.txt
+# ──────────────────────────────────────────────────────────
+# CI / Tooling
+# ──────────────────────────────────────────────────────────
 .actrc
+results.sarif
+snyk-code.sarif

@@ -1,5 +1,5 @@
 ---
-applyTo: "audit_management/**,certification/**"
+applyTo: "frontend/**/*.ts,frontend/**/*.tsx"
 ---
 
 # ISO 17021 Audit Domain Knowledge — Cedrus

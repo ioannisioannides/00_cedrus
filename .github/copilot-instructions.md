@@ -1,14 +1,14 @@
 # GitHub Copilot Instructions for Cedrus
 
-> Karpathy-Inspired AI Coding Guidelines — Django GRC Platform
+> Karpathy-Inspired AI Coding Guidelines — Next.js GRC Platform
 
 ---
 
 ## Project
 
-**Cedrus** is a Django 6 GRC (Governance, Risk, Compliance) platform for ISO 17021 external audit management by Certification Bodies.
+**Cedrus** is a Next.js 15 GRC (Governance, Risk, Compliance) platform for ISO 17021 external audit management by Certification Bodies.
 
-**Stack:** Python 3.13 · Django 6 · DRF · Celery · PostgreSQL · Redis · IBM Carbon Design System · uv · ruff · pytest-django
+**Stack:** TypeScript · Next.js 15 (App Router, Turbopack) · NextAuth v5 · Prisma 7 + PostgreSQL · Tailwind CSS · @base-ui/react · sonner · bcryptjs · zod · date-fns · lucide-react
 
 ---
 
@@ -17,100 +17,141 @@
 1. **Read before write** — understand existing code before changing it
 2. **Small changes** — make the minimum change that solves the problem
 3. **No clever code** — boring, obvious code beats clever code
-4. **Verify everything** — run `uv run ruff check .` and `uv run pytest -x -q` after every change
-5. **Fail loudly** — validate at boundaries, log errors, never silently swallow exceptions
-6. **One thing per function** — if you need "and" in a docstring, split the function
-7. **Make impossible states impossible** — use model validators, serializer validation, type hints
+4. **Verify everything** — run `npx tsc --noEmit` and `npm run lint` after every change
+5. **Fail loudly** — validate at boundaries, never silently ignore errors
+6. **One thing per function** — if you need "and" in a description, split the function
+7. **Make impossible states impossible** — use Zod schemas, TypeScript types, Prisma constraints
 
 ---
 
-## Django Patterns (Strict)
+## Architecture Layers
 
-### Architecture Layers
 ```
-adapters/models.py  → Models + business rules in clean()
-api/views/          → Thin DRF ViewSets (no business logic)
-api/serializers.py  → Input validation at API boundary
-domain/             → Domain services
-application/        → Use case orchestration
-forms/              → Django forms for template views
-templates/          → HTML — NO inline <script> blocks
-static/js/          → ALL JavaScript (external files only)
+app/(dashboard)/[role]/     → Page components (server components by default)
+components/                 → Shared UI components
+lib/actions/               → Server Actions (all mutation logic lives here)
+lib/auth.ts                → NextAuth config (JWT, session, authorize)
+lib/prisma.ts              → Prisma client singleton
+lib/utils.ts               → Shared utilities (cn, formatEnum)
+prisma/schema.prisma       → Single source of truth for data model
 ```
 
-### ORM Only — No Raw SQL
-```python
-# Always use the ORM
-Audit.objects.filter(organization_id=org_id).select_related("organization")
+### Page Pattern (Server Component)
+```tsx
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { prisma } from "@/lib/prisma"
+
+export default async function SomePage() {
+  const session = await auth()
+  if (!session?.user || session.user.role !== "CB_ADMIN") redirect("/")
+
+  const data = await prisma.someModel.findMany({ where: { ... } })
+  return <SomeClientComponent data={data} />
+}
 ```
 
-### Thin Views
-```python
-# Views orchestrate — they do not contain business logic
-def audit_close(request, pk):
-    audit = get_object_or_404(Audit, pk=pk)
-    AuditWorkflowService.close(audit, actor=request.user)
+### Server Action Pattern
+```ts
+"use server"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { prisma } from "@/lib/prisma"
+import { z } from "zod"
+import { revalidatePath } from "next/cache"
+
+const Schema = z.object({ name: z.string().min(1) })
+
+export async function doSomething(_prev: FormState, formData: FormData) {
+  const session = await auth()
+  if (!session?.user) redirect("/login")
+
+  const parsed = Schema.safeParse({ name: formData.get("name") })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  await prisma.someModel.create({ data: parsed.data })
+  revalidatePath("/some-path")
+  return { success: true }
+}
 ```
 
-### Query Parameter Validation
-```python
-org_id = request.GET.get("organization")
-if org_id:
-    try:
-        queryset = queryset.filter(organization_id=int(org_id))
-    except (ValueError, TypeError):
-        pass
+### Client Component Pattern
+```tsx
+"use client"
+import { useActionState } from "react"
+import { useEffect } from "react"
+import { toast } from "sonner"
+
+export function SomeForm({ action }: { action: (prev: FormState, fd: FormData) => Promise<FormState> }) {
+  const [state, formAction, pending] = useActionState(action, {})
+
+  useEffect(() => {
+    if (state.success) toast.success("Done.")
+    else if (state.error) toast.error(state.error)
+  }, [state])
+
+  return <form action={formAction}>...</form>
+}
 ```
 
 ---
 
 ## Security Rules (Non-Negotiable)
 
-- `DEBUG = False` by default — requires `DJANGO_DEBUG=True` explicitly
-- No `unsafe-inline` in `script-src` CSP — use external JS with `data-*` attributes
+- Every page: check `session.user.role` and `redirect("/")` if unauthorized
+- Every action: call `auth()` first — `redirect("/login")` if no session
+- Object-level: scope Prisma queries to the user's org (`cbOrgId` or `clientOrgId`)
 - No secrets in code — environment variables only
-- File uploads: validate extension + MIME type + size
-- Object-level permissions on every API endpoint
-- Validate and cast all query parameters at boundaries
-- Log errors with `logger.error()`, never swallow with bare `except: pass`
+- Never `JSON.parse` user input without validation
+- Use Zod for all form input validation at action boundaries
 
 ---
 
-## Testing
+## Key Conventions
 
-Run before every commit:
-```bash
-uv run ruff check .
-uv run ruff format --check .
-uv run bandit -c pyproject.toml -r . -ll
-uv run pytest -x -q
-```
-
-Coverage target: ≥ 75%
+- **`session.user.organizationId`** = cbOrgId (for CB roles)
+- **`session.user.clientOrgId`** = clientOrgId (for CLIENT_ADMIN)
+- **`@base-ui/react` Button with link**: `<Button render={<Link href="/foo" />}>Label</Button>`
+- **Toast**: `import { toast } from "sonner"` — `toast.success()` / `toast.error()`
+- **Enum display**: `import { formatEnum } from "@/lib/utils"` — converts `SOME_ENUM` → `"Some Enum"`
+- **Date display**: `import { format } from "date-fns"` — `format(date, "dd MMM yyyy")`
 
 ---
 
 ## What NOT To Do
 
-- Don't add features not in scope (check `docs/BACKLOG.md`)
+- Don't add features not in scope
 - Don't refactor working code unless asked
 - Don't add docstrings/comments to unchanged code
-- Don't use `print()` — use `logger.debug()`
-- Don't write raw SQL — use the ORM
+- Don't use `console.log` — use `console.error` only for caught errors in actions
+- Don't write raw SQL — use the Prisma ORM
 - Don't store secrets in code
-- Don't add inline `<script>` in templates — use external JS with data attributes
-- Don't catch and swallow exceptions silently
-- Don't ship code without running the test suite
+- Don't catch and silently ignore errors — return `{ error: "..." }` from actions
+- Don't ship code without running `npx tsc --noEmit`
 
 ---
 
 ## Key Commands
 
 ```bash
-uv sync --all-extras --dev           # Install deps
-DJANGO_DEBUG=True uv run python manage.py runserver  # Dev server
-uv run pytest -x -q                  # Fast tests
-uv run ruff check .                  # Lint
-uv run ruff format .                 # Format
-uv run bandit -c pyproject.toml -r . -ll  # Security scan
+cd frontend
+
+npm run dev                          # Dev server (Turbopack, port 3000)
+npm run build                        # Production build
+npm run lint                         # ESLint
+npx tsc --noEmit                     # Type check
+npx prisma studio                    # DB browser UI
+npx prisma migrate dev --name <name> # Create + apply migration
+npx tsx prisma/seed.ts               # Seed demo data
 ```
+
+## Demo Credentials (after seed)
+
+| Role | Email | Password |
+|------|-------|----------|
+| Super Admin | superadmin@cedrus.example | SuperAdmin123! |
+| CB Admin | cbadmin@cedrus.example | CBAdmin123! |
+| Lead Auditor | auditor1@cedrus.example | Auditor123! |
+| Technical Reviewer | techreviewer@cedrus.example | TechReview123! |
+| Decision Maker | decisionmaker@cedrus.example | Decision123! |
+| Client Admin | clientadmin@cedrus.example | ClientAdmin123! |

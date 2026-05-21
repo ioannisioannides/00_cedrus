@@ -50,6 +50,8 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Required for Docker multi-stage build — copies only the minimal server output
+  output: "standalone",
   // Prevent Turbopack from bundling Prisma and its driver adapters — they must
   // run as native Node.js modules. Without this, Turbopack resolves the wrong
   // package exports (e.g. edge/browser builds) and model delegates are undefined.

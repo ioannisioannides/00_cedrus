@@ -70,11 +70,9 @@ export function SiteHeader({ user }: SiteHeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/profile" className="cursor-pointer flex items-center">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </Link>
+            <DropdownMenuItem render={<Link href="/profile" className="cursor-pointer flex items-center" />}>
+              <User className="mr-2 h-4 w-4" />
+              Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

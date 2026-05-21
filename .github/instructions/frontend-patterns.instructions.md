@@ -1,102 +1,71 @@
 ---
-applyTo: "templates/**,static/js/**"
+applyTo: "frontend/components/**,frontend/app/**"
 ---
 
-# Frontend Patterns — IBM Carbon Design System + Django Templates
+# Frontend Component Patterns — Cedrus
 
-## Key Rules
+## UI Components (`components/ui/`)
 
-1. **No inline `<script>` blocks** — all JavaScript goes in `static/js/` external files
-2. Pass Django template variables to JS via `data-*` attributes on HTML elements
-3. Use IBM Carbon Web Components (CDN) for UI elements
-4. All pages extend `templates/base.html`
+Built on `@base-ui/react` + Tailwind CSS. Use existing components — do not add new UI libraries.
 
-## Data Attribute Pattern (for template variables in JS)
+```tsx
+// Button (with router link)
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+<Button render={<Link href="/cb-admin/audits/new" />}>New Audit</Button>
 
-```html
-{# In Django template — pass context to external JS via data attributes #}
-<div hidden
-     data-my-component
-     data-user-id="{{ user.pk }}"
-     data-org-id="{{ organization.pk }}"
-     data-audit-status="{{ audit.status }}"></div>
+// Card layout
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+<Card>
+  <CardHeader><CardTitle>Audits</CardTitle></CardHeader>
+  <CardContent>...</CardContent>
+</Card>
+
+// Badge (enum status display)
+import { Badge } from "@/components/ui/badge"
+<Badge variant="outline">{formatEnum(audit.status)}</Badge>
 ```
 
-```javascript
-// In static/js/cedrus-*.js — read data attributes
-(function () {
-    'use strict';
-    function init() {
-        const container = document.querySelector('[data-my-component]');
-        if (!container) return;
-        const userId = container.dataset.userId;
-        const orgId = container.dataset.orgId;
-        // ... use values
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-})();
+## Form Rules
+
+1. Forms always use `useActionState` — NOT `useState` + `fetch`
+2. Server action is the `action` prop of `<form>`
+3. Submit state managed via `pending` from `useActionState`
+4. Show results via `toast.success()` / `toast.error()` from `sonner`
+
+## Table Pattern (list pages)
+
+```tsx
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Client</TableHead>
+      <TableHead>Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {audits.map((a) => (
+      <TableRow key={a.id}>
+        <TableCell>{a.clientOrg.name}</TableCell>
+        <TableCell><Badge variant="outline">{formatEnum(a.status)}</Badge></TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
 ```
 
-## IBM Carbon Components (CDN)
+## Stat Cards (dashboard pattern)
 
-Components are loaded as Web Components via CDN modules in `base.html`. Use them as HTML elements:
-
-```html
-<bx-btn kind="primary" type="submit">Save</bx-btn>
-<bx-modal id="confirm-modal">
-  <bx-modal-header>
-    <bx-modal-heading>Confirm Action</bx-modal-heading>
-  </bx-modal-header>
-  <bx-modal-body>Are you sure?</bx-modal-body>
-  <bx-modal-footer>
-    <bx-btn kind="secondary" data-modal-close>Cancel</bx-btn>
-    <bx-btn kind="danger">Confirm</bx-btn>
-  </bx-modal-footer>
-</bx-modal>
+```tsx
+import { StatCard } from "@/components/stat-card"
+<StatCard title="Total Audits" value={count} icon={ClipboardList} href="/cb-admin/audits" />
 ```
 
-## Template Inheritance
+## Icons
 
-```html
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}Audit Detail — {{ audit.title }}{% endblock %}
-
-{% block content %}
-<div class="bx--grid">
-  <div class="bx--row">
-    <div class="bx--col-lg-12">
-      <!-- content here -->
-    </div>
-  </div>
-</div>
-{% endblock %}
-```
-
-## Static Files
-
-- `static/js/cedrus-app.js` — Main application JS (event handlers, UI)
-- `static/js/cedrus-forms.js` — Form enhancements, date validation, confirmation modals
-- `static/js/cedrus-a11y.js` — Accessibility utilities, ARIA announcements
-
-## CSRF for AJAX Requests
-
-```javascript
-function getCsrfToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]').value;
-}
-
-fetch('/api/endpoint/', {
-    method: 'POST',
-    headers: {
-        'X-CSRFToken': getCsrfToken(),
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-});
+Use `lucide-react` exclusively. Import individually:
+```tsx
+import { ClipboardList, Users, AlertTriangle } from "lucide-react"
 ```

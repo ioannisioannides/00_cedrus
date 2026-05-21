@@ -1,0 +1,44 @@
+{
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "python.languageServer": "None",
+  "python.linting.pylintEnabled": false,
+  "python.linting.enabled": true,
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    }
+  },
+  "chat.mcp.serverSampling": {
+    "00_cedrus/.vscode/mcp.json: github": {
+        "allowedModels": [
+            "copilot/claude-sonnet-4.5",
+            "copilot/auto",
+            "copilot/claude-haiku-4.5",
+            "copilot/claude-sonnet-4",
+            "copilot/gemini-2.5-pro",
+            "copilot/gemini-3-pro-preview",
+            "copilot/gpt-4.1",
+            "copilot/gpt-4o",
+            "copilot/gpt-5",
+            "copilot/gpt-5-mini",
+            "copilot/gpt-5-codex",
+            "copilot/gpt-5.1",
+            "copilot/gpt-5.1-codex",
+            "copilot/gpt-5.1-codex-mini",
+            "copilot/grok-code-fast-1",
+            "copilot/oswe-vscode-secondary"
+        ]
+    }
+},
+"python.testing.pytestArgs": [
+  "."
+],
+"python.testing.unittestEnabled": false,
+"python.testing.pytestEnabled": true,
+"python.envFile": "${workspaceFolder}/.env.test"
+}

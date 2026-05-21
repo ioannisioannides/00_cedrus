@@ -1,5 +1,5 @@
 ---
-applyTo: "**/*.py,**/*.yml,**/*.yaml,Dockerfile*,docker-compose*.yml"
+applyTo: "frontend/**/*.ts,frontend/**/*.tsx,**/*.yml,**/*.yaml,Dockerfile*,docker-compose*.yml"
 ---
 
 # Security Patterns — OWASP / Django Hardening
