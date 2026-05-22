@@ -9,11 +9,12 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { NCResponseForm } from "@/components/nc-response-form"
 import { submitNCResponse } from "@/lib/actions/nc-responses"
-import { ChevronLeft } from "lucide-react"
+import { AuditProgressionMap } from "@/components/audit-progression-map"
+import { FindingCommentsSection } from "@/components/finding-comments-section"
+import { ChevronLeft, FileText } from "lucide-react"
 import { format } from "date-fns"
 
 const FINDING_BADGE: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -49,10 +50,15 @@ export default async function ClientAuditDetailPage({
       clientOrg: { select: { name: true } },
       leadAuditor: { select: { name: true } },
       findings: {
-        where: { findingType: { in: ["NC_MAJOR", "NC_MINOR"] } },
         orderBy: [{ findingType: "asc" }, { createdAt: "asc" }],
         include: {
           standard: { select: { code: true } },
+          comments: {
+            include: {
+              user: { select: { name: true, role: true } },
+            },
+            orderBy: { createdAt: "asc" },
+          },
         },
       },
     },
@@ -66,10 +72,20 @@ export default async function ClientAuditDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <Button render={<Link href="/client-admin/audits" />} variant="ghost" size="sm">
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to Audits
+        </Button>
+
+        <Button
+          render={<Link href={`/client-admin/audits/${audit.id}/report`} />}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1.5"
+        >
+          <FileText className="h-4 w-4" />
+          Print / Download Formal Report
         </Button>
       </div>
 
@@ -81,13 +97,18 @@ export default async function ClientAuditDetailPage({
         </p>
       </div>
 
+      {/* Audit Process Progression Map */}
+      <AuditProgressionMap currentStatus={audit.status} />
+
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-1">
             <CardDescription>Status</CardDescription>
           </CardHeader>
           <CardContent>
-            <Badge>{audit.status.replace(/_/g, " ")}</Badge>
+            <Badge className="font-sans uppercase text-xs tracking-wider">
+              {audit.status.replace(/_/g, " ")}
+            </Badge>
           </CardContent>
         </Card>
         <Card>
@@ -103,48 +124,55 @@ export default async function ClientAuditDetailPage({
             <CardDescription>Open Non-Conformances</CardDescription>
           </CardHeader>
           <CardContent className="text-sm font-medium">
-            {audit.findings.filter((f) => f.verificationStatus === "OPEN").length}
+            {audit.findings.filter((f) => (f.findingType === "NC_MAJOR" || f.findingType === "NC_MINOR") && f.verificationStatus === "OPEN").length}
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Non-Conformances</h2>
+        <h2 className="text-lg font-semibold">Audit Findings & Observations</h2>
 
         {audit.findings.length === 0 ? (
           <Card>
             <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              No non-conformances recorded for this audit.
+              No findings recorded for this audit yet.
             </CardContent>
           </Card>
         ) : (
           audit.findings.map((f) => {
-            const needsResponse = f.verificationStatus === "OPEN" && canRespond
+            const isNC = f.findingType === "NC_MAJOR" || f.findingType === "NC_MINOR"
+            const needsResponse = isNC && f.verificationStatus === "OPEN" && canRespond
             const boundAction = submitNCResponse.bind(null, f.id)
 
             return (
-              <Card key={f.id}>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={FINDING_BADGE[f.findingType] ?? "outline"}>
-                      {f.findingType.replace(/_/g, " ")}
-                    </Badge>
-                    <Badge variant="outline">
-                      {NC_STATUS_LABEL[f.verificationStatus] ?? f.verificationStatus}
-                    </Badge>
-                    {f.standard && (
-                      <span className="text-xs text-muted-foreground">{f.standard.code}</span>
-                    )}
-                    {f.clause && (
-                      <span className="text-xs text-muted-foreground">cl. {f.clause}</span>
-                    )}
+              <Card key={f.id} className="overflow-hidden">
+                <CardHeader className="bg-muted/10 border-b py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={FINDING_BADGE[f.findingType] ?? "outline"}>
+                        {f.findingType.replace(/_/g, " ")}
+                      </Badge>
+                      {isNC && (
+                        <Badge variant="outline">
+                          {NC_STATUS_LABEL[f.verificationStatus] ?? f.verificationStatus}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {f.standard && (
+                        <span className="font-semibold">{f.standard.code}</span>
+                      )}
+                      {f.clause && (
+                        <span>Clause {f.clause}</span>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-4">
                   {f.statementOfNc && (
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                        Statement of Non-Conformance
+                        Statement of Finding
                       </p>
                       <p className="text-sm">{f.statementOfNc}</p>
                     </div>
@@ -165,25 +193,25 @@ export default async function ClientAuditDetailPage({
                     </p>
                   )}
 
-                  {f.verificationStatus !== "OPEN" && f.clientCorrectiveAction && (
-                    <div className="rounded-md bg-muted/50 p-3 space-y-2">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Your Response
+                  {isNC && f.verificationStatus !== "OPEN" && f.clientCorrectiveAction && (
+                    <div className="rounded-md bg-muted/60 p-3 space-y-2 border">
+                      <p className="text-xs font-bold text-primary uppercase tracking-wide">
+                        Corrective Action Response
                       </p>
                       {f.clientRootCause && (
                         <div>
-                          <p className="text-xs text-muted-foreground">Root cause</p>
+                          <p className="text-xs text-muted-foreground font-semibold">Root cause analysis</p>
                           <p className="text-sm">{f.clientRootCause}</p>
                         </div>
                       )}
                       {f.clientCorrection && (
                         <div>
-                          <p className="text-xs text-muted-foreground">Correction</p>
+                          <p className="text-xs text-muted-foreground font-semibold">Immediate correction</p>
                           <p className="text-sm">{f.clientCorrection}</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-xs text-muted-foreground">Corrective action</p>
+                        <p className="text-xs text-muted-foreground font-semibold">Preventive action plan</p>
                         <p className="text-sm">{f.clientCorrectiveAction}</p>
                       </div>
                     </div>
@@ -191,7 +219,7 @@ export default async function ClientAuditDetailPage({
 
                   {needsResponse && (
                     <div className="border-t pt-4">
-                      <p className="text-sm font-medium mb-3">Submit your response</p>
+                      <p className="text-sm font-medium mb-3">Submit your corrective action plan</p>
                       <NCResponseForm
                         action={boundAction}
                         defaultValues={{
@@ -202,6 +230,9 @@ export default async function ClientAuditDetailPage({
                       />
                     </div>
                   )}
+
+                  {/* Finding Comment Discussion section */}
+                  <FindingCommentsSection findingId={f.id} comments={f.comments} />
                 </CardContent>
               </Card>
             )

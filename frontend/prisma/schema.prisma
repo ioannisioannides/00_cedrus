@@ -6,9 +6,476 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─────────────────────────────────────────────
-// Identity
-// ─────────────────────────────────────────────
+/// Certification Body team / CB organisation (for user affiliation)
+model CbOrg {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
+model User {
+  id                        String                     @id @default(cuid())
+  name                      String
+  email                     String                     @unique
+  passwordHash              String
+  role                      Role
+  isActive                  Boolean                    @default(true)
+  cbOrgId                   String?
+  clientOrgId               String?
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  appealsSubmitted          Appeal[]                   @relation("AppealsSubmitted")
+  auditsCreated             Audit[]                    @relation("AuditsCreated")
+  auditsLed                 Audit[]                    @relation("AuditsLed")
+  auditProgramsCreated      AuditProgram[]             @relation("AuditProgramsCreated")
+  statusLogs                AuditStatusLog[]           @relation("StatusLogs")
+  auditTeamAssignments      AuditTeamMember[]
+  competenceWarnings        AuditorCompetenceWarning[]
+  certificateHistoryActions CertificateHistory[]
+  certificationDecisions    CertificationDecision[]    @relation("DecisionsMade")
+  complaintsInvestigating   Complaint[]                @relation("ComplaintsInvestigating")
+  complaintsSubmitted       Complaint[]                @relation("ComplaintsSubmitted")
+  evidenceUploads           EvidenceFile[]             @relation("EvidenceUploads")
+  findingsCreated           Finding[]                  @relation("FindingsCreated")
+  findingsVerified          Finding[]                  @relation("FindingsVerified")
+  findingComments           FindingComment[]
+  technicalReviews          TechnicalReview[]          @relation("TechnicalReviews")
+  cbOrg                     CbOrg?                     @relation(fields: [cbOrgId], references: [id])
+  clientOrg                 ClientOrg?                 @relation("ClientAdmins", fields: [clientOrgId], references: [id])
+}
+
+/// Client organisation being certified (ISO 17021 auditee)
+model ClientOrg {
+  id                    String          @id @default(cuid())
+  name                  String
+  registeredId          String          @default("")
+  registeredAddress     String
+  customerId            String          @unique
+  totalEmployeeCount    Int
+  contactTelephone      String          @default("")
+  contactFax            String          @default("")
+  contactEmail          String          @default("")
+  contactWebsite        String          @default("")
+  signatoryName         String          @default("")
+  signatoryTitle        String          @default("")
+  msRepresentativeName  String          @default("")
+  msRepresentativeTitle String          @default("")
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  audits                Audit[]
+  auditPrograms         AuditProgram[]
+  certifications        Certification[]
+  complaints            Complaint[]
+  sites                 Site[]
+  clientAdmins          User[]          @relation("ClientAdmins")
+}
+
+model Site {
+  id                String      @id @default(cuid())
+  clientOrgId       String
+  siteName          String
+  siteAddress       String
+  siteEmployeeCount Int?
+  siteScope         String      @default("")
+  active            Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  auditSites        AuditSite[]
+  findings          Finding[]
+  clientOrg         ClientOrg   @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
+}
+
+model Standard {
+  id             String          @id @default(cuid())
+  code           String          @unique
+  title          String
+  naceCode       String          @default("")
+  eaCode         String          @default("")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  certifications Certification[]
+  findings       Finding[]
+}
+
+model Certification {
+  id                         String                      @id @default(cuid())
+  clientOrgId                String
+  standardId                 String
+  certificationScope         String
+  certificateId              String                      @default("")
+  certificateStatus          CertificateStatus           @default(DRAFT)
+  issueDate                  DateTime?
+  expiryDate                 DateTime?
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  auditCertifications        AuditCertification[]
+  history                    CertificateHistory[]
+  clientOrg                  ClientOrg                   @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
+  standard                   Standard                    @relation(fields: [standardId], references: [id])
+  certificationDecisionLinks CertificationDecisionCert[]
+  surveillanceSchedule       SurveillanceSchedule?
+
+  @@unique([clientOrgId, standardId])
+}
+
+model CertificateHistory {
+  id                         String            @id @default(cuid())
+  certificationId            String
+  action                     CertHistoryAction
+  actionDate                 DateTime
+  relatedAuditId             String?
+  relatedDecisionId          String?
+  certificateNumberSnapshot  String            @default("")
+  certificationScopeSnapshot String            @default("")
+  validFrom                  DateTime?
+  validTo                    DateTime?
+  actionById                 String?
+  actionReason               String            @default("")
+  internalNotes              String            @default("")
+  createdAt                  DateTime          @default(now())
+  actionBy                   User?             @relation(fields: [actionById], references: [id])
+  certification              Certification     @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([actionDate])
+}
+
+model SurveillanceSchedule {
+  id                     String        @id @default(cuid())
+  certificationId        String        @unique
+  cycleStart             DateTime
+  cycleEnd               DateTime
+  surveillance1DueDate   DateTime
+  surveillance2DueDate   DateTime
+  recertificationDueDate DateTime
+  surveillance1AuditId   String?
+  surveillance2AuditId   String?
+  recertificationAuditId String?
+  certification          Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+}
+
+model AuditProgram {
+  id                 String             @id @default(cuid())
+  clientOrgId        String
+  title              String
+  year               Int
+  status             AuditProgramStatus @default(DRAFT)
+  objectives         String
+  risksOpportunities String
+  createdById        String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  audits             Audit[]
+  clientOrg          ClientOrg          @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
+  createdBy          User               @relation("AuditProgramsCreated", fields: [createdById], references: [id])
+
+  @@unique([clientOrgId, year, title])
+}
+
+model Audit {
+  id                    String                 @id @default(cuid())
+  programId             String?
+  clientOrgId           String
+  auditType             AuditType
+  dateFrom              DateTime
+  dateTo                DateTime
+  plannedDurationHours  Float?
+  actualDurationHours   Float?
+  durationJustification String                 @default("")
+  status                AuditStatus            @default(DRAFT)
+  createdById           String
+  leadAuditorId         String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  clientOrg             ClientOrg              @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
+  createdBy             User                   @relation("AuditsCreated", fields: [createdById], references: [id])
+  leadAuditor           User?                  @relation("AuditsLed", fields: [leadAuditorId], references: [id])
+  program               AuditProgram?          @relation(fields: [programId], references: [id])
+  certifications        AuditCertification[]
+  changes               AuditChanges?
+  planReview            AuditPlanReview?
+  recommendations       AuditRecommendation[]
+  sites                 AuditSite[]
+  statusLogs            AuditStatusLog[]
+  summary               AuditSummary?
+  teamMembers           AuditTeamMember[]
+  certificationDecision CertificationDecision?
+  complaints            Complaint[]
+  evidenceFiles         EvidenceFile[]
+  findings              Finding[]
+  technicalReview       TechnicalReview?
+
+  @@index([status])
+  @@index([clientOrgId, status])
+  @@index([leadAuditorId])
+}
+
+model AuditCertification {
+  auditId         String
+  certificationId String
+  audit           Audit         @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+
+  @@id([auditId, certificationId])
+}
+
+model AuditSite {
+  auditId String
+  siteId  String
+  audit   Audit  @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  site    Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@id([auditId, siteId])
+}
+
+model AuditTeamMember {
+  id       String         @id @default(cuid())
+  auditId  String
+  userId   String?
+  name     String
+  title    String         @default("")
+  role     TeamMemberRole
+  dateFrom DateTime
+  dateTo   DateTime
+  audit    Audit          @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  user     User?          @relation(fields: [userId], references: [id])
+}
+
+model AuditChanges {
+  id                    String  @id @default(cuid())
+  auditId               String  @unique
+  changeOfName          Boolean @default(false)
+  changeOfScope         Boolean @default(false)
+  changeOfSites         Boolean @default(false)
+  changeOfMsRep         Boolean @default(false)
+  changeOfSignatory     Boolean @default(false)
+  changeOfEmployeeCount Boolean @default(false)
+  changeOfContactInfo   Boolean @default(false)
+  otherHasChange        Boolean @default(false)
+  otherDescription      String  @default("")
+  audit                 Audit   @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model AuditPlanReview {
+  id                     String    @id @default(cuid())
+  auditId                String    @unique
+  deviationsYesNo        Boolean   @default(false)
+  deviationsDetails      String    @default("")
+  issuesAffectingYesNo   Boolean   @default(false)
+  issuesAffectingDetails String    @default("")
+  nextAuditDateFrom      DateTime?
+  nextAuditDateTo        DateTime?
+  audit                  Audit     @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model AuditSummary {
+  id                        String  @id @default(cuid())
+  auditId                   String  @unique
+  objectivesMet             Boolean @default(false)
+  objectivesComments        String  @default("")
+  scopeAppropriate          Boolean @default(false)
+  scopeComments             String  @default("")
+  msMeetsRequirements       Boolean @default(false)
+  msComments                String  @default("")
+  managementReviewEffective Boolean @default(false)
+  managementReviewComments  String  @default("")
+  internalAuditEffective    Boolean @default(false)
+  internalAuditComments     String  @default("")
+  msEffective               Boolean @default(false)
+  msEffectiveComments       String  @default("")
+  correctUseOfLogos         Boolean @default(false)
+  logosComments             String  @default("")
+  promotedToCommittee       Boolean @default(false)
+  committeeComments         String  @default("")
+  generalCommentary         String  @default("")
+  audit                     Audit   @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+/// Unified finding table (Nonconformity / Observation / OFI via findingType discriminator)
+model Finding {
+  id                     String               @id @default(cuid())
+  auditId                String
+  standardId             String?
+  clause                 String
+  siteId                 String?
+  findingType            FindingType
+  createdById            String
+  createdAt              DateTime             @default(now())
+  objectiveEvidence      String?
+  statementOfNc          String?
+  auditorExplanation     String?
+  clientRootCause        String               @default("")
+  clientCorrection       String               @default("")
+  clientCorrectiveAction String               @default("")
+  dueDate                DateTime?
+  verificationStatus     NCVerificationStatus @default(OPEN)
+  verifiedById           String?
+  verifiedAt             DateTime?
+  verificationNotes      String               @default("")
+  observationStatement   String?
+  observationExplanation String               @default("")
+  ofiDescription         String?
+  audit                  Audit                @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  createdBy              User                 @relation("FindingsCreated", fields: [createdById], references: [id])
+  site                   Site?                @relation(fields: [siteId], references: [id])
+  standard               Standard?            @relation(fields: [standardId], references: [id])
+  verifiedBy             User?                @relation("FindingsVerified", fields: [verifiedById], references: [id])
+  comments               FindingComment[]
+
+  @@index([auditId])
+  @@index([findingType])
+  @@index([verificationStatus])
+}
+
+model AuditRecommendation {
+  id             String   @id @default(cuid())
+  auditId        String
+  recommendation String
+  createdAt      DateTime @default(now())
+  audit          Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model AuditStatusLog {
+  id          String       @id @default(cuid())
+  auditId     String
+  fromStatus  AuditStatus?
+  toStatus    AuditStatus
+  changedById String
+  notes       String       @default("")
+  changedAt   DateTime     @default(now())
+  audit       Audit        @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  changedBy   User         @relation("StatusLogs", fields: [changedById], references: [id])
+
+  @@index([auditId])
+}
+
+model EvidenceFile {
+  id           String   @id @default(cuid())
+  auditId      String
+  fileName     String
+  filePath     String
+  mimeType     String
+  sizeBytes    Int
+  uploadedById String
+  uploadedAt   DateTime @default(now())
+  audit        Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation("EvidenceUploads", fields: [uploadedById], references: [id])
+
+  @@index([auditId])
+}
+
+model AuditorCompetenceWarning {
+  id          String   @id @default(cuid())
+  userId      String
+  description String
+  raisedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Complaint {
+  id                       String          @id @default(cuid())
+  complaintNumber          String          @unique
+  clientOrgId              String?
+  relatedAuditId           String?
+  complainantName          String
+  complainantEmail         String          @default("")
+  complaintType            ComplaintType
+  description              String
+  submittedAt              DateTime        @default(now())
+  submittedById            String?
+  status                   ComplaintStatus @default(RECEIVED)
+  assignedInvestigatorId   String?
+  investigationStartedAt   DateTime?
+  investigationNotes       String          @default("")
+  investigationCompletedAt DateTime?
+  resolutionDetails        String          @default("")
+  correctiveActions        String          @default("")
+  appeals                  Appeal[]
+  assignedInvestigator     User?           @relation("ComplaintsInvestigating", fields: [assignedInvestigatorId], references: [id])
+  clientOrg                ClientOrg?      @relation(fields: [clientOrgId], references: [id])
+  relatedAudit             Audit?          @relation(fields: [relatedAuditId], references: [id])
+  submittedBy              User?           @relation("ComplaintsSubmitted", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([complaintNumber])
+}
+
+model CertificationDecision {
+  id                     String                      @id @default(cuid())
+  auditId                String                      @unique
+  decisionMakerId        String
+  decidedAt              DateTime                    @default(now())
+  decision               CertDecisionType
+  decisionNotes          String
+  appeals                Appeal[]
+  audit                  Audit                       @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  decisionMaker          User                        @relation("DecisionsMade", fields: [decisionMakerId], references: [id])
+  certificationsAffected CertificationDecisionCert[]
+}
+
+model CertificationDecisionCert {
+  decisionId      String
+  certificationId String
+  certification   Certification         @relation(fields: [certificationId], references: [id])
+  decision        CertificationDecision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+
+  @@id([decisionId, certificationId])
+}
+
+model Appeal {
+  id                 String                 @id @default(cuid())
+  appealNumber       String                 @unique
+  relatedComplaintId String?
+  relatedDecisionId  String?
+  appellantName      String
+  appellantEmail     String                 @default("")
+  grounds            String
+  submittedAt        DateTime               @default(now())
+  submittedById      String?
+  status             AppealStatus           @default(RECEIVED)
+  panelDecision      AppealPanelDecision?
+  panelDecisionDate  DateTime?
+  panelJustification String                 @default("")
+  relatedComplaint   Complaint?             @relation(fields: [relatedComplaintId], references: [id])
+  relatedDecision    CertificationDecision? @relation(fields: [relatedDecisionId], references: [id])
+  submittedBy        User?                  @relation("AppealsSubmitted", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([appealNumber])
+}
+
+model TechnicalReview {
+  id                     String                @id @default(cuid())
+  auditId                String                @unique
+  reviewerId             String
+  reviewedAt             DateTime              @default(now())
+  status                 TechnicalReviewStatus @default(PENDING)
+  scopeVerified          Boolean               @default(false)
+  objectivesVerified     Boolean               @default(false)
+  findingsReviewed       Boolean               @default(false)
+  conclusionClear        Boolean               @default(false)
+  reviewerNotes          String                @default("")
+  clarificationRequested String                @default("")
+  audit                  Audit                 @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  reviewer               User                  @relation("TechnicalReviews", fields: [reviewerId], references: [id])
+}
+
+model FindingComment {
+  id        String   @id @default(cuid())
+  findingId String
+  userId    String
+  comment   String
+  createdAt DateTime @default(now())
+  finding   Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([findingId])
+  @@index([userId])
+}
 
 enum Role {
   SUPER_ADMIN
@@ -19,138 +486,12 @@ enum Role {
   CLIENT_ADMIN
 }
 
-/// Certification Body team / CB organisation (for user affiliation)
-model CbOrg {
-  id        String   @id @default(cuid())
-  name      String
-  code      String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users User[]
-}
-
-model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  passwordHash  String
-  role          Role
-  isActive      Boolean   @default(true)
-  cbOrgId       String?
-  cbOrg         CbOrg?    @relation(fields: [cbOrgId], references: [id])
-  clientOrgId   String?
-  clientOrg     ClientOrg? @relation("ClientAdmins", fields: [clientOrgId], references: [id])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations populated throughout schema
-  auditProgramsCreated       AuditProgram[]          @relation("AuditProgramsCreated")
-  auditsCreated              Audit[]                 @relation("AuditsCreated")
-  auditsLed                  Audit[]                 @relation("AuditsLed")
-  auditTeamAssignments       AuditTeamMember[]
-  findingsCreated            Finding[]               @relation("FindingsCreated")
-  findingsVerified           Finding[]               @relation("FindingsVerified")
-  evidenceUploads            EvidenceFile[]          @relation("EvidenceUploads")
-  statusLogs                 AuditStatusLog[]        @relation("StatusLogs")
-  technicalReviews           TechnicalReview[]       @relation("TechnicalReviews")
-  certificationDecisions     CertificationDecision[] @relation("DecisionsMade")
-  complaintsSubmitted        Complaint[]             @relation("ComplaintsSubmitted")
-  complaintsInvestigating    Complaint[]             @relation("ComplaintsInvestigating")
-  appealsSubmitted           Appeal[]                @relation("AppealsSubmitted")
-  certificateHistoryActions  CertificateHistory[]
-  competenceWarnings         AuditorCompetenceWarning[]
-}
-
-// ─────────────────────────────────────────────
-// Core — Client Organizations
-// ─────────────────────────────────────────────
-
-/// Client organisation being certified (ISO 17021 auditee)
-model ClientOrg {
-  id                    String   @id @default(cuid())
-  name                  String
-  registeredId          String   @default("")
-  registeredAddress     String
-  customerId            String   @unique
-  totalEmployeeCount    Int
-  contactTelephone      String   @default("")
-  contactFax            String   @default("")
-  contactEmail          String   @default("")
-  contactWebsite        String   @default("")
-  signatoryName         String   @default("")
-  signatoryTitle        String   @default("")
-  msRepresentativeName  String   @default("")
-  msRepresentativeTitle String   @default("")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  sites          Site[]
-  certifications Certification[]
-  auditPrograms  AuditProgram[]
-  audits         Audit[]
-  complaints     Complaint[]
-  clientAdmins   User[]          @relation("ClientAdmins")
-}
-
-model Site {
-  id                String    @id @default(cuid())
-  clientOrg         ClientOrg @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
-  clientOrgId       String
-  siteName          String
-  siteAddress       String
-  siteEmployeeCount Int?
-  siteScope         String    @default("")
-  active            Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  auditSites AuditSite[]
-  findings   Finding[]
-}
-
-model Standard {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  title     String
-  naceCode  String   @default("")
-  eaCode    String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  certifications Certification[]
-  findings       Finding[]
-}
-
 enum CertificateStatus {
   DRAFT
   ACTIVE
   SUSPENDED
   WITHDRAWN
   EXPIRED
-}
-
-model Certification {
-  id                 String            @id @default(cuid())
-  clientOrg          ClientOrg         @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
-  clientOrgId        String
-  standard           Standard          @relation(fields: [standardId], references: [id])
-  standardId         String
-  certificationScope String
-  certificateId      String            @default("")
-  certificateStatus  CertificateStatus @default(DRAFT)
-  issueDate          DateTime?
-  expiryDate         DateTime?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-
-  auditCertifications            AuditCertification[]
-  certificationDecisionLinks     CertificationDecisionCert[]
-  history                        CertificateHistory[]
-  surveillanceSchedule           SurveillanceSchedule?
-
-  @@unique([clientOrgId, standardId])
 }
 
 enum CertHistoryAction {
@@ -167,70 +508,11 @@ enum CertHistoryAction {
   TRANSFER_OUT
 }
 
-model CertificateHistory {
-  id                         String            @id @default(cuid())
-  certification              Certification     @relation(fields: [certificationId], references: [id], onDelete: Cascade)
-  certificationId            String
-  action                     CertHistoryAction
-  actionDate                 DateTime
-  relatedAuditId             String?
-  relatedDecisionId          String?
-  certificateNumberSnapshot  String            @default("")
-  certificationScopeSnapshot String            @default("")
-  validFrom                  DateTime?
-  validTo                    DateTime?
-  actionById                 String?
-  actionBy                   User?             @relation(fields: [actionById], references: [id])
-  actionReason               String            @default("")
-  internalNotes              String            @default("")
-  createdAt                  DateTime          @default(now())
-
-  @@index([action])
-  @@index([actionDate])
-}
-
-model SurveillanceSchedule {
-  id                     String        @id @default(cuid())
-  certification          Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
-  certificationId        String        @unique
-  cycleStart             DateTime
-  cycleEnd               DateTime
-  surveillance1DueDate   DateTime
-  surveillance2DueDate   DateTime
-  recertificationDueDate DateTime
-  surveillance1AuditId   String?
-  surveillance2AuditId   String?
-  recertificationAuditId String?
-}
-
-// ─────────────────────────────────────────────
-// Audit Management
-// ─────────────────────────────────────────────
-
 enum AuditProgramStatus {
   DRAFT
   ACTIVE
   COMPLETED
   CANCELLED
-}
-
-model AuditProgram {
-  id                 String             @id @default(cuid())
-  clientOrg          ClientOrg          @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
-  clientOrgId        String
-  title              String
-  year               Int
-  status             AuditProgramStatus @default(DRAFT)
-  objectives         String
-  risksOpportunities String
-  createdById        String
-  createdBy          User               @relation("AuditProgramsCreated", fields: [createdById], references: [id])
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-
-  audits Audit[]
-
-  @@unique([clientOrgId, year, title])
 }
 
 enum AuditType {
@@ -257,132 +539,12 @@ enum AuditStatus {
   CANCELLED
 }
 
-model Audit {
-  id                    String      @id @default(cuid())
-  programId             String?
-  program               AuditProgram? @relation(fields: [programId], references: [id])
-  clientOrg             ClientOrg   @relation(fields: [clientOrgId], references: [id], onDelete: Cascade)
-  clientOrgId           String
-  auditType             AuditType
-  dateFrom              DateTime
-  dateTo                DateTime
-  plannedDurationHours  Float?
-  actualDurationHours   Float?
-  durationJustification String      @default("")
-  status                AuditStatus @default(DRAFT)
-  createdById           String
-  createdBy             User        @relation("AuditsCreated", fields: [createdById], references: [id])
-  leadAuditorId         String?
-  leadAuditor           User?       @relation("AuditsLed", fields: [leadAuditorId], references: [id])
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
-
-  certifications        AuditCertification[]
-  sites                 AuditSite[]
-  teamMembers           AuditTeamMember[]
-  changes               AuditChanges?
-  planReview            AuditPlanReview?
-  summary               AuditSummary?
-  findings              Finding[]
-  recommendations       AuditRecommendation[]
-  statusLogs            AuditStatusLog[]
-  evidenceFiles         EvidenceFile[]
-  certificationDecision CertificationDecision?
-  technicalReview       TechnicalReview?
-  complaints            Complaint[]
-
-  @@index([status])
-  @@index([clientOrgId, status])
-  @@index([leadAuditorId])
-}
-
-model AuditCertification {
-  audit           Audit         @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId         String
-  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
-  certificationId String
-
-  @@id([auditId, certificationId])
-}
-
-model AuditSite {
-  audit   Audit  @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId String
-  site    Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  siteId  String
-
-  @@id([auditId, siteId])
-}
-
 enum TeamMemberRole {
   LEAD_AUDITOR
   AUDITOR
   TECHNICAL_EXPERT
   TRAINEE
   OBSERVER
-}
-
-model AuditTeamMember {
-  id       String         @id @default(cuid())
-  audit    Audit          @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId  String
-  userId   String?
-  user     User?          @relation(fields: [userId], references: [id])
-  name     String
-  title    String         @default("")
-  role     TeamMemberRole
-  dateFrom DateTime
-  dateTo   DateTime
-}
-
-model AuditChanges {
-  id                    String  @id @default(cuid())
-  audit                 Audit   @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId               String  @unique
-  changeOfName          Boolean @default(false)
-  changeOfScope         Boolean @default(false)
-  changeOfSites         Boolean @default(false)
-  changeOfMsRep         Boolean @default(false)
-  changeOfSignatory     Boolean @default(false)
-  changeOfEmployeeCount Boolean @default(false)
-  changeOfContactInfo   Boolean @default(false)
-  otherHasChange        Boolean @default(false)
-  otherDescription      String  @default("")
-}
-
-model AuditPlanReview {
-  id                     String    @id @default(cuid())
-  audit                  Audit     @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId                String    @unique
-  deviationsYesNo        Boolean   @default(false)
-  deviationsDetails      String    @default("")
-  issuesAffectingYesNo   Boolean   @default(false)
-  issuesAffectingDetails String    @default("")
-  nextAuditDateFrom      DateTime?
-  nextAuditDateTo        DateTime?
-}
-
-model AuditSummary {
-  id                        String  @id @default(cuid())
-  audit                     Audit   @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId                   String  @unique
-  objectivesMet             Boolean @default(false)
-  objectivesComments        String  @default("")
-  scopeAppropriate          Boolean @default(false)
-  scopeComments             String  @default("")
-  msMeetsRequirements       Boolean @default(false)
-  msComments                String  @default("")
-  managementReviewEffective Boolean @default(false)
-  managementReviewComments  String  @default("")
-  internalAuditEffective    Boolean @default(false)
-  internalAuditComments     String  @default("")
-  msEffective               Boolean @default(false)
-  msEffectiveComments       String  @default("")
-  correctUseOfLogos         Boolean @default(false)
-  logosComments             String  @default("")
-  promotedToCommittee       Boolean @default(false)
-  committeeComments         String  @default("")
-  generalCommentary         String  @default("")
 }
 
 enum FindingType {
@@ -398,96 +560,6 @@ enum NCVerificationStatus {
   ACCEPTED
   CLOSED
 }
-
-/// Unified finding table (Nonconformity / Observation / OFI via findingType discriminator)
-model Finding {
-  id             String               @id @default(cuid())
-  audit          Audit                @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId        String
-  standard       Standard?            @relation(fields: [standardId], references: [id])
-  standardId     String?
-  clause         String
-  site           Site?                @relation(fields: [siteId], references: [id])
-  siteId         String?
-  findingType    FindingType
-  createdById    String
-  createdBy      User                 @relation("FindingsCreated", fields: [createdById], references: [id])
-  createdAt      DateTime             @default(now())
-
-  // NC-specific fields
-  objectiveEvidence      String?
-  statementOfNc          String?
-  auditorExplanation     String?
-  clientRootCause        String               @default("")
-  clientCorrection       String               @default("")
-  clientCorrectiveAction String               @default("")
-  dueDate                DateTime?
-  verificationStatus     NCVerificationStatus @default(OPEN)
-  verifiedById           String?
-  verifiedBy             User?                @relation("FindingsVerified", fields: [verifiedById], references: [id])
-  verifiedAt             DateTime?
-  verificationNotes      String               @default("")
-
-  // Observation-specific fields
-  observationStatement   String?
-  observationExplanation String               @default("")
-
-  // OFI-specific fields
-  ofiDescription         String?
-
-  @@index([auditId])
-  @@index([findingType])
-  @@index([verificationStatus])
-}
-
-model AuditRecommendation {
-  id          String   @id @default(cuid())
-  audit       Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId     String
-  recommendation String
-  createdAt   DateTime @default(now())
-}
-
-model AuditStatusLog {
-  id          String      @id @default(cuid())
-  audit       Audit       @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId     String
-  fromStatus  AuditStatus?
-  toStatus    AuditStatus
-  changedById String
-  changedBy   User        @relation("StatusLogs", fields: [changedById], references: [id])
-  notes       String      @default("")
-  changedAt   DateTime    @default(now())
-
-  @@index([auditId])
-}
-
-model EvidenceFile {
-  id           String   @id @default(cuid())
-  audit        Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId      String
-  fileName     String
-  filePath     String
-  mimeType     String
-  sizeBytes    Int
-  uploadedById String
-  uploadedBy   User     @relation("EvidenceUploads", fields: [uploadedById], references: [id])
-  uploadedAt   DateTime @default(now())
-
-  @@index([auditId])
-}
-
-model AuditorCompetenceWarning {
-  id          String   @id @default(cuid())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  description String
-  raisedAt    DateTime @default(now())
-}
-
-// ─────────────────────────────────────────────
-// Certification
-// ─────────────────────────────────────────────
 
 enum ComplaintType {
   AUDIT_CONDUCT
@@ -505,64 +577,12 @@ enum ComplaintStatus {
   ESCALATED
 }
 
-model Complaint {
-  id                       String          @id @default(cuid())
-  complaintNumber          String          @unique
-  clientOrg                ClientOrg?      @relation(fields: [clientOrgId], references: [id])
-  clientOrgId              String?
-  relatedAuditId           String?
-  relatedAudit             Audit?          @relation(fields: [relatedAuditId], references: [id])
-  complainantName          String
-  complainantEmail         String          @default("")
-  complaintType            ComplaintType
-  description              String
-  submittedAt              DateTime        @default(now())
-  submittedById            String?
-  submittedBy              User?           @relation("ComplaintsSubmitted", fields: [submittedById], references: [id])
-  status                   ComplaintStatus @default(RECEIVED)
-  assignedInvestigatorId   String?
-  assignedInvestigator     User?           @relation("ComplaintsInvestigating", fields: [assignedInvestigatorId], references: [id])
-  investigationStartedAt   DateTime?
-  investigationNotes       String          @default("")
-  investigationCompletedAt DateTime?
-  resolutionDetails        String          @default("")
-  correctiveActions        String          @default("")
-
-  appeals Appeal[]
-
-  @@index([status])
-  @@index([complaintNumber])
-}
-
 enum CertDecisionType {
   GRANT
   REFUSE
   SUSPEND
   WITHDRAW
   SPECIAL_AUDIT
-}
-
-model CertificationDecision {
-  id              String           @id @default(cuid())
-  audit           Audit            @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId         String           @unique
-  decisionMakerId String
-  decisionMaker   User             @relation("DecisionsMade", fields: [decisionMakerId], references: [id])
-  decidedAt       DateTime         @default(now())
-  decision        CertDecisionType
-  decisionNotes   String
-
-  certificationsAffected CertificationDecisionCert[]
-  appeals                Appeal[]
-}
-
-model CertificationDecisionCert {
-  decision        CertificationDecision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
-  decisionId      String
-  certification   Certification         @relation(fields: [certificationId], references: [id])
-  certificationId String
-
-  @@id([decisionId, certificationId])
 }
 
 enum AppealStatus {
@@ -578,49 +598,9 @@ enum AppealPanelDecision {
   PARTIALLY_UPHELD
 }
 
-model Appeal {
-  id                 String               @id @default(cuid())
-  appealNumber       String               @unique
-  relatedComplaintId String?
-  relatedComplaint   Complaint?           @relation(fields: [relatedComplaintId], references: [id])
-  relatedDecisionId  String?
-  relatedDecision    CertificationDecision? @relation(fields: [relatedDecisionId], references: [id])
-  appellantName      String
-  appellantEmail     String               @default("")
-  grounds            String
-  submittedAt        DateTime             @default(now())
-  submittedById      String?
-  submittedBy        User?                @relation("AppealsSubmitted", fields: [submittedById], references: [id])
-  status             AppealStatus         @default(RECEIVED)
-  panelDecision      AppealPanelDecision?
-  panelDecisionDate  DateTime?
-  panelJustification String               @default("")
-
-  @@index([status])
-  @@index([appealNumber])
-}
-
 enum TechnicalReviewStatus {
   PENDING
   APPROVED
   REQUIRES_CLARIFICATION
   REJECTED
 }
-
-model TechnicalReview {
-  id                     String                @id @default(cuid())
-  audit                  Audit                 @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  auditId                String                @unique
-  reviewerId             String
-  reviewer               User                  @relation("TechnicalReviews", fields: [reviewerId], references: [id])
-  reviewedAt             DateTime              @default(now())
-  status                 TechnicalReviewStatus @default(PENDING)
-  scopeVerified          Boolean               @default(false)
-  objectivesVerified     Boolean               @default(false)
-  findingsReviewed       Boolean               @default(false)
-  conclusionClear        Boolean               @default(false)
-  reviewerNotes          String                @default("")
-  clarificationRequested String                @default("")
-}
-
-

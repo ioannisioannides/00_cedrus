@@ -13,6 +13,10 @@ async function requireAuditorRole(auditId: string) {
   if (!session?.user || !["CB_ADMIN", "SUPER_ADMIN", "LEAD_AUDITOR"].includes(session.user.role)) {
     redirect("/")
   }
+  if (auditId) {
+    const exists = await prisma.audit.findUnique({ where: { id: auditId }, select: { id: true } })
+    if (!exists) throw new Error("Referenced Audit target not found.")
+  }
   return session.user
 }
 

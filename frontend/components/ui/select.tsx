@@ -161,7 +161,8 @@ function SelectContent({ children }: { children?: React.ReactNode }) {
 
 // ── SelectItem — renders nothing; extracted by Select ─────────────────────
 
-function SelectItem(_props: {
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+function SelectItem(props: {
   value: string
   children: React.ReactNode
   disabled?: boolean

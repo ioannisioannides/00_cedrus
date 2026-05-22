@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -98,6 +98,7 @@ export function AuditChangesForm({
 
   return (
     <form action={formAction} className="space-y-4">
+      <input type="hidden" name="auditId" value={auditId} />
       <div className="grid gap-3 sm:grid-cols-2">
         {CHANGE_FIELDS.map(([name, label]) => (
           <YesNoField

@@ -42,6 +42,17 @@ async function requireAuditorOrAdmin() {
   if (!session?.user || !allowed.includes(session.user.role)) {
     redirect("/")
   }
+
+  // Handle post-seed or database reset stale session cookies cleanly:
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, role: true },
+  })
+
+  if (!dbUser) {
+    redirect("/login")
+  }
+
   return session.user
 }
 
@@ -198,7 +209,7 @@ export async function updateFinding(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const user = await requireAuditorOrAdmin()
+  await requireAuditorOrAdmin()
 
   const finding = await prisma.finding.findUnique({
     where: { id: findingId },

@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { format } from "date-fns"
-import { AlertTriangle, BookOpen, FileText, Pencil, Plus, Trash2, Users } from "lucide-react"
+import { AlertTriangle, BookOpen, Pencil, Plus, Trash2, Users } from "lucide-react"
 import { StatusTransitionButton } from "@/components/status-transition-button"
 import { deleteFinding } from "@/lib/actions/findings"
 
