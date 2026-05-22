@@ -2,8 +2,8 @@
 # CEDRUS — Next.js Dockerfile (multi-stage)
 # ──────────────────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS base
-# Upgrade zlib to patch CVE-2023-45853 (buffer overflow) and related DoS CVEs
-RUN apk upgrade --no-cache zlib
+# Update and upgrade all base system packages to patch zlib utilities and other active security CVEs
+RUN apk update && apk upgrade --no-cache
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Stage 1: Install dependencies

@@ -110,7 +110,7 @@ async function main() {
         clientOrgId: demo.clientOrgCode ? clientOrgMap[demo.clientOrgCode] : null,
       },
     })
-    console.log(`  ✓ ${demo.role.padEnd(20)} ${demo.email}  (${demo.password})`)
+    console.log(`  ✓ ${demo.role.padEnd(20)} ${demo.email} seeded.`)
   }
 
   console.log("\nSeed complete.")
