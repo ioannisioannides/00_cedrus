@@ -38,8 +38,8 @@ export default async function CbAdminUsersPage() {
           <h1 className="text-2xl font-bold tracking-tight">Users</h1>
           <p className="text-muted-foreground">{users.length} user{users.length !== 1 ? "s" : ""} in your CB</p>
         </div>
-        <Button render={<Link href="/cb-admin/users/new" />} size="sm">
-          <Plus className="h-4 w-4 mr-1" />
+        <Button render={<Link href="/cb-admin/users/new" />}>
+          <Plus className="mr-2 h-4 w-4" />
           New User
         </Button>
       </div>
