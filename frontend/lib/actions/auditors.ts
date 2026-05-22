@@ -25,27 +25,36 @@ export async function addCompetenceWarning(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireCbAdmin()
+  try {
+    await requireCbAdmin()
 
-  const parsed = WarningSchema.safeParse({ description: formData.get("description") })
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
+    const parsed = WarningSchema.safeParse({ description: formData.get("description") })
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  const auditor = await prisma.user.findUnique({ where: { id: auditorId } })
-  if (!auditor) return { error: "Auditor not found" }
+    const auditor = await prisma.user.findUnique({ where: { id: auditorId } })
+    if (!auditor) return { error: "Auditor not found" }
 
-  await prisma.auditorCompetenceWarning.create({
-    data: { userId: auditorId, description: parsed.data.description },
-  })
+    await prisma.auditorCompetenceWarning.create({
+      data: { userId: auditorId, description: parsed.data.description },
+    })
 
-  revalidatePath(`/cb-admin/auditors/${auditorId}`)
-  return { success: true }
+    revalidatePath(`/cb-admin/auditors/${auditorId}`)
+    return { success: true }
+  } catch (err) {
+    console.error("Error adding competence warning:", err)
+    return { error: err instanceof Error ? err.message : "Failed to add competence warning." }
+  }
 }
 
 export async function removeCompetenceWarning(warningId: string): Promise<void> {
-  await requireCbAdmin()
-  const warning = await prisma.auditorCompetenceWarning.findUnique({ where: { id: warningId } })
-  if (warning) {
-    await prisma.auditorCompetenceWarning.delete({ where: { id: warningId } })
-    revalidatePath(`/cb-admin/auditors/${warning.userId}`)
+  try {
+    await requireCbAdmin()
+    const warning = await prisma.auditorCompetenceWarning.findUnique({ where: { id: warningId } })
+    if (warning) {
+      await prisma.auditorCompetenceWarning.delete({ where: { id: warningId } })
+      revalidatePath(`/cb-admin/auditors/${warning.userId}`)
+    }
+  } catch (err) {
+    console.error("Error removing competence warning:", err)
   }
 }

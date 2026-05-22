@@ -36,34 +36,39 @@ export async function createComplaint(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const user = await requireCbAdmin()
+  try {
+    const user = await requireCbAdmin()
 
-  const parsed = CreateComplaintSchema.safeParse({
-    complainantName: formData.get("complainantName"),
-    complainantEmail: formData.get("complainantEmail") || "",
-    complaintType: formData.get("complaintType"),
-    description: formData.get("description"),
-    clientOrgId: formData.get("clientOrgId") || undefined,
-    relatedAuditId: formData.get("relatedAuditId") || undefined,
-  })
+    const parsed = CreateComplaintSchema.safeParse({
+      complainantName: formData.get("complainantName"),
+      complainantEmail: formData.get("complainantEmail") || "",
+      complaintType: formData.get("complaintType"),
+      description: formData.get("description"),
+      clientOrgId: formData.get("clientOrgId") || undefined,
+      relatedAuditId: formData.get("relatedAuditId") || undefined,
+    })
 
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  await prisma.complaint.create({
-    data: {
-      complaintNumber: generateComplaintNumber(),
-      complainantName: parsed.data.complainantName,
-      complainantEmail: parsed.data.complainantEmail,
-      complaintType: parsed.data.complaintType,
-      description: parsed.data.description,
-      clientOrgId: parsed.data.clientOrgId ?? null,
-      relatedAuditId: parsed.data.relatedAuditId ?? null,
-      submittedById: user.id,
-    },
-  })
+    await prisma.complaint.create({
+      data: {
+        complaintNumber: generateComplaintNumber(),
+        complainantName: parsed.data.complainantName,
+        complainantEmail: parsed.data.complainantEmail,
+        complaintType: parsed.data.complaintType,
+        description: parsed.data.description,
+        clientOrgId: parsed.data.clientOrgId ?? null,
+        relatedAuditId: parsed.data.relatedAuditId ?? null,
+        submittedById: user.id,
+      },
+    })
 
-  revalidatePath("/cb-admin/complaints")
-  return { success: true }
+    revalidatePath("/cb-admin/complaints")
+    return { success: true }
+  } catch (err) {
+    console.error("Error creating complaint:", err)
+    return { error: err instanceof Error ? err.message : "Failed to create complaint due to an unexpected error." }
+  }
 }
 
 export async function updateComplaintStatus(
@@ -71,38 +76,43 @@ export async function updateComplaintStatus(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const user = await requireCbAdmin()
+  try {
+    const user = await requireCbAdmin()
 
-  const status = formData.get("status") as string | null
-  const investigationNotes = (formData.get("investigationNotes") as string) || ""
-  const resolutionDetails = (formData.get("resolutionDetails") as string) || ""
-  const correctiveActions = (formData.get("correctiveActions") as string) || ""
+    const status = formData.get("status") as string | null
+    const investigationNotes = (formData.get("investigationNotes") as string) || ""
+    const resolutionDetails = (formData.get("resolutionDetails") as string) || ""
+    const correctiveActions = (formData.get("correctiveActions") as string) || ""
 
-  const validStatuses = ["RECEIVED", "UNDER_INVESTIGATION", "RESOLVED", "CLOSED", "ESCALATED"]
-  if (!status || !validStatuses.includes(status)) {
-    return { error: "Valid status is required" }
+    const validStatuses = ["RECEIVED", "UNDER_INVESTIGATION", "RESOLVED", "CLOSED", "ESCALATED"]
+    if (!status || !validStatuses.includes(status)) {
+      return { error: "Valid status is required" }
+    }
+
+    const complaint = await prisma.complaint.findUnique({ where: { id: complaintId } })
+    if (!complaint) return { error: "Complaint not found" }
+
+    const updateData: Record<string, unknown> = {
+      status,
+      investigationNotes,
+      resolutionDetails,
+      correctiveActions,
+    }
+
+    if (status === "UNDER_INVESTIGATION" && !complaint.investigationStartedAt) {
+      updateData.investigationStartedAt = new Date()
+      updateData.assignedInvestigatorId = user.id
+    }
+    if ((status === "RESOLVED" || status === "CLOSED") && !complaint.investigationCompletedAt) {
+      updateData.investigationCompletedAt = new Date()
+    }
+
+    await prisma.complaint.update({ where: { id: complaintId }, data: updateData })
+    revalidatePath(`/cb-admin/complaints/${complaintId}`)
+    revalidatePath("/cb-admin/complaints")
+    return { success: true }
+  } catch (err) {
+    console.error("Error updating complaint status:", err)
+    return { error: err instanceof Error ? err.message : "Failed to update complaint status due to an unexpected error." }
   }
-
-  const complaint = await prisma.complaint.findUnique({ where: { id: complaintId } })
-  if (!complaint) return { error: "Complaint not found" }
-
-  const updateData: Record<string, unknown> = {
-    status,
-    investigationNotes,
-    resolutionDetails,
-    correctiveActions,
-  }
-
-  if (status === "UNDER_INVESTIGATION" && !complaint.investigationStartedAt) {
-    updateData.investigationStartedAt = new Date()
-    updateData.assignedInvestigatorId = user.id
-  }
-  if ((status === "RESOLVED" || status === "CLOSED") && !complaint.investigationCompletedAt) {
-    updateData.investigationCompletedAt = new Date()
-  }
-
-  await prisma.complaint.update({ where: { id: complaintId }, data: updateData })
-  revalidatePath(`/cb-admin/complaints/${complaintId}`)
-  revalidatePath("/cb-admin/complaints")
-  return { success: true }
 }

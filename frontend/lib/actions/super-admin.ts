@@ -24,28 +24,33 @@ const CbOrgSchema = z.object({
 })
 
 export async function createCbOrg(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireSuperAdmin()
-
-  const parsed = CbOrgSchema.safeParse({
-    name: formData.get("name"),
-    code: formData.get("code"),
-  })
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
-
   try {
-    await prisma.cbOrg.create({ data: { name: parsed.data.name, code: parsed.data.code } })
-  } catch {
-    return { error: "A CB org with that code already exists." }
-  }
+    await requireSuperAdmin()
 
-  revalidatePath("/super-admin/cb-orgs")
-  return { success: true }
+    const parsed = CbOrgSchema.safeParse({
+      name: formData.get("name"),
+      code: formData.get("code"),
+    })
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+    await prisma.cbOrg.create({ data: { name: parsed.data.name, code: parsed.data.code } })
+
+    revalidatePath("/super-admin/cb-orgs")
+    return { success: true }
+  } catch (err) {
+    console.error("Error creating CB Org:", err)
+    return { error: err instanceof Error ? err.message : "Failed to create CB Organisation." }
+  }
 }
 
 export async function toggleCbOrgActive(cbOrgId: string, isActive: boolean): Promise<void> {
-  await requireSuperAdmin()
-  await prisma.cbOrg.update({ where: { id: cbOrgId }, data: { isActive } })
-  revalidatePath("/super-admin/cb-orgs")
+  try {
+    await requireSuperAdmin()
+    await prisma.cbOrg.update({ where: { id: cbOrgId }, data: { isActive } })
+    revalidatePath("/super-admin/cb-orgs")
+  } catch (err) {
+    console.error("Error toggling CB Org:", err)
+  }
 }
 
 // ── Standard ─────────────────────────────────────────────────────────────────
@@ -58,30 +63,35 @@ const StandardSchema = z.object({
 })
 
 export async function createStandard(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireSuperAdmin()
-
-  const parsed = StandardSchema.safeParse({
-    code: formData.get("code"),
-    title: formData.get("title"),
-    naceCode: formData.get("naceCode") || "",
-    eaCode: formData.get("eaCode") || "",
-  })
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
-
   try {
-    await prisma.standard.create({ data: parsed.data })
-  } catch {
-    return { error: "A standard with that code already exists." }
-  }
+    await requireSuperAdmin()
 
-  revalidatePath("/super-admin/standards")
-  return { success: true }
+    const parsed = StandardSchema.safeParse({
+      code: formData.get("code"),
+      title: formData.get("title"),
+      naceCode: formData.get("naceCode") || "",
+      eaCode: formData.get("eaCode") || "",
+    })
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+    await prisma.standard.create({ data: parsed.data })
+
+    revalidatePath("/super-admin/standards")
+    return { success: true }
+  } catch (err) {
+    console.error("Error creating Standard:", err)
+    return { error: err instanceof Error ? err.message : "Failed to create Standard." }
+  }
 }
 
 export async function deleteStandard(standardId: string): Promise<void> {
-  await requireSuperAdmin()
-  await prisma.standard.delete({ where: { id: standardId } })
-  revalidatePath("/super-admin/standards")
+  try {
+    await requireSuperAdmin()
+    await prisma.standard.delete({ where: { id: standardId } })
+    revalidatePath("/super-admin/standards")
+  } catch (err) {
+    console.error("Error deleting Standard:", err)
+  }
 }
 
 // ── User ─────────────────────────────────────────────────────────────────────
@@ -96,21 +106,21 @@ const CreateUserSchema = z.object({
 })
 
 export async function createUser(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireSuperAdmin()
-
-  const parsed = CreateUserSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-    role: formData.get("role"),
-    cbOrgId: formData.get("cbOrgId") || undefined,
-    clientOrgId: formData.get("clientOrgId") || undefined,
-  })
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
-
-  const passwordHash = await hash(parsed.data.password, 12)
-
   try {
+    await requireSuperAdmin()
+
+    const parsed = CreateUserSchema.safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+      role: formData.get("role"),
+      cbOrgId: formData.get("cbOrgId") || undefined,
+      clientOrgId: formData.get("clientOrgId") || undefined,
+    })
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+    const passwordHash = await hash(parsed.data.password, 12)
+
     await prisma.user.create({
       data: {
         name: parsed.data.name,
@@ -121,16 +131,21 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
         clientOrgId: parsed.data.role === "CLIENT_ADMIN" ? (parsed.data.clientOrgId ?? null) : null,
       },
     })
-  } catch {
-    return { error: "A user with that email already exists." }
-  }
 
-  revalidatePath("/super-admin/users")
-  return { success: true }
+    revalidatePath("/super-admin/users")
+    return { success: true }
+  } catch (err) {
+    console.error("Error creating user:", err)
+    return { error: err instanceof Error ? err.message : "Failed to create user." }
+  }
 }
 
 export async function toggleUserActive(userId: string, isActive: boolean): Promise<void> {
-  await requireSuperAdmin()
-  await prisma.user.update({ where: { id: userId }, data: { isActive } })
-  revalidatePath("/super-admin/users")
+  try {
+    await requireSuperAdmin()
+    await prisma.user.update({ where: { id: userId }, data: { isActive } })
+    revalidatePath("/super-admin/users")
+  } catch (err) {
+    console.error("Error toggling user active:", err)
+  }
 }

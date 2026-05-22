@@ -23,30 +23,35 @@ export async function changePassword(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const session = await auth()
-  if (!session?.user) redirect("/login")
+  try {
+    const session = await auth()
+    if (!session?.user) redirect("/login")
 
-  const parsed = ChangePasswordSchema.safeParse({
-    currentPassword: formData.get("currentPassword"),
-    newPassword: formData.get("newPassword"),
-    confirmPassword: formData.get("confirmPassword"),
-  })
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
+    const parsed = ChangePasswordSchema.safeParse({
+      currentPassword: formData.get("currentPassword"),
+      newPassword: formData.get("newPassword"),
+      confirmPassword: formData.get("confirmPassword"),
+    })
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { passwordHash: true },
-  })
-  if (!user) return { error: "User not found." }
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { passwordHash: true },
+    })
+    if (!user) return { error: "User not found." }
 
-  const valid = await compare(parsed.data.currentPassword, user.passwordHash)
-  if (!valid) return { error: "Current password is incorrect." }
+    const valid = await compare(parsed.data.currentPassword, user.passwordHash)
+    if (!valid) return { error: "Current password is incorrect." }
 
-  const passwordHash = await hash(parsed.data.newPassword, 12)
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { passwordHash },
-  })
+    const passwordHash = await hash(parsed.data.newPassword, 12)
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { passwordHash },
+    })
 
-  return { success: true }
+    return { success: true }
+  } catch (err) {
+    console.error("Error changing password:", err)
+    return { error: err instanceof Error ? err.message : "Failed to change password." }
+  }
 }

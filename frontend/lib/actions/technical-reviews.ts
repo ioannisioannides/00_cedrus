@@ -23,58 +23,63 @@ export async function submitTechnicalReview(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const session = await auth()
-  if (!session?.user || session.user.role !== "TECHNICAL_REVIEWER") redirect("/")
+  try {
+    const session = await auth()
+    if (!session?.user || session.user.role !== "TECHNICAL_REVIEWER") redirect("/")
 
-  const parsed = ReviewSchema.safeParse({
-    scopeVerified: formData.get("scopeVerified") === "on",
-    objectivesVerified: formData.get("objectivesVerified") === "on",
-    findingsReviewed: formData.get("findingsReviewed") === "on",
-    conclusionClear: formData.get("conclusionClear") === "on",
-    reviewerNotes: formData.get("reviewerNotes"),
-    decision: formData.get("decision"),
-    clarificationRequested: formData.get("clarificationRequested") || "",
-  })
+    const parsed = ReviewSchema.safeParse({
+      scopeVerified: formData.get("scopeVerified") === "on",
+      objectivesVerified: formData.get("objectivesVerified") === "on",
+      findingsReviewed: formData.get("findingsReviewed") === "on",
+      conclusionClear: formData.get("conclusionClear") === "on",
+      reviewerNotes: formData.get("reviewerNotes"),
+      decision: formData.get("decision"),
+      clarificationRequested: formData.get("clarificationRequested") || "",
+    })
 
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  const audit = await prisma.audit.findUnique({ where: { id: auditId } })
-  if (!audit) return { error: "Audit not found." }
-  if (audit.status !== "TECHNICAL_REVIEW") {
-    return { error: "This audit is not in the Technical Review stage." }
+    const audit = await prisma.audit.findUnique({ where: { id: auditId } })
+    if (!audit) return { error: "Audit not found." }
+    if (audit.status !== "TECHNICAL_REVIEW") {
+      return { error: "This audit is not in the Technical Review stage." }
+    }
+
+    const nextStatus = parsed.data.decision === "APPROVED" ? "DECISION_PENDING" : "SUBMITTED"
+
+    await prisma.$transaction([
+      prisma.technicalReview.upsert({
+        where: { auditId },
+        create: {
+          auditId,
+          reviewerId: session.user.id,
+          ...parsed.data,
+        },
+        update: {
+          ...parsed.data,
+          reviewedAt: new Date(),
+        },
+      }),
+      prisma.audit.update({
+        where: { id: auditId },
+        data: { status: nextStatus },
+      }),
+      prisma.auditStatusLog.create({
+        data: {
+          auditId,
+          fromStatus: "TECHNICAL_REVIEW",
+          toStatus: nextStatus,
+          notes: parsed.data.reviewerNotes,
+          changedById: session.user.id,
+        },
+      }),
+    ])
+
+    revalidatePath(`/technical-reviewer/reviews/${auditId}`)
+    revalidatePath(`/technical-reviewer/reviews`)
+    return { success: true }
+  } catch (err) {
+    console.error("Error submitting technical review:", err)
+    return { error: err instanceof Error ? err.message : "Failed to submit technical review." }
   }
-
-  const nextStatus = parsed.data.decision === "APPROVED" ? "DECISION_PENDING" : "SUBMITTED"
-
-  await prisma.$transaction([
-    prisma.technicalReview.upsert({
-      where: { auditId },
-      create: {
-        auditId,
-        reviewerId: session.user.id,
-        ...parsed.data,
-      },
-      update: {
-        ...parsed.data,
-        reviewedAt: new Date(),
-      },
-    }),
-    prisma.audit.update({
-      where: { id: auditId },
-      data: { status: nextStatus },
-    }),
-    prisma.auditStatusLog.create({
-      data: {
-        auditId,
-        fromStatus: "TECHNICAL_REVIEW",
-        toStatus: nextStatus,
-        notes: parsed.data.reviewerNotes,
-        changedById: session.user.id,
-      },
-    }),
-  ])
-
-  revalidatePath(`/technical-reviewer/reviews/${auditId}`)
-  revalidatePath(`/technical-reviewer/reviews`)
-  return { success: true }
 }

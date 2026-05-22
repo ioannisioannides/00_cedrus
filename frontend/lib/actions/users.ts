@@ -31,19 +31,19 @@ export async function createCbUser(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const actor = await requireCbAdmin()
-
-  const parsed = CreateCbUserSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-    role: formData.get("role"),
-  })
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
-
-  const passwordHash = await hash(parsed.data.password, 12)
-
   try {
+    const actor = await requireCbAdmin()
+
+    const parsed = CreateCbUserSchema.safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+      role: formData.get("role"),
+    })
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+    const passwordHash = await hash(parsed.data.password, 12)
+
     await prisma.user.create({
       data: {
         name: parsed.data.name,
@@ -53,32 +53,37 @@ export async function createCbUser(
         cbOrgId: actor.organizationId,
       },
     })
-  } catch {
-    return { error: "A user with that email already exists." }
-  }
 
-  revalidatePath("/cb-admin/users")
-  return { success: true }
+    revalidatePath("/cb-admin/users")
+    return { success: true }
+  } catch (err) {
+    console.error("Error creating CB user:", err)
+    return { error: err instanceof Error ? err.message : "Failed to create user." }
+  }
 }
 
 export async function toggleCbUserActive(userId: string, isActive: boolean): Promise<void> {
-  const actor = await requireCbAdmin()
+  try {
+    const actor = await requireCbAdmin()
 
-  // Ensure the target user belongs to the same CB org
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { cbOrgId: true, role: true },
-  })
+    // Ensure the target user belongs to the same CB org
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { cbOrgId: true, role: true },
+    })
 
-  if (!user) return
-  if (
-    user.cbOrgId !== actor.organizationId &&
-    actor.role !== "SUPER_ADMIN"
-  ) {
-    return
+    if (!user) return
+    if (
+      user.cbOrgId !== actor.organizationId &&
+      actor.role !== "SUPER_ADMIN"
+    ) {
+      return
+    }
+    if (!CB_ROLES.includes(user.role)) return
+
+    await prisma.user.update({ where: { id: userId }, data: { isActive } })
+    revalidatePath("/cb-admin/users")
+  } catch (err) {
+    console.error("Error toggling CB user active:", err)
   }
-  if (!CB_ROLES.includes(user.role)) return
-
-  await prisma.user.update({ where: { id: userId }, data: { isActive } })
-  revalidatePath("/cb-admin/users")
 }

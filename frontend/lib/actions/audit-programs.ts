@@ -109,14 +109,19 @@ export async function updateAuditProgram(
 }
 
 export async function deleteAuditProgram(id: string): Promise<FormState> {
-  await requireCbAdmin()
+  try {
+    await requireCbAdmin()
 
-  const hasAudits = await prisma.audit.findFirst({ where: { programId: id } })
-  if (hasAudits) {
-    return { error: "Cannot delete a program that contains audits. Cancel audits first." }
+    const hasAudits = await prisma.audit.findFirst({ where: { programId: id } })
+    if (hasAudits) {
+      return { error: "Cannot delete a program that contains audits. Cancel audits first." }
+    }
+
+    await prisma.auditProgram.delete({ where: { id } })
+    revalidatePath("/cb-admin/programs")
+    return { success: true }
+  } catch (err) {
+    console.error("Error deleting audit program:", err)
+    return { error: err instanceof Error ? err.message : "Failed to delete audit program." }
   }
-
-  await prisma.auditProgram.delete({ where: { id } })
-  revalidatePath("/cb-admin/programs")
-  return { success: true }
 }

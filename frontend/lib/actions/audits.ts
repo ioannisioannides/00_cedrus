@@ -142,63 +142,73 @@ export async function updateAuditStatus(
   newStatus: AuditStatus,
   notes?: string
 ): Promise<FormState> {
-  const session = await auth()
-  if (!session?.user) redirect("/")
+  try {
+    const session = await auth()
+    if (!session?.user) redirect("/")
 
-  const audit = await prisma.audit.findUnique({ where: { id: auditId } })
-  if (!audit) return { error: "Audit not found." }
+    const audit = await prisma.audit.findUnique({ where: { id: auditId } })
+    if (!audit) return { error: "Audit not found." }
 
-  // Business rules — valid transitions
-  const TRANSITIONS: Partial<Record<AuditStatus, AuditStatus[]>> = {
-    DRAFT: ["SCHEDULED", "CANCELLED"],
-    SCHEDULED: ["IN_PROGRESS", "CANCELLED"],
-    IN_PROGRESS: ["REPORT_DRAFT", "CANCELLED"],
-    REPORT_DRAFT: ["CLIENT_REVIEW", "SUBMITTED"],
-    CLIENT_REVIEW: ["SUBMITTED"],
-    SUBMITTED: ["TECHNICAL_REVIEW"],
-    TECHNICAL_REVIEW: ["DECISION_PENDING"],
-    DECISION_PENDING: ["DECIDED"],
-    DECIDED: ["CLOSED"],
+    // Business rules — valid transitions
+    const TRANSITIONS: Partial<Record<AuditStatus, AuditStatus[]>> = {
+      DRAFT: ["SCHEDULED", "CANCELLED"],
+      SCHEDULED: ["IN_PROGRESS", "CANCELLED"],
+      IN_PROGRESS: ["REPORT_DRAFT", "CANCELLED"],
+      REPORT_DRAFT: ["CLIENT_REVIEW", "SUBMITTED"],
+      CLIENT_REVIEW: ["SUBMITTED"],
+      SUBMITTED: ["TECHNICAL_REVIEW"],
+      TECHNICAL_REVIEW: ["DECISION_PENDING"],
+      DECISION_PENDING: ["DECIDED"],
+      DECIDED: ["CLOSED"],
+    }
+
+    const allowed = TRANSITIONS[audit.status] ?? []
+    if (!allowed.includes(newStatus)) {
+      return { error: `Cannot transition from ${audit.status} to ${newStatus}.` }
+    }
+
+    await prisma.$transaction([
+      prisma.audit.update({ where: { id: auditId }, data: { status: newStatus } }),
+      prisma.auditStatusLog.create({
+        data: {
+          auditId,
+          fromStatus: audit.status,
+          toStatus: newStatus,
+          notes: notes ?? "",
+          changedById: session.user.id,
+        },
+      }),
+    ])
+
+    revalidatePath(`/cb-admin/audits/${auditId}`)
+    revalidatePath(`/lead-auditor/audits/${auditId}`)
+    return { success: true }
+  } catch (err) {
+    console.error("Error updating audit status:", err)
+    return { error: err instanceof Error ? err.message : "Failed to update audit status due to an unexpected error." }
   }
-
-  const allowed = TRANSITIONS[audit.status] ?? []
-  if (!allowed.includes(newStatus)) {
-    return { error: `Cannot transition from ${audit.status} to ${newStatus}.` }
-  }
-
-  await prisma.$transaction([
-    prisma.audit.update({ where: { id: auditId }, data: { status: newStatus } }),
-    prisma.auditStatusLog.create({
-      data: {
-        auditId,
-        fromStatus: audit.status,
-        toStatus: newStatus,
-        notes: notes ?? "",
-        changedById: session.user.id,
-      },
-    }),
-  ])
-
-  revalidatePath(`/cb-admin/audits/${auditId}`)
-  revalidatePath(`/lead-auditor/audits/${auditId}`)
-  return { success: true }
 }
 
 export async function assignLeadAuditor(
   auditId: string,
   leadAuditorId: string
 ): Promise<FormState> {
-  await requireCbAdmin()
+  try {
+    await requireCbAdmin()
 
-  const auditor = await prisma.user.findUnique({
-    where: { id: leadAuditorId },
-    select: { role: true },
-  })
-  if (!auditor || auditor.role !== "LEAD_AUDITOR") {
-    return { error: "Selected user is not a Lead Auditor." }
+    const auditor = await prisma.user.findUnique({
+      where: { id: leadAuditorId },
+      select: { role: true },
+    })
+    if (!auditor || auditor.role !== "LEAD_AUDITOR") {
+      return { error: "Selected user is not a Lead Auditor." }
+    }
+
+    await prisma.audit.update({ where: { id: auditId }, data: { leadAuditorId } })
+    revalidatePath(`/cb-admin/audits/${auditId}`)
+    return { success: true }
+  } catch (err) {
+    console.error("Error assigning lead auditor:", err)
+    return { error: err instanceof Error ? err.message : "Failed to assign lead auditor." }
   }
-
-  await prisma.audit.update({ where: { id: auditId }, data: { leadAuditorId } })
-  revalidatePath(`/cb-admin/audits/${auditId}`)
-  return { success: true }
 }

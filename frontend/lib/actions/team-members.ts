@@ -31,50 +31,59 @@ export async function addTeamMember(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await requireAuditorRole()
+  try {
+    await requireAuditorRole()
 
-  const parsed = TeamMemberSchema.safeParse({
-    name: formData.get("name"),
-    title: formData.get("title") || "",
-    role: formData.get("role"),
-    dateFrom: formData.get("dateFrom"),
-    dateTo: formData.get("dateTo"),
-    userId: formData.get("userId") || undefined,
-  })
+    const parsed = TeamMemberSchema.safeParse({
+      name: formData.get("name"),
+      title: formData.get("title") || "",
+      role: formData.get("role"),
+      dateFrom: formData.get("dateFrom"),
+      dateTo: formData.get("dateTo"),
+      userId: formData.get("userId") || undefined,
+    })
 
-  if (!parsed.success) return { error: parsed.error.issues[0].message }
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  const dateFrom = new Date(parsed.data.dateFrom)
-  const dateTo = new Date(parsed.data.dateTo)
-  if (dateTo < dateFrom) return { error: "End date must be after start date" }
+    const dateFrom = new Date(parsed.data.dateFrom)
+    const dateTo = new Date(parsed.data.dateTo)
+    if (dateTo < dateFrom) return { error: "End date must be after start date" }
 
-  await prisma.auditTeamMember.create({
-    data: {
-      auditId,
-      name: parsed.data.name,
-      title: parsed.data.title,
-      role: parsed.data.role,
-      dateFrom,
-      dateTo,
-      userId: parsed.data.userId || null,
-    },
-  })
+    await prisma.auditTeamMember.create({
+      data: {
+        auditId,
+        name: parsed.data.name,
+        title: parsed.data.title,
+        role: parsed.data.role,
+        dateFrom,
+        dateTo,
+        userId: parsed.data.userId || null,
+      },
+    })
 
-  revalidatePath(`/lead-auditor/audits/${auditId}/team`)
-  revalidatePath(`/cb-admin/audits/${auditId}`)
-  return { success: true }
+    revalidatePath(`/lead-auditor/audits/${auditId}/team`)
+    revalidatePath(`/cb-admin/audits/${auditId}`)
+    return { success: true }
+  } catch (err) {
+    console.error("Error adding team member:", err)
+    return { error: err instanceof Error ? err.message : "Failed to add team member." }
+  }
 }
 
 export async function removeTeamMember(id: string): Promise<void> {
-  const session = await auth()
-  if (!session?.user || !["CB_ADMIN", "SUPER_ADMIN", "LEAD_AUDITOR"].includes(session.user.role)) {
-    return
+  try {
+    const session = await auth()
+    if (!session?.user || !["CB_ADMIN", "SUPER_ADMIN", "LEAD_AUDITOR"].includes(session.user.role)) {
+      return
+    }
+
+    const member = await prisma.auditTeamMember.findUnique({ where: { id } })
+    if (!member) return
+
+    await prisma.auditTeamMember.delete({ where: { id } })
+    revalidatePath(`/lead-auditor/audits/${member.auditId}/team`)
+    revalidatePath(`/cb-admin/audits/${member.auditId}`)
+  } catch (err) {
+    console.error("Error removing team member:", err)
   }
-
-  const member = await prisma.auditTeamMember.findUnique({ where: { id } })
-  if (!member) return
-
-  await prisma.auditTeamMember.delete({ where: { id } })
-  revalidatePath(`/lead-auditor/audits/${member.auditId}/team`)
-  revalidatePath(`/cb-admin/audits/${member.auditId}`)
 }
