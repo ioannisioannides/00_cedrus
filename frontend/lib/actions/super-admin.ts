@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { Role } from "@prisma/client"
 import { hash } from "bcryptjs"
 
@@ -38,6 +39,7 @@ export async function createCbOrg(_prev: FormState, formData: FormData): Promise
     revalidatePath("/super-admin/cb-orgs")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error creating CB Org:", err)
     return { error: err instanceof Error ? err.message : "Failed to create CB Organisation." }
   }
@@ -49,6 +51,7 @@ export async function toggleCbOrgActive(cbOrgId: string, isActive: boolean): Pro
     await prisma.cbOrg.update({ where: { id: cbOrgId }, data: { isActive } })
     revalidatePath("/super-admin/cb-orgs")
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error toggling CB Org:", err)
   }
 }
@@ -79,6 +82,7 @@ export async function createStandard(_prev: FormState, formData: FormData): Prom
     revalidatePath("/super-admin/standards")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error creating Standard:", err)
     return { error: err instanceof Error ? err.message : "Failed to create Standard." }
   }
@@ -90,6 +94,7 @@ export async function deleteStandard(standardId: string): Promise<void> {
     await prisma.standard.delete({ where: { id: standardId } })
     revalidatePath("/super-admin/standards")
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error deleting Standard:", err)
   }
 }
@@ -135,6 +140,7 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
     revalidatePath("/super-admin/users")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error creating user:", err)
     return { error: err instanceof Error ? err.message : "Failed to create user." }
   }
@@ -146,6 +152,7 @@ export async function toggleUserActive(userId: string, isActive: boolean): Promi
     await prisma.user.update({ where: { id: userId }, data: { isActive } })
     revalidatePath("/super-admin/users")
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error toggling user active:", err)
   }
 }

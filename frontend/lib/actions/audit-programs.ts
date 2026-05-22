@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { AuditProgramStatus } from "@prisma/client"
 
 const ProgramSchema = z.object({
@@ -64,6 +65,8 @@ export async function createAuditProgram(
     revalidatePath("/cb-admin/programs")
     return { success: true }
   } catch (error) {
+    if (isRedirectError(error)) throw error;
+    if (isRedirectError(error)) throw error
     console.error("Error creating audit program:", error)
     return { error: error instanceof Error ? error.message : "Failed to create audit program due to an unexpected error." }
   }
@@ -103,6 +106,8 @@ export async function updateAuditProgram(
     revalidatePath(`/cb-admin/programs/${id}`)
     return { success: true }
   } catch (error) {
+    if (isRedirectError(error)) throw error;
+    if (isRedirectError(error)) throw error
     console.error("Error updating audit program:", error)
     return { error: error instanceof Error ? error.message : "Failed to update audit program due to an unexpected error." }
   }
@@ -121,6 +126,8 @@ export async function deleteAuditProgram(id: string): Promise<FormState> {
     revalidatePath("/cb-admin/programs")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
+    if (isRedirectError(err)) throw err
     console.error("Error deleting audit program:", err)
     return { error: err instanceof Error ? err.message : "Failed to delete audit program." }
   }

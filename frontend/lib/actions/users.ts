@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { hash } from "bcryptjs"
 import { Role } from "@prisma/client"
 
@@ -57,6 +58,7 @@ export async function createCbUser(
     revalidatePath("/cb-admin/users")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error creating CB user:", err)
     return { error: err instanceof Error ? err.message : "Failed to create user." }
   }
@@ -84,6 +86,7 @@ export async function toggleCbUserActive(userId: string, isActive: boolean): Pro
     await prisma.user.update({ where: { id: userId }, data: { isActive } })
     revalidatePath("/cb-admin/users")
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error toggling CB user active:", err)
   }
 }

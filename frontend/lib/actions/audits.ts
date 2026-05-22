@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { AuditType, AuditStatus } from "@prisma/client"
 
 const AuditSchema = z.object({
@@ -88,6 +89,7 @@ export async function createAudit(
     revalidatePath(`/cb-admin/clients/${rest.clientOrgId}`)
     return { success: true, id: audit.id }
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error creating audit:", error)
     return { error: error instanceof Error ? error.message : "Failed to create audit due to an unexpected error." }
   }
@@ -132,6 +134,7 @@ export async function updateAudit(
     revalidatePath(`/cb-admin/audits/${auditId}`)
     return { success: true, id: auditId }
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error updating audit:", error)
     return { error: error instanceof Error ? error.message : "Failed to update audit due to an unexpected error." }
   }
@@ -184,6 +187,7 @@ export async function updateAuditStatus(
     revalidatePath(`/lead-auditor/audits/${auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error updating audit status:", err)
     return { error: err instanceof Error ? err.message : "Failed to update audit status due to an unexpected error." }
   }
@@ -208,6 +212,7 @@ export async function assignLeadAuditor(
     revalidatePath(`/cb-admin/audits/${auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error assigning lead auditor:", err)
     return { error: err instanceof Error ? err.message : "Failed to assign lead auditor." }
   }

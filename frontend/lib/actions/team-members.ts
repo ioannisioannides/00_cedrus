@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { TeamMemberRole } from "@prisma/client"
 
 type FormState = { error?: string; success?: boolean }
@@ -65,6 +66,7 @@ export async function addTeamMember(
     revalidatePath(`/cb-admin/audits/${auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error adding team member:", err)
     return { error: err instanceof Error ? err.message : "Failed to add team member." }
   }
@@ -84,6 +86,7 @@ export async function removeTeamMember(id: string): Promise<void> {
     revalidatePath(`/lead-auditor/audits/${member.auditId}/team`)
     revalidatePath(`/cb-admin/audits/${member.auditId}`)
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error removing team member:", err)
   }
 }

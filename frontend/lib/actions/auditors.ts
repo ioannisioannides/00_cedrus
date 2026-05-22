@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 
 type FormState = { error?: string; success?: boolean }
 
@@ -41,6 +42,7 @@ export async function addCompetenceWarning(
     revalidatePath(`/cb-admin/auditors/${auditorId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error adding competence warning:", err)
     return { error: err instanceof Error ? err.message : "Failed to add competence warning." }
   }
@@ -55,6 +57,7 @@ export async function removeCompetenceWarning(warningId: string): Promise<void> 
       revalidatePath(`/cb-admin/auditors/${warning.userId}`)
     }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error removing competence warning:", err)
   }
 }

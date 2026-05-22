@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 
 import { CertDecisionType, CertHistoryAction, CertificateStatus } from "@prisma/client"
 
@@ -181,6 +182,7 @@ export async function makeCertificationDecision(
     revalidatePath(`/cb-admin/audits/${auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error committing decision:", err)
     return { error: err instanceof Error ? err.message : "Failed to make certification decision." }
   }

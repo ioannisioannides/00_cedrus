@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 
 const ClientOrgSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -67,6 +68,7 @@ export async function createClientOrg(
     revalidatePath("/super-admin")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error creating client organisation:", err)
     return { error: err instanceof Error ? err.message : "Failed to create client organisation due to an unexpected error." }
   }
@@ -109,6 +111,7 @@ export async function updateClientOrg(
     revalidatePath("/super-admin")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error updating client organisation:", err)
     return { error: err instanceof Error ? err.message : "Failed to update client organisation." }
   }
@@ -127,6 +130,7 @@ export async function deleteClientOrg(id: string): Promise<FormState> {
     revalidatePath("/cb-admin/clients")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error deleting client organisation:", err)
     return { error: err instanceof Error ? err.message : "Failed to delete client organisation due to an unexpected error." }
   }
@@ -162,6 +166,7 @@ export async function addSite(
     revalidatePath(`/cb-admin/clients/${clientOrgId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error adding site:", err)
     return { error: err instanceof Error ? err.message : "Failed to add site due to an unexpected error." }
   }
@@ -178,6 +183,7 @@ export async function deleteSite(siteId: string): Promise<void> {
     await prisma.site.delete({ where: { id: siteId } })
     revalidatePath(`/cb-admin/clients/${site.clientOrgId}`)
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error deleting site:", err)
   }
 }
@@ -227,6 +233,7 @@ export async function addCertification(
     revalidatePath(`/cb-admin/clients/${clientOrgId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error adding certification:", err)
     return { error: "A certification for this standard already exists or could not be created." }
   }
@@ -249,7 +256,7 @@ export async function updateCertificationStatus(
     })
     revalidatePath(`/cb-admin/clients/${cert.clientOrgId}`)
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error updating certification status:", err)
   }
 }
-

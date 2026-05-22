@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 
 type FormState = { error?: string; success?: boolean }
 
@@ -79,6 +80,7 @@ export async function submitTechnicalReview(
     revalidatePath(`/technical-reviewer/reviews`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error submitting technical review:", err)
     return { error: err instanceof Error ? err.message : "Failed to submit technical review." }
   }

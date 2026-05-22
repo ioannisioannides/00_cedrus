@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { FindingType, NCVerificationStatus } from "@prisma/client"
 
 const FindingBaseSchema = z.object({
@@ -127,6 +128,7 @@ export async function createFinding(
     revalidatePath(`/cb-admin/audits/${base.auditId}`)
     return { success: true, id: finding.id }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error creating finding:", err)
     return { error: err instanceof Error ? err.message : "Failed to create finding due to an unexpected error." }
   }
@@ -166,6 +168,7 @@ export async function updateNCResponse(
     revalidatePath(`/client-admin/findings/${findingId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error updating NC response:", err)
     return { error: err instanceof Error ? err.message : "Failed to updates NC response." }
   }
@@ -201,6 +204,7 @@ export async function verifyFinding(
     revalidatePath(`/lead-auditor/audits/${finding.auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error verifying finding:", err)
     return { error: err instanceof Error ? err.message : "Failed to verify finding." }
   }
@@ -219,6 +223,7 @@ export async function verifyFindingAction(
     const notes = (formData.get("verificationNotes") as string) || ""
     return verifyFinding(findingId, status, notes)
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error verifying finding action:", err)
     return { error: err instanceof Error ? err.message : "Failed to verify finding." }
   }
@@ -283,6 +288,7 @@ export async function updateFinding(
     revalidatePath(`/cb-admin/audits/${finding.auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error updating finding:", err)
     return { error: err instanceof Error ? err.message : "Failed to update finding." }
   }
@@ -309,6 +315,7 @@ export async function deleteFinding(findingId: string): Promise<{ error?: string
     revalidatePath(`/cb-admin/audits/${finding.auditId}`)
     return {}
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error deleting finding:", err)
     return { error: err instanceof Error ? err.message : "Failed to delete finding." }
   }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { ComplaintType } from "@prisma/client"
 
 type FormState = { error?: string; success?: boolean }
@@ -66,6 +67,7 @@ export async function createComplaint(
     revalidatePath("/cb-admin/complaints")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error creating complaint:", err)
     return { error: err instanceof Error ? err.message : "Failed to create complaint due to an unexpected error." }
   }
@@ -112,6 +114,7 @@ export async function updateComplaintStatus(
     revalidatePath("/cb-admin/complaints")
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error updating complaint status:", err)
     return { error: err instanceof Error ? err.message : "Failed to update complaint status due to an unexpected error." }
   }

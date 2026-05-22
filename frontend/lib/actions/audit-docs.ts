@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 
 type FormState = { error?: string; success?: boolean }
 
@@ -52,6 +53,7 @@ export async function saveAuditChanges(
     revalidatePath(`/cb-admin/audits/${auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error saving audit changes:", err)
     return { error: err instanceof Error ? err.message : "Failed to save audit changes." }
   }
@@ -110,6 +112,7 @@ export async function saveAuditPlanReview(
     revalidatePath(`/cb-admin/audits/${auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error saving plan review:", err)
     return { error: err instanceof Error ? err.message : "Failed to save plan review." }
   }
@@ -155,6 +158,7 @@ export async function saveAuditSummary(
     revalidatePath(`/cb-admin/audits/${auditId}`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error saving summary:", err)
     return { error: err instanceof Error ? err.message : "Failed to save audit summary." }
   }
@@ -179,6 +183,7 @@ export async function addRecommendation(
     revalidatePath(`/lead-auditor/audits/${auditId}/docs`)
     return { success: true }
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error adding recommendation:", err)
     return { error: err instanceof Error ? err.message : "Failed to add recommendation." }
   }
@@ -197,6 +202,7 @@ export async function deleteRecommendation(id: string): Promise<void> {
     await prisma.auditRecommendation.delete({ where: { id } })
     revalidatePath(`/lead-auditor/audits/${rec.auditId}/docs`)
   } catch (err) {
+    if (isRedirectError(err)) throw err;
     console.error("Error deleting recommendation:", err)
   }
 }
