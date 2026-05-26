@@ -12,15 +12,25 @@ export default async function DecisionMakerDashboard() {
   const session = await auth()
   if (!session?.user || session.user.role !== "DECISION_MAKER") redirect("/")
 
+  const cbOrgId = session.user.organizationId
+  if (!cbOrgId) redirect("/")
+
+  const auditScope = {
+    OR: [
+      { createdBy: { is: { cbOrgId } } },
+      { leadAuditor: { is: { cbOrgId } } },
+    ],
+  }
+
   const [pending, decided, granted, refused] = await Promise.all([
-    prisma.audit.count({ where: { status: "DECISION_PENDING" } }),
-    prisma.audit.count({ where: { status: "DECIDED" } }),
-    prisma.certificationDecision.count({ where: { decision: "GRANT" } }),
-    prisma.certificationDecision.count({ where: { decision: "REFUSE" } }),
+    prisma.audit.count({ where: { ...auditScope, status: "DECISION_PENDING" } }),
+    prisma.audit.count({ where: { ...auditScope, status: "DECIDED" } }),
+    prisma.certificationDecision.count({ where: { decision: "GRANT", audit: { is: auditScope } } }),
+    prisma.certificationDecision.count({ where: { decision: "REFUSE", audit: { is: auditScope } } }),
   ])
 
   const queue = await prisma.audit.findMany({
-    where: { status: "DECISION_PENDING" },
+    where: { ...auditScope, status: "DECISION_PENDING" },
     orderBy: { updatedAt: "asc" },
     take: 8,
     include: {

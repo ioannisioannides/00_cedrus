@@ -33,7 +33,21 @@ export default async function AuditsPage() {
     redirect("/")
   }
 
+  const isSuperAdmin = session.user.role === "SUPER_ADMIN"
+  const cbOrgId = session.user.organizationId
+  if (!isSuperAdmin && !cbOrgId) redirect("/")
+
+  const auditScope = isSuperAdmin
+    ? {}
+    : {
+        OR: [
+          { createdBy: { is: { cbOrgId } } },
+          { leadAuditor: { is: { cbOrgId } } },
+        ],
+      }
+
   const audits = await prisma.audit.findMany({
+    where: auditScope,
     orderBy: { dateFrom: "desc" },
     include: {
       clientOrg: { select: { name: true, customerId: true } },
@@ -63,7 +77,9 @@ export default async function AuditsPage() {
             <ClipboardList className="h-5 w-5" />
             All Audits
           </CardTitle>
-          <CardDescription>All audits across all clients</CardDescription>
+          <CardDescription>
+            {isSuperAdmin ? "All audits across all clients" : "All audits in your certification body"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {audits.length === 0 ? (

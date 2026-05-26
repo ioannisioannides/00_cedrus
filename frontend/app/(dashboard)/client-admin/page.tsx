@@ -1,7 +1,10 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { Suspense } from "react"
 import { StatCard } from "@/components/stat-card"
+import StatCardSkeleton from "@/components/stat-card-skeleton"
+import OpenFindingsSkeleton from "@/components/open-findings-skeleton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ClipboardList, AlertCircle, FileText, Award } from "lucide-react"
@@ -31,44 +34,45 @@ export default async function ClientAdminDashboard() {
     )
   }
 
-  const [activeAudits, activeCerts] = await Promise.all([
-    prisma.audit.count({
+
+  function StatActiveAudits() {
+    const count = prisma.audit.count({
       where: { clientOrgId, status: { in: ["SCHEDULED", "IN_PROGRESS", "REPORT_DRAFT", "CLIENT_REVIEW"] } },
-    }),
-    prisma.certification.count({
+    })
+    return <StatCard title="Active Audits" value={count} description="Currently under audit" icon={ClipboardList} />
+  }
+  function StatOpenFindings() {
+    const count = prisma.finding.count({
+      where: {
+        audit: { clientOrgId },
+        findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
+        verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
+      },
+    })
+    return <StatCard title="Open Findings" value={count} description="Requiring your response" icon={AlertCircle} />
+  }
+  function StatActiveCerts() {
+    const count = prisma.certification.count({
       where: { clientOrgId, certificateStatus: "ACTIVE" },
-    }),
-  ])
+    })
+    return <StatCard title="Certificates" value={count} description="Active certifications" icon={Award} />
+  }
+  // My Audits is a placeholder (value 0)
 
-  const openFindings = await prisma.finding.findMany({
-    where: {
-      audit: { clientOrgId },
-      findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
-      verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
-    },
-    orderBy: [{ findingType: "asc" }, { createdAt: "desc" }],
-    take: 10,
-    include: {
-      audit: { include: { clientOrg: { select: { name: true } } } },
-    },
-  })
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Client Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Track your audit progress, respond to findings, and manage documents.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Active Audits" value={activeAudits} description="Currently under audit" icon={ClipboardList} />
-        <StatCard title="Open Findings" value={openFindings.length} description="Requiring your response" icon={AlertCircle} />
-        <StatCard title="Certificates" value={activeCerts} description="Active certifications" icon={Award} />
-        <StatCard title="My Audits" value={0} description="View your audit history" icon={FileText} />
-      </div>
-
+  async function OpenFindingsList() {
+    const openFindings = await prisma.finding.findMany({
+      where: {
+        audit: { clientOrgId },
+        findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
+        verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
+      },
+      orderBy: [{ findingType: "asc" }, { createdAt: "desc" }],
+      take: 10,
+      include: {
+        audit: { include: { clientOrg: { select: { name: true } } } },
+      },
+    })
+    return (
       <Card>
         <CardHeader>
           <CardTitle>Open Non-Conformances</CardTitle>
@@ -100,6 +104,28 @@ export default async function ClientAdminDashboard() {
           )}
         </CardContent>
       </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Client Admin Dashboard</h1>
+        <p className="text-muted-foreground">
+          Track your audit progress, respond to findings, and manage documents.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Suspense fallback={<StatCardSkeleton />}><StatActiveAudits /></Suspense>
+        <Suspense fallback={<StatCardSkeleton />}><StatOpenFindings /></Suspense>
+        <Suspense fallback={<StatCardSkeleton />}><StatActiveCerts /></Suspense>
+        <StatCard title="My Audits" value={0} description="View your audit history" icon={FileText} />
+      </div>
+
+      <Suspense fallback={<OpenFindingsSkeleton />}>
+        <OpenFindingsList />
+      </Suspense>
     </div>
   )
 }

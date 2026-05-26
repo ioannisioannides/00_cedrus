@@ -29,25 +29,38 @@ const STATUS_COLOR: Record<string, "default" | "secondary" | "destructive" | "ou
   CANCELLED: "destructive",
 }
 
+
 export default async function AuditProgramsPage() {
   const session = await auth()
   if (!session?.user || !["CB_ADMIN", "SUPER_ADMIN"].includes(session.user.role)) {
     redirect("/")
   }
 
+  const isSuperAdmin = session.user.role === "SUPER_ADMIN"
+  const cbOrgId = session.user.organizationId
+  if (!isSuperAdmin && !cbOrgId) redirect("/")
+
+  // Aggregate status counts in the database
+  const statusCounts = await prisma.auditProgram.groupBy({
+    by: ["status"],
+    where: isSuperAdmin ? {} : { createdBy: { is: { cbOrgId } } },
+    _count: { status: true },
+  })
+
+  const byStatus = {
+    ACTIVE: statusCounts.find((s) => s.status === "ACTIVE")?._count.status ?? 0,
+    DRAFT: statusCounts.find((s) => s.status === "DRAFT")?._count.status ?? 0,
+    COMPLETED: statusCounts.find((s) => s.status === "COMPLETED")?._count.status ?? 0,
+  }
+
   const programs = await prisma.auditProgram.findMany({
+    where: isSuperAdmin ? {} : { createdBy: { is: { cbOrgId } } },
     orderBy: [{ year: "desc" }, { createdAt: "desc" }],
     include: {
       clientOrg: { select: { name: true } },
       _count: { select: { audits: true } },
     },
   })
-
-  const byStatus = {
-    ACTIVE: programs.filter((p) => p.status === "ACTIVE").length,
-    DRAFT: programs.filter((p) => p.status === "DRAFT").length,
-    COMPLETED: programs.filter((p) => p.status === "COMPLETED").length,
-  }
 
   return (
     <div className="space-y-6">

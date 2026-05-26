@@ -27,8 +27,14 @@ export default async function AuditorsPage() {
     redirect("/")
   }
 
+  const isSuperAdmin = session.user.role === "SUPER_ADMIN"
+  const cbOrgId = session.user.organizationId
+  if (!isSuperAdmin && !cbOrgId) redirect("/")
+
+  const auditorScope = isSuperAdmin ? {} : { cbOrgId }
+
   const auditors = await prisma.user.findMany({
-    where: { role: "LEAD_AUDITOR", isActive: true },
+    where: { ...auditorScope, role: "LEAD_AUDITOR", isActive: true },
     orderBy: { name: "asc" },
     include: {
       cbOrg: { select: { name: true } },
@@ -42,8 +48,19 @@ export default async function AuditorsPage() {
     },
   })
 
-  const allAuditors = await prisma.user.count({ where: { role: "LEAD_AUDITOR" } })
-  const active = await prisma.user.count({ where: { role: "LEAD_AUDITOR", isActive: true } })
+  const allAuditors = await prisma.user.count({ where: { ...auditorScope, role: "LEAD_AUDITOR" } })
+  const active = await prisma.user.count({ where: { ...auditorScope, role: "LEAD_AUDITOR", isActive: true } })
+  // Count auditors with at least one active audit (assigned)
+  const assigned = await prisma.user.count({
+    where: {
+      ...auditorScope,
+      role: "LEAD_AUDITOR",
+      isActive: true,
+      auditsLed: {
+        some: { status: { in: ["SCHEDULED", "IN_PROGRESS", "REPORT_DRAFT"] } },
+      },
+    },
+  })
 
   return (
     <div className="space-y-6">
@@ -68,9 +85,7 @@ export default async function AuditorsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Currently Assigned</CardDescription>
-            <CardTitle className="text-3xl">
-              {auditors.filter((a) => a._count.auditsLed > 0).length}
-            </CardTitle>
+            <CardTitle className="text-3xl">{assigned}</CardTitle>
           </CardHeader>
         </Card>
       </div>

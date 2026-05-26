@@ -25,19 +25,51 @@ export default async function ComplaintsPage() {
     redirect("/")
   }
 
+  const isSuperAdmin = session.user.role === "SUPER_ADMIN"
+  const cbOrgId = session.user.organizationId
+  if (!isSuperAdmin && !cbOrgId) redirect("/")
+
+  const auditScope = {
+    OR: [
+      { createdBy: { is: { cbOrgId } } },
+      { leadAuditor: { is: { cbOrgId } } },
+    ],
+  }
+
+  const complaintScope = isSuperAdmin
+    ? {}
+    : {
+        OR: [
+          { submittedBy: { is: { cbOrgId } } },
+          { assignedInvestigator: { is: { cbOrgId } } },
+          { relatedAudit: { is: auditScope } },
+        ],
+      }
+
+  // Aggregate status counts in the database
+  const statusCounts = await prisma.complaint.groupBy({
+    by: ["status"],
+    where: complaintScope,
+    _count: { status: true },
+  })
+
+  const byStatus = {
+    open:
+      (statusCounts.find((s) => s.status === "RECEIVED")?._count.status ?? 0) +
+      (statusCounts.find((s) => s.status === "UNDER_INVESTIGATION")?._count.status ?? 0) +
+      (statusCounts.find((s) => s.status === "ESCALATED")?._count.status ?? 0),
+    resolved: statusCounts.find((s) => s.status === "RESOLVED")?._count.status ?? 0,
+    closed: statusCounts.find((s) => s.status === "CLOSED")?._count.status ?? 0,
+  }
+
   const complaints = await prisma.complaint.findMany({
+    where: complaintScope,
     orderBy: { submittedAt: "desc" },
     include: {
       clientOrg: { select: { name: true } },
       assignedInvestigator: { select: { name: true } },
     },
   })
-
-  const byStatus = {
-    open: complaints.filter((c) => ["RECEIVED", "UNDER_INVESTIGATION", "ESCALATED"].includes(c.status)).length,
-    resolved: complaints.filter((c) => c.status === "RESOLVED").length,
-    closed: complaints.filter((c) => c.status === "CLOSED").length,
-  }
 
   return (
     <div className="space-y-6">

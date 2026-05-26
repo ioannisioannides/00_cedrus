@@ -14,17 +14,50 @@ export default async function NewAuditPage({ searchParams }: Props) {
     redirect("/")
   }
 
+  const isSuperAdmin = session.user.role === "SUPER_ADMIN"
+  const cbOrgId = session.user.organizationId
+  if (!isSuperAdmin && !cbOrgId) redirect("/")
+
   const { clientOrgId } = await searchParams
 
+  const auditScope = {
+    OR: [
+      { createdBy: { is: { cbOrgId } } },
+      { leadAuditor: { is: { cbOrgId } } },
+    ],
+  }
+
+  const clientScope = isSuperAdmin
+    ? {}
+    : {
+        OR: [
+          { audits: { some: auditScope } },
+          { auditPrograms: { some: { createdBy: { is: { cbOrgId } } } } },
+          { complaints: { some: { submittedBy: { is: { cbOrgId } } } } },
+          { complaints: { some: { relatedAudit: { is: auditScope } } } },
+        ],
+      }
+
   const [clientOrgs, auditors, programs] = await Promise.all([
-    prisma.clientOrg.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, customerId: true } }),
+    prisma.clientOrg.findMany({
+      where: clientScope,
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, customerId: true },
+    }),
     prisma.user.findMany({
-      where: { role: "LEAD_AUDITOR", isActive: true },
+      where: {
+        ...(isSuperAdmin ? {} : { cbOrgId }),
+        role: "LEAD_AUDITOR",
+        isActive: true,
+      },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     prisma.auditProgram.findMany({
-      where: { status: "ACTIVE" },
+      where: {
+        ...(isSuperAdmin ? {} : { createdBy: { is: { cbOrgId } } }),
+        status: "ACTIVE",
+      },
       orderBy: [{ year: "desc" }, { title: "asc" }],
       select: { id: true, title: true, year: true, clientOrgId: true },
     }),

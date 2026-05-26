@@ -53,18 +53,28 @@ export default async function ClientAuditDetailPage({
         orderBy: [{ findingType: "asc" }, { createdAt: "asc" }],
         include: {
           standard: { select: { code: true } },
-          comments: {
-            include: {
-              user: { select: { name: true, role: true } },
-            },
-            orderBy: { createdAt: "asc" },
-          },
         },
       },
     },
   })
 
   if (!audit) notFound()
+
+  const findingComments = await prisma.findingComment.findMany({
+    where: { findingId: { in: audit.findings.map((finding) => finding.id) } },
+    include: { user: { select: { name: true, role: true } } },
+    orderBy: { createdAt: "asc" },
+  })
+
+  const commentsByFindingId = findingComments.reduce<Map<string, typeof findingComments>>(
+    (accumulator, comment) => {
+      const current = accumulator.get(comment.findingId) ?? []
+      current.push(comment)
+      accumulator.set(comment.findingId, current)
+      return accumulator
+    },
+    new Map()
+  )
 
   const canRespond = ["IN_PROGRESS", "REPORT_DRAFT", "CLIENT_REVIEW", "SUBMITTED"].includes(
     audit.status
@@ -232,7 +242,10 @@ export default async function ClientAuditDetailPage({
                   )}
 
                   {/* Finding Comment Discussion section */}
-                  <FindingCommentsSection findingId={f.id} comments={f.comments} />
+                  <FindingCommentsSection
+                    findingId={f.id}
+                    comments={commentsByFindingId.get(f.id) ?? []}
+                  />
                 </CardContent>
               </Card>
             )

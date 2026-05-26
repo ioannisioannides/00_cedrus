@@ -13,15 +13,25 @@ export default async function TechnicalReviewerDashboard() {
   const session = await auth()
   if (!session?.user || session.user.role !== "TECHNICAL_REVIEWER") redirect("/")
 
+  const cbOrgId = session.user.organizationId
+  if (!cbOrgId) redirect("/")
+
+  const auditScope = {
+    OR: [
+      { createdBy: { is: { cbOrgId } } },
+      { leadAuditor: { is: { cbOrgId } } },
+    ],
+  }
+
   const [pending, approved, clarification, submitted] = await Promise.all([
-    prisma.audit.count({ where: { status: "TECHNICAL_REVIEW" } }),
-    prisma.technicalReview.count({ where: { status: "APPROVED" } }),
-    prisma.technicalReview.count({ where: { status: "REQUIRES_CLARIFICATION" } }),
-    prisma.audit.count({ where: { status: "SUBMITTED" } }),
+    prisma.audit.count({ where: { ...auditScope, status: "TECHNICAL_REVIEW" } }),
+    prisma.technicalReview.count({ where: { status: "APPROVED", audit: { is: auditScope } } }),
+    prisma.technicalReview.count({ where: { status: "REQUIRES_CLARIFICATION", audit: { is: auditScope } } }),
+    prisma.audit.count({ where: { ...auditScope, status: "SUBMITTED" } }),
   ])
 
   const queue = await prisma.audit.findMany({
-    where: { status: { in: ["SUBMITTED", "TECHNICAL_REVIEW"] } },
+    where: { ...auditScope, status: { in: ["SUBMITTED", "TECHNICAL_REVIEW"] } },
     orderBy: { updatedAt: "asc" },
     take: 8,
     include: {

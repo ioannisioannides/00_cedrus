@@ -23,7 +23,30 @@ export default async function ClientOrgsPage() {
     redirect("/")
   }
 
+  const isSuperAdmin = session.user.role === "SUPER_ADMIN"
+  const cbOrgId = session.user.organizationId
+  if (!isSuperAdmin && !cbOrgId) redirect("/")
+
+  const auditScope = {
+    OR: [
+      { createdBy: { is: { cbOrgId } } },
+      { leadAuditor: { is: { cbOrgId } } },
+    ],
+  }
+
+  const clientScope = isSuperAdmin
+    ? {}
+    : {
+        OR: [
+          { audits: { some: auditScope } },
+          { auditPrograms: { some: { createdBy: { is: { cbOrgId } } } } },
+          { complaints: { some: { submittedBy: { is: { cbOrgId } } } } },
+          { complaints: { some: { relatedAudit: { is: auditScope } } } },
+        ],
+      }
+
   const clients = await prisma.clientOrg.findMany({
+    where: clientScope,
     orderBy: { name: "asc" },
     include: {
       _count: { select: { audits: true, certifications: true, sites: true } },
