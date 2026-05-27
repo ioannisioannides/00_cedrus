@@ -40,28 +40,28 @@
 
 ## Priority 3 — UX / Accessibility
 
-- [ ] Ensure all forms disable mutable controls during pending submission states, not only submit buttons (start with [frontend/components/audit-form.tsx](frontend/components/audit-form.tsx)).
-- [ ] Standardize form control primitives for consistency and accessibility (replace plain select where appropriate with shared UI primitives).
-- [ ] Run an accessibility pass for keyboard navigation, labels, and ARIA semantics across role dashboards and forms.
+- [x] Ensure all forms disable mutable controls during pending submission states, not only submit buttons (start with [frontend/components/audit-form.tsx](frontend/components/audit-form.tsx)).
+- [x] Standardize form control primitives for consistency and accessibility (replace plain select where appropriate with shared UI primitives).
+- [x] Run an accessibility pass for keyboard navigation, labels, and ARIA semantics across role dashboards and forms.
 
 ## Priority 4 — Testing / Quality Gates
 
-- [ ] Introduce a test stack (Vitest or Jest + Testing Library) and baseline tests for critical auth and tenant scoping behavior.
-- [ ] Add integration tests for server actions covering redirect behavior and role enforcement.
-- [ ] Add a regression test for the client-admin audit detail comments flow in [frontend/app/(dashboard)/client-admin/audits/[id]/page.tsx](frontend/app/(dashboard)/client-admin/audits/[id]/page.tsx).
-- [ ] Add CI jobs for typecheck and lint as explicit required checks if not already enforced.
+- [x] Introduce a test stack (Vitest or Jest + Testing Library) and baseline tests for critical auth and tenant scoping behavior.
+- [x] Add integration tests for server actions covering redirect behavior and role enforcement.
+- [x] Add a regression test for the client-admin audit detail comments flow in [frontend/app/(dashboard)/client-admin/audits/[id]/page.tsx](frontend/app/(dashboard)/client-admin/audits/[id]/page.tsx).
+- [x] Add CI jobs for typecheck and lint as explicit required checks if not already enforced.
 
 ## Priority 5 — Dependency / Security Hygiene
 
-- [ ] Resolve the moderate npm audit finding for qs (DoS advisory GHSA-q8mj-m7cp-5q26) in frontend dependencies.
-- [ ] Keep secret scanning strict and confirm only template/example values are allowlisted.
-- [ ] Periodically validate that local env files are not tracked and that production secrets rotate on schedule.
+- [x] Resolve the moderate npm audit finding for qs (DoS advisory GHSA-q8mj-m7cp-5q26) in frontend dependencies.
+- [x] Keep secret scanning strict and confirm only template/example values are allowlisted.
+- [x] Periodically validate that local env files are not tracked and that production secrets rotate on schedule.
 
 ## Priority 6 — Maintainability
 
-- [ ] Extract duplicated status labels/badge mappings to shared constants.
-- [ ] Extract duplicated FormState definitions to a shared type module.
-- [ ] Introduce shared role guard/query helper utilities to reduce repeated auth logic and reduce drift.
+- [x] Extract duplicated status labels/badge mappings to shared constants.
+- [x] Extract duplicated FormState definitions to a shared type module.
+- [x] Introduce shared role guard/query helper utilities to reduce repeated auth logic and reduce drift.
 
 ## Suggested Execution Order
 

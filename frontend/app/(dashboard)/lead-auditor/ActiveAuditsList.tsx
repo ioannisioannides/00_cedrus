@@ -4,16 +4,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
-
-const STATUS_COLOR: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  DRAFT: "outline",
-  SCHEDULED: "secondary",
-  IN_PROGRESS: "default",
-  REPORT_DRAFT: "secondary",
-  SUBMITTED: "secondary",
-  CLOSED: "outline",
-  CANCELLED: "destructive",
-}
+import { STATUS_COLOR, formatStatusLabel } from "@/lib/status"
 
 export default async function ActiveAuditsList({ userId }: { userId: string }) {
   const audits = await prisma.audit.findMany({
@@ -56,7 +47,7 @@ export default async function ActiveAuditsList({ userId }: { userId: string }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">{a._count.findings} findings</Badge>
-                  <Badge variant={STATUS_COLOR[a.status] ?? "outline"}>{a.status.replace("_", " ")}</Badge>
+                  <Badge variant={STATUS_COLOR[a.status] ?? "outline"}>{formatStatusLabel(a.status)}</Badge>
                   <Button render={<Link href={`/lead-auditor/audits/${a.id}`} />} variant="ghost" size="sm">
                     View
                   </Button>

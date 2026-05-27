@@ -92,6 +92,7 @@ export function AuditForm({
                 defaultValue={defaultClientOrgId ?? ""}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 required
+                disabled={isPending}
               >
                 <option value="">Select client…</option>
                 {clientOrgs.map((c) => (
@@ -110,6 +111,7 @@ export function AuditForm({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 required
                 defaultValue={defaultValues?.auditType ?? ""}
+                disabled={isPending}
               >
                 <option value="">Select type…</option>
                 {AUDIT_TYPES.map((t) => (
@@ -122,11 +124,11 @@ export function AuditForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="dateFrom">Start Date *</Label>
-              <Input id="dateFrom" name="dateFrom" type="date" required defaultValue={defaultValues?.dateFrom ?? ""} />
+              <Input id="dateFrom" name="dateFrom" type="date" required defaultValue={defaultValues?.dateFrom ?? ""} disabled={isPending} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dateTo">End Date *</Label>
-              <Input id="dateTo" name="dateTo" type="date" required defaultValue={defaultValues?.dateTo ?? ""} />
+              <Input id="dateTo" name="dateTo" type="date" required defaultValue={defaultValues?.dateTo ?? ""} disabled={isPending} />
             </div>
           </div>
 
@@ -138,6 +140,7 @@ export function AuditForm({
                 name="leadAuditorId"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 defaultValue={defaultValues?.leadAuditorId ?? ""}
+                disabled={isPending}
               >
                 <option value="">Assign later…</option>
                 {auditors.map((a) => (
@@ -153,6 +156,7 @@ export function AuditForm({
                 name="programId"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 defaultValue={defaultValues?.programId ?? ""}
+                disabled={isPending}
               >
                 <option value="">None</option>
                 {programs.map((p) => (
@@ -172,6 +176,7 @@ export function AuditForm({
               step="0.5"
               placeholder="e.g. 16"
               defaultValue={defaultValues?.plannedDurationHours ?? ""}
+              disabled={isPending}
             />
           </div>
 
@@ -184,6 +189,7 @@ export function AuditForm({
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
               placeholder="Basis for planned audit duration…"
               defaultValue={defaultValues?.durationJustification ?? ""}
+              disabled={isPending}
             />
           </div>
         </CardContent>
@@ -201,6 +207,7 @@ export function AuditForm({
           type="button"
           variant="outline"
           onClick={() => router.back()}
+          disabled={isPending}
         >
           Cancel
         </Button>
