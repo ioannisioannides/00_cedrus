@@ -34,79 +34,6 @@ export default async function ClientAdminDashboard() {
     )
   }
 
-
-  function StatActiveAudits() {
-    const count = prisma.audit.count({
-      where: { clientOrgId, status: { in: ["SCHEDULED", "IN_PROGRESS", "REPORT_DRAFT", "CLIENT_REVIEW"] } },
-    })
-    return <StatCard title="Active Audits" value={count} description="Currently under audit" icon={ClipboardList} />
-  }
-  function StatOpenFindings() {
-    const count = prisma.finding.count({
-      where: {
-        audit: { clientOrgId },
-        findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
-        verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
-      },
-    })
-    return <StatCard title="Open Findings" value={count} description="Requiring your response" icon={AlertCircle} />
-  }
-  function StatActiveCerts() {
-    const count = prisma.certification.count({
-      where: { clientOrgId, certificateStatus: "ACTIVE" },
-    })
-    return <StatCard title="Certificates" value={count} description="Active certifications" icon={Award} />
-  }
-  // My Audits is a placeholder (value 0)
-
-  async function OpenFindingsList() {
-    const openFindings = await prisma.finding.findMany({
-      where: {
-        audit: { clientOrgId },
-        findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
-        verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
-      },
-      orderBy: [{ findingType: "asc" }, { createdAt: "desc" }],
-      take: 10,
-      include: {
-        audit: { include: { clientOrg: { select: { name: true } } } },
-      },
-    })
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Open Non-Conformances</CardTitle>
-          <CardDescription>Findings requiring your corrective action response</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {openFindings.length === 0 ? (
-            <p className="py-6 text-sm text-muted-foreground text-center">No open findings requiring action.</p>
-          ) : (
-            <div className="divide-y">
-              {openFindings.map((f) => (
-                <div key={f.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="text-sm font-medium">
-                      <span className="text-muted-foreground mr-2 font-mono text-xs">{f.clause}</span>
-                      {f.statementOfNc ?? "Non-conformance"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {f.audit.clientOrg.name}
-                      {f.dueDate ? ` · Due ${format(f.dueDate, "dd MMM yyyy")}` : ""}
-                    </p>
-                  </div>
-                  <Badge variant={FINDING_BADGE[f.findingType] ?? "outline"}>
-                    {f.findingType.replace("_", " ")}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -117,15 +44,88 @@ export default async function ClientAdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Suspense fallback={<StatCardSkeleton />}><StatActiveAudits /></Suspense>
-        <Suspense fallback={<StatCardSkeleton />}><StatOpenFindings /></Suspense>
-        <Suspense fallback={<StatCardSkeleton />}><StatActiveCerts /></Suspense>
+        <Suspense fallback={<StatCardSkeleton />}><StatActiveAudits clientOrgId={clientOrgId} /></Suspense>
+        <Suspense fallback={<StatCardSkeleton />}><StatOpenFindings clientOrgId={clientOrgId} /></Suspense>
+        <Suspense fallback={<StatCardSkeleton />}><StatActiveCerts clientOrgId={clientOrgId} /></Suspense>
         <StatCard title="My Audits" value={0} description="View your audit history" icon={FileText} />
       </div>
 
       <Suspense fallback={<OpenFindingsSkeleton />}>
-        <OpenFindingsList />
+        <OpenFindingsList clientOrgId={clientOrgId} />
       </Suspense>
     </div>
+  )
+}
+
+async function StatActiveAudits({ clientOrgId }: { clientOrgId: string }) {
+  const count = await prisma.audit.count({
+    where: { clientOrgId, status: { in: ["SCHEDULED", "IN_PROGRESS", "REPORT_DRAFT", "CLIENT_REVIEW"] } },
+  })
+  return <StatCard title="Active Audits" value={count} description="Currently under audit" icon={ClipboardList} />
+}
+
+async function StatOpenFindings({ clientOrgId }: { clientOrgId: string }) {
+  const count = await prisma.finding.count({
+    where: {
+      audit: { clientOrgId },
+      findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
+      verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
+    },
+  })
+  return <StatCard title="Open Findings" value={count} description="Requiring your response" icon={AlertCircle} />
+}
+
+async function StatActiveCerts({ clientOrgId }: { clientOrgId: string }) {
+  const count = await prisma.certification.count({
+    where: { clientOrgId, certificateStatus: "ACTIVE" },
+  })
+  return <StatCard title="Certificates" value={count} description="Active certifications" icon={Award} />
+}
+
+async function OpenFindingsList({ clientOrgId }: { clientOrgId: string }) {
+  const openFindings = await prisma.finding.findMany({
+    where: {
+      audit: { clientOrgId },
+      findingType: { in: ["NC_MAJOR", "NC_MINOR"] },
+      verificationStatus: { in: ["OPEN", "CLIENT_RESPONDED"] },
+    },
+    orderBy: [{ findingType: "asc" }, { createdAt: "desc" }],
+    take: 10,
+    include: {
+      audit: { include: { clientOrg: { select: { name: true } } } },
+    },
+  })
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Open Non-Conformances</CardTitle>
+        <CardDescription>Findings requiring your corrective action response</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {openFindings.length === 0 ? (
+          <p className="py-6 text-sm text-muted-foreground text-center">No open findings requiring action.</p>
+        ) : (
+          <div className="divide-y">
+            {openFindings.map((f) => (
+              <div key={f.id} className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-medium">
+                    <span className="text-muted-foreground mr-2 font-mono text-xs">{f.clause}</span>
+                    {f.statementOfNc ?? "Non-conformance"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {f.audit.clientOrg.name}
+                    {f.dueDate ? ` · Due ${format(f.dueDate, "dd MMM yyyy")}` : ""}
+                  </p>
+                </div>
+                <Badge variant={FINDING_BADGE[f.findingType] ?? "outline"}>
+                  {f.findingType.replace("_", " ")}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }

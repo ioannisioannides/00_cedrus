@@ -1,11 +1,11 @@
 # Dependabot configuration for automated dependency updates
-# Uses uv ecosystem to scan pyproject.toml + uv.lock
+# Uses npm ecosystem to scan frontend/package.json
 
 version: 2
 updates:
-  # Python dependencies (uv)
-  - package-ecosystem: "uv"
-    directory: "/"
+  # Node.js dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
     schedule:
       interval: "weekly"
       day: "monday"

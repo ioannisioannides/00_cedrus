@@ -21,7 +21,6 @@ if (process.env.NODE_ENV !== "production") {
   // the corresponding delegate (e.g., prisma.audit) will be undefined.
   // This check warns you in development if a delegate is missing.
   if (typeof prisma.audit === "undefined") {
-    // eslint-disable-next-line no-console
     console.warn(
       "\u26A0\uFE0F Prisma client is missing the 'audit' delegate.\n" +
       "This usually means you changed schema.prisma but did NOT run `npx prisma generate` or restart the dev server.\n" +

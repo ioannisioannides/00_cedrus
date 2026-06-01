@@ -8,7 +8,6 @@ import { redirect } from "next/navigation"
 
 import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { AuditType, AuditStatus } from "@prisma/client"
-import { ACTION_ERROR } from "@/lib/utils"
 
 const AuditSchema = z.object({
   clientOrgId: z.string().min(1, "Client organisation is required"),
@@ -21,7 +20,7 @@ const AuditSchema = z.object({
   durationJustification: z.string().optional().default(""),
 })
 
-type FormState = { error?: { code: string; message: string }; success?: boolean; id?: string }
+type FormState = { error?: string; success?: boolean; id?: string }
 
 async function requireCbAdmin() {
   const session = await auth()
@@ -60,13 +59,13 @@ export async function createAudit(
       durationJustification: formData.get("durationJustification") || "",
     })
 
-    if (!parsed.success) return { error: { code: ACTION_ERROR.VALIDATION, message: parsed.error.issues[0].message } }
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
 
     const { dateFrom, dateTo, ...rest } = parsed.data
     const from = new Date(dateFrom)
     const to = new Date(dateTo)
 
-    if (to < from) return { error: { code: ACTION_ERROR.VALIDATION, message: "End date must be on or after the start date." } }
+    if (to < from) return { error: "End date must be on or after the start date." }
 
     const audit = await prisma.audit.create({
       data: {
@@ -93,7 +92,7 @@ export async function createAudit(
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error("Error creating audit:", error)
-    return { error: { code: ACTION_ERROR.UNKNOWN, message: error instanceof Error ? error.message : "Failed to create audit due to an unexpected error." } }
+    return { error: error instanceof Error ? error.message : "Failed to create audit due to an unexpected error." }
   }
 }
 
@@ -116,13 +115,13 @@ export async function updateAudit(
       durationJustification: formData.get("durationJustification") || "",
     })
 
-    if (!parsed.success) return { error: { code: ACTION_ERROR.VALIDATION, message: parsed.error.issues[0].message } }
+    if (!parsed.success) return { error: parsed.error.issues[0].message }
 
     const { dateFrom, dateTo, ...rest } = parsed.data
     const from = new Date(dateFrom!)
     const to = new Date(dateTo!)
 
-    if (to < from) return { error: { code: ACTION_ERROR.VALIDATION, message: "End date must be on or after the start date." } }
+    if (to < from) return { error: "End date must be on or after the start date." }
 
     await prisma.audit.update({
       where: { id: auditId },
@@ -138,7 +137,7 @@ export async function updateAudit(
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error("Error updating audit:", error)
-    return { error: { code: ACTION_ERROR.UNKNOWN, message: error instanceof Error ? error.message : "Failed to update audit due to an unexpected error." } }
+    return { error: error instanceof Error ? error.message : "Failed to update audit due to an unexpected error." }
   }
 }
 
@@ -152,7 +151,7 @@ export async function updateAuditStatus(
     if (!session?.user) redirect("/")
 
     const audit = await prisma.audit.findUnique({ where: { id: auditId } })
-    if (!audit) return { error: { code: ACTION_ERROR.NOT_FOUND, message: "Audit not found." } }
+    if (!audit) return { error: "Audit not found." }
 
     // Business rules — valid transitions
     const TRANSITIONS: Partial<Record<AuditStatus, AuditStatus[]>> = {
@@ -169,7 +168,7 @@ export async function updateAuditStatus(
 
     const allowed = TRANSITIONS[audit.status] ?? []
     if (!allowed.includes(newStatus)) {
-      return { error: { code: ACTION_ERROR.CONFLICT, message: `Cannot transition from ${audit.status} to ${newStatus}.` } }
+      return { error: `Cannot transition from ${audit.status} to ${newStatus}.` }
     }
 
     await prisma.$transaction([
@@ -191,7 +190,7 @@ export async function updateAuditStatus(
   } catch (err) {
     if (isRedirectError(err)) throw err;
     console.error("Error updating audit status:", err)
-    return { error: { code: ACTION_ERROR.UNKNOWN, message: err instanceof Error ? err.message : "Failed to update audit status due to an unexpected error." } }
+    return { error: err instanceof Error ? err.message : "Failed to update audit status due to an unexpected error." }
   }
 }
 
@@ -207,7 +206,7 @@ export async function assignLeadAuditor(
       select: { role: true },
     })
     if (!auditor || auditor.role !== "LEAD_AUDITOR") {
-      return { error: { code: ACTION_ERROR.VALIDATION, message: "Selected user is not a Lead Auditor." } }
+      return { error: "Selected user is not a Lead Auditor." }
     }
 
     await prisma.audit.update({ where: { id: auditId }, data: { leadAuditorId } })
@@ -216,6 +215,6 @@ export async function assignLeadAuditor(
   } catch (err) {
     if (isRedirectError(err)) throw err;
     console.error("Error assigning lead auditor:", err)
-    return { error: { code: ACTION_ERROR.UNKNOWN, message: err instanceof Error ? err.message : "Failed to assign lead auditor." } }
+    return { error: err instanceof Error ? err.message : "Failed to assign lead auditor." }
   }
 }
