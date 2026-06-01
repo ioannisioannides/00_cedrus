@@ -1,9 +1,9 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # CEDRUS — Next.js Dockerfile (multi-stage)
 # ──────────────────────────────────────────────────────────────────────────────
-FROM node:22-alpine AS base
-# Update and upgrade all base system packages to patch zlib utilities and other active security CVEs
-RUN apk update && apk upgrade --no-cache
+FROM node:22-alpine3.22 AS base
+# Enforce patched zlib and upgrade base packages to close known Alpine CVEs.
+RUN apk add --no-cache "zlib>=1.3.2-r0" && apk upgrade --no-cache
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Stage 1: Install dependencies
