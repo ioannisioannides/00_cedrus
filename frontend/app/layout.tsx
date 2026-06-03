@@ -18,8 +18,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="h-full">
+    <html
+      lang="en"
+      className={`${geistSans.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="h-full" suppressHydrationWarning>
         <Providers>
           {children}
           <Toaster />
